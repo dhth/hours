@@ -18,7 +18,7 @@ func Execute() {
 	currentUser, err := user.Current()
 
 	if err != nil {
-		die("Error getting your home directory, This is a fatal error; let @dhth know about this.\n%s\n", err)
+		die("Error getting your home directory, This is a fatal error; use -db-path to specify database path manually.\n%s\n", err)
 	}
 
 	defaultDBPath := fmt.Sprintf("%s/hours.v%s.db", currentUser.HomeDir, DB_VERSION)

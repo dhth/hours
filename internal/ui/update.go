@@ -475,7 +475,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			var items []list.Item
 			for _, e := range msg.entries {
-				items = append(items, list.Item(e))
+				e.updateDesc()
+				items = append(items, e)
 			}
 			m.taskLogList.SetItems(items)
 		}

@@ -1,10 +1,7 @@
 package ui
 
 import (
-	"fmt"
 	"time"
-
-	"github.com/dustin/go-humanize"
 )
 
 type task struct {
@@ -13,10 +10,10 @@ type task struct {
 	createdAt      time.Time
 	updatedAt      time.Time
 	trackingActive bool
-	title          string
-	desc           string
 	secsSpent      int
 	active         bool
+	title          string
+	desc           string
 }
 
 type taskLogEntry struct {
@@ -26,6 +23,8 @@ type taskLogEntry struct {
 	beginTS     time.Time
 	endTS       time.Time
 	comment     string
+	title       string
+	desc        string
 }
 
 func (t task) Title() string {
@@ -45,12 +44,7 @@ func (e taskLogEntry) Title() string {
 }
 
 func (e taskLogEntry) Description() string {
-	secsSpent := int(e.endTS.Sub(e.beginTS).Seconds())
-	timeSpentStr := humanizeDuration(secsSpent)
-
-	timeStr := fmt.Sprintf("%s (spent %s)", RightPadTrim(humanize.Time(e.beginTS), 30), timeSpentStr)
-
-	return fmt.Sprintf("%s %s", RightPadTrim("["+e.taskSummary+"]", 60), timeStr)
+	return e.desc
 }
 
 func (e taskLogEntry) FilterValue() string {
