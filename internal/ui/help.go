@@ -18,18 +18,22 @@ var (
 %s
   %s
 %s
+  %s
+%s
 `,
 		helpHeaderStyle.Render("\"hours\" Reference Manual"),
 		helpSectionStyle.Render(`
   (scroll line by line with j/k/arrow keys or by half a page with <c-d>/<c-u>)
 
-  "hours" has a simple to use TUI, indended for those who want to track time on the tasks they
-  care about with minimal keypresses.
+  "hours" is intended for those who want to do some sort of time tracking for their projects,
+  but don't want to use an overly complicated app or website to do so. "hours" has a simple
+  and minimalistic UI; almost everything in it can be achieved with one or two keypresses.
 
-  "hours" has 4 panes:
+  "hours" has 5 panes:
     - Tasks List View                      Shows your tasks
     - Task Management View                 Allows you to create/update tasks
     - Task Log List View                   Shows your task log entries
+    - Inactive Tasks List View             Shows inactive tasks
     - Help View (this one)
 `),
 		helpHeaderStyle.Render("Keyboard Shortcuts"),
@@ -37,6 +41,7 @@ var (
 		helpSectionStyle.Render(`
     1                                       Switch to Tasks List View
     2                                       Switch to Task Log List View
+    3                                       Switch to Inactive Task Log List View
     <tab>                                   Go to next view/form entry
     <shift+tab>                             Go to previous view/form entry
       ?                                     Show help view
@@ -56,11 +61,16 @@ var (
                                                 second "s" keypress
     <ctrl+s>                                Add a manual task log entry
     <ctrl+t>                                Go to currently tracked item
+    <ctrl+d>                                Deactivate task
 `),
 		helpHeaderStyle.Render("Task Log List View"),
 		helpSectionStyle.Render(`
     <ctrl+d>                                Delete task log entry
     <ctrl+r>                                Refresh list
+`),
+		helpHeaderStyle.Render("Inactive Task List View"),
+		helpSectionStyle.Render(`
+    <ctrl+d>                                Activate task
 `),
 		helpHeaderStyle.Render("Task Log Entry View"),
 		helpSectionStyle.Render(`

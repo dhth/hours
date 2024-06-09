@@ -16,6 +16,7 @@ type task struct {
 	title          string
 	desc           string
 	secsSpent      int
+	active         bool
 }
 
 type taskLogEntry struct {
@@ -47,7 +48,7 @@ func (e taskLogEntry) Description() string {
 	secsSpent := int(e.endTS.Sub(e.beginTS).Seconds())
 	timeSpentStr := humanizeDuration(secsSpent)
 
-	timeStr := fmt.Sprintf("began %s (spent %s)", RightPadTrim(humanize.Time(e.beginTS), 20), timeSpentStr)
+	timeStr := fmt.Sprintf("began %s (spent %s)", RightPadTrim(humanize.Time(e.beginTS), 30), timeSpentStr)
 
 	return fmt.Sprintf("%s %s", RightPadTrim("["+e.taskSummary+"]", 60), timeStr)
 }

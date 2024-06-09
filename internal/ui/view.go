@@ -25,7 +25,7 @@ func (m model) View() string {
 	var activeMsg string
 	if m.tasksFetched && m.trackingActive {
 		var taskSummaryMsg string
-		task, ok := m.taskMap[m.activeTaskId]
+		task, ok := m.activeTaskMap[m.activeTaskId]
 		if ok {
 			taskSummaryMsg = fmt.Sprintf("(%s)", Trim(task.summary, 50))
 		}
@@ -36,10 +36,12 @@ func (m model) View() string {
 	}
 
 	switch m.activeView {
-	case taskListView:
-		content = stackListStyle.Render(m.taskList.View())
+	case activeTaskListView:
+		content = taskListStyle.Render(m.activeTasksList.View())
 	case taskLogView:
-		content = stackListStyle.Render(m.taskLogList.View())
+		content = taskListStyle.Render(m.taskLogList.View())
+	case inactiveTaskListView:
+		content = taskListStyle.Render(m.inactiveTasksList.View())
 	case taskInputView:
 		var formTitle string
 		switch m.taskMgmtContext {

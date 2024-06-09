@@ -6,7 +6,8 @@ import (
 
 const (
 	defaultBackgroundColor = "#282828"
-	taskListColor          = "#fe8019"
+	activeTaskListColor    = "#fe8019"
+	inactiveTaskListColor  = "#928374"
 	taskLogListColor       = "#b8bb26"
 	trackingColor          = "#fabd2f"
 	activeTaskolor         = "#8ec07c"
@@ -37,7 +38,7 @@ var (
 			PaddingLeft(1).
 			PaddingBottom(1)
 
-	stackListStyle = baseListStyle
+	taskListStyle = baseListStyle
 
 	toolNameStyle = baseStyle.
 			Align(lipgloss.Center).

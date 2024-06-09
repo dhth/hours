@@ -146,8 +146,8 @@ WHERE active=true;
 func insertTaskInDB(db *sql.DB, summary string) error {
 
 	stmt, err := db.Prepare(`
-INSERT into task (summary, done, created_at, updated_at)
-VALUES (?, false, DATETIME('now'), DATETIME('now'));
+INSERT into task (summary, active, created_at, updated_at)
+VALUES (?, true, DATETIME('now'), DATETIME('now'));
 `)
 	if err != nil {
 		return err
@@ -182,6 +182,26 @@ WHERE id = ?
 	return nil
 }
 
+func updateTaskActiveStatusInDB(db *sql.DB, id int, active bool) error {
+
+	stmt, err := db.Prepare(`
+UPDATE task
+SET active = ?
+WHERE id = ?
+`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(active, id)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func updateTaskDataFromDB(db *sql.DB, t *task) error {
 
 	row := db.QueryRow(`
@@ -200,15 +220,17 @@ WHERE id=?;
 	return nil
 }
 
-func fetchTasksFromDB(db *sql.DB) ([]task, error) {
+func fetchTasksFromDB(db *sql.DB, active bool) ([]task, error) {
 
 	var tasks []task
 
 	rows, err := db.Query(`
-SELECT id, summary, secsSpent, created_at, updated_at
+SELECT id, summary, secsSpent, created_at, updated_at, active
 FROM task
-ORDER by updated_at DESC LIMIT 30;
-    `)
+WHERE active=?
+ORDER by updated_at DESC
+LIMIT 100;
+    `, active)
 	if err != nil {
 		return nil, err
 	}
@@ -221,6 +243,7 @@ ORDER by updated_at DESC LIMIT 30;
 			&entry.secsSpent,
 			&entry.createdAt,
 			&entry.updatedAt,
+			&entry.active,
 		)
 		if err != nil {
 			return nil, err

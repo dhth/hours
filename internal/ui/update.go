@@ -18,8 +18,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if m.taskList.FilterState() == list.Filtering {
-			m.taskList, cmd = m.taskList.Update(msg)
+		if m.activeTasksList.FilterState() == list.Filtering {
+			m.activeTasksList, cmd = m.activeTasksList.Update(msg)
 			cmds = append(cmds, cmd)
 			return m, tea.Batch(cmds...)
 		}
@@ -31,14 +31,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			switch m.activeView {
 			case taskInputView:
-				m.activeView = taskListView
+				m.activeView = activeTaskListView
 				if m.taskInputs[summaryField].Value() != "" {
 					switch m.taskMgmtContext {
 					case taskCreateCxt:
 						cmds = append(cmds, createTask(m.db, m.taskInputs[summaryField].Value()))
 						m.taskInputs[summaryField].SetValue("")
 					case taskUpdateCxt:
-						selectedTask, ok := m.taskList.SelectedItem().(*task)
+						selectedTask, ok := m.activeTasksList.SelectedItem().(*task)
 						if ok {
 							cmds = append(cmds, updateTask(m.db, selectedTask, m.taskInputs[summaryField].Value()))
 							m.taskInputs[summaryField].SetValue("")
@@ -47,7 +47,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, tea.Batch(cmds...)
 				}
 			case askForCommentView:
-				m.activeView = taskListView
+				m.activeView = activeTaskListView
 				if m.trackingInputs[entryComment].Value() != "" {
 					m.activeTLEndTS = time.Now()
 					cmds = append(cmds, toggleTracking(m.db, m.activeTaskId, m.activeTLBeginTS, m.activeTLEndTS, m.trackingInputs[entryComment].Value()))
@@ -79,12 +79,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				for i := range m.trackingInputs {
 					m.trackingInputs[i].SetValue("")
 				}
-				task, ok := m.taskList.SelectedItem().(*task)
+				task, ok := m.activeTasksList.SelectedItem().(*task)
 				if ok {
 					switch m.tasklogSaveType {
 					case tasklogInsert:
 						cmds = append(cmds, insertManualEntry(m.db, task.id, beginTS.Local(), endTS.Local(), comment))
-						m.activeView = taskListView
+						m.activeView = activeTaskListView
 					}
 				}
 				return m, tea.Batch(cmds...)
@@ -92,17 +92,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "esc":
 			switch m.activeView {
 			case taskInputView:
-				m.activeView = taskListView
+				m.activeView = activeTaskListView
 				for i := range m.taskInputs {
 					m.taskInputs[i].SetValue("")
 				}
 			case askForCommentView:
-				m.activeView = taskListView
+				m.activeView = activeTaskListView
 				m.trackingInputs[entryComment].SetValue("")
 			case manualTasklogEntryView:
 				switch m.tasklogSaveType {
 				case tasklogInsert:
-					m.activeView = taskListView
+					m.activeView = activeTaskListView
 				}
 				for i := range m.trackingInputs {
 					m.trackingInputs[i].SetValue("")
@@ -110,11 +110,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "tab":
 			switch m.activeView {
-			case taskListView:
+			case activeTaskListView:
 				m.activeView = taskLogView
-				cmds = append(cmds, fetchTaskLogEntries(m.db))
 			case taskLogView:
-				m.activeView = taskListView
+				m.activeView = inactiveTaskListView
+			case inactiveTaskListView:
+				m.activeView = activeTaskListView
 			case manualTasklogEntryView:
 				switch m.trackingFocussedField {
 				case entryBeginTS:
@@ -132,10 +133,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "shift+tab":
 			switch m.activeView {
 			case taskLogView:
-				m.activeView = taskListView
-			case taskListView:
+				m.activeView = activeTaskListView
+			case activeTaskListView:
+				m.activeView = inactiveTaskListView
+			case inactiveTaskListView:
 				m.activeView = taskLogView
-				cmds = append(cmds, fetchTaskLogEntries(m.db))
 			case manualTasklogEntryView:
 				switch m.trackingFocussedField {
 				case entryBeginTS:
@@ -177,10 +179,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			switch m.activeView {
-			case taskListView:
-				fs := m.taskList.FilterState()
+			case activeTaskListView:
+				fs := m.activeTasksList.FilterState()
 				if fs == list.Filtering || fs == list.FilterApplied {
-					m.taskList.ResetFilter()
+					m.activeTasksList.ResetFilter()
 				} else {
 					return m, tea.Quit
 				}
@@ -192,43 +194,46 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, tea.Quit
 				}
 			case helpView:
-				m.activeView = taskListView
+				m.activeView = activeTaskListView
 			default:
 				return m, tea.Quit
 			}
 		case "1":
-			if m.activeView != taskListView {
-				m.activeView = taskListView
+			if m.activeView != activeTaskListView {
+				m.activeView = activeTaskListView
 			}
 		case "2":
 			if m.activeView != taskLogView {
 				m.activeView = taskLogView
-				cmds = append(cmds, fetchTaskLogEntries(m.db))
+			}
+		case "3":
+			if m.activeView != inactiveTaskListView {
+				m.activeView = inactiveTaskListView
 			}
 		case "ctrl+r":
 			switch m.activeView {
-			case taskListView:
-				cmds = append(cmds, fetchTasks(m.db))
+			case activeTaskListView:
+				cmds = append(cmds, fetchTasks(m.db, true))
 			case taskLogView:
 				cmds = append(cmds, fetchTaskLogEntries(m.db))
 				m.taskLogList.ResetSelected()
 			}
 		case "ctrl+t":
-			if m.activeView == taskListView {
+			if m.activeView == activeTaskListView {
 				if m.trackingActive {
-					if m.taskList.IsFiltered() {
-						m.taskList.ResetFilter()
+					if m.activeTasksList.IsFiltered() {
+						m.activeTasksList.ResetFilter()
 					}
-					activeIndex, ok := m.taskIndexMap[m.activeTaskId]
+					activeIndex, ok := m.activeTaskIndexMap[m.activeTaskId]
 					if ok {
-						m.taskList.Select(activeIndex)
+						m.activeTasksList.Select(activeIndex)
 					}
 				} else {
 					m.message = "Nothing is being tracked right now"
 				}
 			}
 		case "ctrl+s":
-			if m.activeView == taskListView && !m.trackingActive {
+			if m.activeView == activeTaskListView && !m.trackingActive {
 				m.activeView = manualTasklogEntryView
 				m.tasklogSaveType = tasklogInsert
 				m.trackingFocussedField = entryBeginTS
@@ -246,27 +251,48 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "ctrl+d":
 			switch m.activeView {
+			case activeTaskListView:
+				task, ok := m.activeTasksList.SelectedItem().(*task)
+				if ok {
+					if task.trackingActive {
+						m.message = "Cannot deactivate a task being tracked; stop tracking and try again."
+					} else {
+						cmds = append(cmds, updateTaskActiveStatus(m.db, task, false))
+					}
+				} else {
+					msg := "Couldn't select task"
+					m.message = msg
+					m.messages = append(m.messages, msg)
+				}
 			case taskLogView:
 				entry, ok := m.taskLogList.SelectedItem().(taskLogEntry)
 				if ok {
 					cmds = append(cmds, deleteLogEntry(m.db, &entry))
-					return m, tea.Batch(cmds...)
 				} else {
 					msg := "Couldn't delete task log entry"
+					m.message = msg
+					m.messages = append(m.messages, msg)
+				}
+			case inactiveTaskListView:
+				task, ok := m.inactiveTasksList.SelectedItem().(*task)
+				if ok {
+					cmds = append(cmds, updateTaskActiveStatus(m.db, task, true))
+				} else {
+					msg := "Couldn't select task"
 					m.message = msg
 					m.messages = append(m.messages, msg)
 				}
 			}
 		case "s":
 			switch m.activeView {
-			case taskListView:
-				if m.taskList.FilterState() != list.Filtering {
+			case activeTaskListView:
+				if m.activeTasksList.FilterState() != list.Filtering {
 					if m.changesLocked {
 						message := "Changes locked momentarily"
 						m.message = message
 						m.messages = append(m.messages, message)
 					}
-					task, ok := m.taskList.SelectedItem().(*task)
+					task, ok := m.activeTasksList.SelectedItem().(*task)
 					if !ok {
 						message := "Couldn't select a task"
 						m.message = message
@@ -286,8 +312,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "a":
 			switch m.activeView {
-			case taskListView:
-				if m.taskList.FilterState() != list.Filtering {
+			case activeTaskListView:
+				if m.activeTasksList.FilterState() != list.Filtering {
 					if m.changesLocked {
 						message := "Changes locked momentarily"
 						m.message = message
@@ -301,14 +327,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "u":
 			switch m.activeView {
-			case taskListView:
-				if m.taskList.FilterState() != list.Filtering {
+			case activeTaskListView:
+				if m.activeTasksList.FilterState() != list.Filtering {
 					if m.changesLocked {
 						message := "Changes locked momentarily"
 						m.message = message
 						m.messages = append(m.messages, message)
 					}
-					task, ok := m.taskList.SelectedItem().(*task)
+					task, ok := m.activeTasksList.SelectedItem().(*task)
 					if ok {
 						m.activeView = taskInputView
 						m.taskInputFocussedField = summaryField
@@ -326,11 +352,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.WindowSizeMsg:
-		w, h := stackListStyle.GetFrameSize()
+		w, h := taskListStyle.GetFrameSize()
 		m.terminalHeight = msg.Height
-		m.taskList.SetHeight(msg.Height - h - 2)
+
+		m.activeTasksList.SetHeight(msg.Height - h - 2)
+		m.inactiveTasksList.SetHeight(msg.Height - h - 2)
+
 		m.taskLogList.SetHeight(msg.Height - h - 2)
 		m.taskLogList.SetHeight(msg.Height - h - 2)
+
 		if !m.helpVPReady {
 			m.helpVP = viewport.New(w-5, m.terminalHeight-7)
 			m.helpVP.HighPerformanceRendering = useHighPerformanceRenderer
@@ -345,7 +375,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err != nil {
 			m.message = fmt.Sprintf("Error creating task: %s", msg.err)
 		} else {
-			cmds = append(cmds, fetchTasks(m.db))
+			cmds = append(cmds, fetchTasks(m.db, true))
 		}
 	case taskUpdatedMsg:
 		if msg.err != nil {
@@ -360,21 +390,30 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.message = message
 			m.messages = append(m.messages, message)
 		} else {
-			m.taskMap = make(map[int]*task)
-			m.taskIndexMap = make(map[int]int)
-			tasks := make([]list.Item, len(msg.tasks))
-			for i, task := range msg.tasks {
-				task.updateTitle()
-				task.updateDesc()
-				tasks[i] = &task
-				m.taskMap[task.id] = &task
-				m.taskIndexMap[task.id] = i
+			if msg.active {
+				m.activeTaskMap = make(map[int]*task)
+				m.activeTaskIndexMap = make(map[int]int)
+				tasks := make([]list.Item, len(msg.tasks))
+				for i, task := range msg.tasks {
+					task.updateTitle()
+					task.updateDesc()
+					tasks[i] = &task
+					m.activeTaskMap[task.id] = &task
+					m.activeTaskIndexMap[task.id] = i
+				}
+				m.activeTasksList.SetItems(tasks)
+				m.activeTasksList.Title = "Tasks"
+				m.tasksFetched = true
+				cmds = append(cmds, fetchActiveTask(m.db))
+			} else {
+				inactiveTasks := make([]list.Item, len(msg.tasks))
+				for i, inactiveTask := range msg.tasks {
+					inactiveTask.updateTitle()
+					inactiveTask.updateDesc()
+					inactiveTasks[i] = &inactiveTask
+				}
+				m.inactiveTasksList.SetItems(inactiveTasks)
 			}
-			m.taskList.SetItems(tasks)
-			m.taskList.Title = "Tasks"
-			m.tasksFetched = true
-
-			cmds = append(cmds, fetchActiveTask(m.db))
 		}
 	case manualTaskLogInserted:
 		if msg.err != nil {
@@ -385,11 +424,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			for i := range m.trackingInputs {
 				m.trackingInputs[i].SetValue("")
 			}
-			task, ok := m.taskMap[msg.taskId]
+			task, ok := m.activeTaskMap[msg.taskId]
 
 			if ok {
 				cmds = append(cmds, updateTaskRep(m.db, task))
 			}
+			cmds = append(cmds, fetchTaskLogEntries(m.db))
 		}
 	case taskLogEntriesFetchedMsg:
 		if msg.err != nil {
@@ -415,15 +455,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.activeTaskId = msg.activeTaskId
 				m.lastChange = insertChange
 				m.activeTLBeginTS = msg.beginTs
-				activeTask, ok := m.taskMap[m.activeTaskId]
+				activeTask, ok := m.activeTaskMap[m.activeTaskId]
 				if ok {
 					activeTask.trackingActive = true
 					activeTask.updateTitle()
 
 					// go to tracked item on startup
-					activeIndex, ok := m.taskIndexMap[msg.activeTaskId]
+					activeIndex, ok := m.activeTaskIndexMap[msg.activeTaskId]
 					if ok {
-						m.taskList.Select(activeIndex)
+						m.activeTasksList.Select(activeIndex)
 					}
 				}
 				m.trackingActive = true
@@ -438,7 +478,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			m.changesLocked = false
 
-			task, ok := m.taskMap[msg.taskId]
+			task, ok := m.activeTaskMap[msg.taskId]
 
 			if ok {
 				if msg.finished {
@@ -447,6 +487,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.trackingActive = false
 					m.activeTaskId = -1
 					cmds = append(cmds, updateTaskRep(m.db, task))
+					cmds = append(cmds, fetchTaskLogEntries(m.db))
 				} else {
 					m.lastChange = insertChange
 					task.trackingActive = true
@@ -468,22 +509,34 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.message = message
 			m.messages = append(m.messages, message)
 		} else {
-			task, ok := m.taskMap[msg.entry.taskId]
+			task, ok := m.activeTaskMap[msg.entry.taskId]
 			if ok {
 				cmds = append(cmds, updateTaskRep(m.db, task))
 			}
 			cmds = append(cmds, fetchTaskLogEntries(m.db))
+		}
+	case taskActiveStatusUpdated:
+		if msg.err != nil {
+			message := "error updating task's active status: " + msg.err.Error()
+			m.message = message
+			m.messages = append(m.messages, message)
+		} else {
+			cmds = append(cmds, fetchTasks(m.db, true))
+			cmds = append(cmds, fetchTasks(m.db, false))
 		}
 	case HideHelpMsg:
 		m.showHelpIndicator = false
 	}
 
 	switch m.activeView {
-	case taskListView:
-		m.taskList, cmd = m.taskList.Update(msg)
+	case activeTaskListView:
+		m.activeTasksList, cmd = m.activeTasksList.Update(msg)
 		cmds = append(cmds, cmd)
 	case taskLogView:
 		m.taskLogList, cmd = m.taskLogList.Update(msg)
+		cmds = append(cmds, cmd)
+	case inactiveTaskListView:
+		m.inactiveTasksList, cmd = m.inactiveTasksList.Update(msg)
 		cmds = append(cmds, cmd)
 	case helpView:
 		m.helpVP, cmd = m.helpVP.Update(msg)

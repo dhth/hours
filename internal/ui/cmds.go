@@ -123,10 +123,17 @@ func updateTask(db *sql.DB, task *task, summary string) tea.Cmd {
 	}
 }
 
-func fetchTasks(db *sql.DB) tea.Cmd {
+func updateTaskActiveStatus(db *sql.DB, task *task, active bool) tea.Cmd {
 	return func() tea.Msg {
-		tasks, err := fetchTasksFromDB(db)
-		return tasksFetched{tasks, err}
+		err := updateTaskActiveStatusInDB(db, task.id, active)
+		return taskActiveStatusUpdated{task, active, err}
+	}
+}
+
+func fetchTasks(db *sql.DB, active bool) tea.Cmd {
+	return func() tea.Msg {
+		tasks, err := fetchTasksFromDB(db, active)
+		return tasksFetched{tasks, active, err}
 	}
 }
 

@@ -27,8 +27,9 @@ const (
 type stateView uint
 
 const (
-	taskListView stateView = iota
+	activeTaskListView stateView = iota
 	taskLogView
+	inactiveTaskListView
 	askForCommentView
 	manualTasklogEntryView
 	taskInputView
@@ -71,9 +72,10 @@ type model struct {
 	activeView             stateView
 	lastView               stateView
 	db                     *sql.DB
-	taskList               list.Model
-	taskMap                map[int]*task
-	taskIndexMap           map[int]int
+	activeTasksList        list.Model
+	inactiveTasksList      list.Model
+	activeTaskMap          map[int]*task
+	activeTaskIndexMap     map[int]int
 	activeTLBeginTS        time.Time
 	activeTLEndTS          time.Time
 	tasksFetched           bool
@@ -100,6 +102,8 @@ type model struct {
 func (m model) Init() tea.Cmd {
 	return tea.Batch(
 		hideHelp(time.Minute*1),
-		fetchTasks(m.db),
+		fetchTasks(m.db, true),
+		fetchTaskLogEntries(m.db),
+		fetchTasks(m.db, false),
 	)
 }

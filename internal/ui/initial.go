@@ -9,7 +9,8 @@ import (
 )
 
 func InitialModel(db *sql.DB) model {
-	var stackItems []list.Item
+	var activeTaskItems []list.Item
+	var inactiveTaskItems []list.Item
 	var tasklogListItems []list.Item
 
 	trackingInputs := make([]textinput.Model, 3)
@@ -39,20 +40,21 @@ func InitialModel(db *sql.DB) model {
 	taskInputs[entryBeginTS].Width = 60
 
 	m := model{
-		db:                db,
-		taskList:          list.New(stackItems, newItemDelegate(lipgloss.Color(taskListColor)), listWidth, 0),
-		taskMap:           make(map[int]*task),
-		taskIndexMap:      make(map[int]int),
-		taskLogList:       list.New(tasklogListItems, newItemDelegate(lipgloss.Color(taskLogListColor)), listWidth, 0),
-		showHelpIndicator: true,
-		trackingInputs:    trackingInputs,
-		taskInputs:        taskInputs,
+		db:                 db,
+		activeTasksList:    list.New(activeTaskItems, newItemDelegate(lipgloss.Color(activeTaskListColor)), listWidth, 0),
+		inactiveTasksList:  list.New(inactiveTaskItems, newItemDelegate(lipgloss.Color(inactiveTaskListColor)), listWidth, 0),
+		activeTaskMap:      make(map[int]*task),
+		activeTaskIndexMap: make(map[int]int),
+		taskLogList:        list.New(tasklogListItems, newItemDelegate(lipgloss.Color(taskLogListColor)), listWidth, 0),
+		showHelpIndicator:  true,
+		trackingInputs:     trackingInputs,
+		taskInputs:         taskInputs,
 	}
-	m.taskList.Title = "Tasks"
-	m.taskList.SetStatusBarItemName("task", "tasks")
-	m.taskList.DisableQuitKeybindings()
-	m.taskList.SetShowHelp(false)
-	m.taskList.Styles.Title = m.taskList.Styles.Title.Foreground(lipgloss.Color(defaultBackgroundColor)).Background(lipgloss.Color(taskListColor)).Bold(true)
+	m.activeTasksList.Title = "Tasks"
+	m.activeTasksList.SetStatusBarItemName("task", "tasks")
+	m.activeTasksList.DisableQuitKeybindings()
+	m.activeTasksList.SetShowHelp(false)
+	m.activeTasksList.Styles.Title = m.activeTasksList.Styles.Title.Foreground(lipgloss.Color(defaultBackgroundColor)).Background(lipgloss.Color(activeTaskListColor)).Bold(true)
 
 	m.taskLogList.Title = "Task Log"
 	m.taskLogList.SetStatusBarItemName("entry", "entries")
@@ -60,6 +62,12 @@ func InitialModel(db *sql.DB) model {
 	m.taskLogList.DisableQuitKeybindings()
 	m.taskLogList.SetShowHelp(false)
 	m.taskLogList.Styles.Title = m.taskLogList.Styles.Title.Foreground(lipgloss.Color(defaultBackgroundColor)).Background(lipgloss.Color(taskLogListColor)).Bold(true)
+
+	m.inactiveTasksList.Title = "Inactive Tasks"
+	m.inactiveTasksList.SetStatusBarItemName("task", "tasks")
+	m.inactiveTasksList.DisableQuitKeybindings()
+	m.inactiveTasksList.SetShowHelp(false)
+	m.inactiveTasksList.Styles.Title = m.inactiveTasksList.Styles.Title.Foreground(lipgloss.Color(defaultBackgroundColor)).Background(lipgloss.Color(inactiveTaskListColor)).Bold(true)
 
 	return m
 }

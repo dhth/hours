@@ -43,12 +43,19 @@ type taskUpdatedMsg struct {
 	err     error
 }
 
+type taskActiveStatusUpdated struct {
+	tsk    *task
+	active bool
+	err    error
+}
+
 type taskLogEntryDeletedMsg struct {
 	entry *taskLogEntry
 	err   error
 }
 
 type tasksFetched struct {
-	tasks []task
-	err   error
+	tasks  []task
+	active bool
+	err    error
 }
