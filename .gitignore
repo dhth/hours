@@ -1,0 +1,7 @@
+dist
+cosign.key
+cosign.pub
+hours
+debug.log
+.quickrun
+justfile
