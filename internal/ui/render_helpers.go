@@ -19,7 +19,7 @@ func (t *task) updateDesc() {
 	var timeSpent string
 
 	if t.secsSpent != 0 {
-		timeSpent = "time spent: " + humanizeDuration(t.secsSpent)
+		timeSpent = "worked on for " + humanizeDuration(t.secsSpent)
 	} else {
 		timeSpent = "no time spent"
 	}

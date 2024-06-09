@@ -46,7 +46,7 @@ LIMIT 1
 
 		default:
 			secsSpent := int(endTs.Sub(beginTs).Seconds())
-			err := updateActiveTLInDB(db, activeTaskLogId, activeTaskId, endTs, secsSpent, comment)
+			err := updateActiveTLInDB(db, activeTaskLogId, activeTaskId, beginTs, endTs, secsSpent, comment)
 			if err != nil {
 				return trackingToggledMsg{err: err}
 			} else {

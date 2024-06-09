@@ -18,10 +18,7 @@ func (m model) View() string {
 	if m.message != "" {
 		statusBar = Trim(m.message, 120)
 	}
-	var errorMsg string
-	if m.errorMessage != "" {
-		errorMsg = "error: " + Trim(m.errorMessage, 120)
-	}
+
 	var activeMsg string
 	if m.tasksFetched && m.trackingActive {
 		var taskSummaryMsg string
@@ -67,8 +64,20 @@ func (m model) View() string {
 			content += "\n"
 		}
 	case askForCommentView:
+		formHeadingText := "Saving task entry. Enter the following details:"
+
 		content = fmt.Sprintf(
 			`
+    %s
+
+    %s
+
+    %s
+
+    %s
+
+    %s
+
     %s
 
     %s
@@ -76,11 +85,16 @@ func (m model) View() string {
 
     %s
 `,
+			formContextStyle.Render(formHeadingText),
+			formFieldNameStyle.Render("Begin Time  (format: 2006/01/02 15:04)"),
+			m.trackingInputs[entryBeginTS].View(),
+			formFieldNameStyle.Render("End Time  (format: 2006/01/02 15:04)"),
+			m.trackingInputs[entryEndTS].View(),
 			formFieldNameStyle.Render(RightPadTrim("Comment:", 16)),
 			m.trackingInputs[entryComment].View(),
 			formContextStyle.Render("Press enter to submit"),
 		)
-		for i := 0; i < m.terminalHeight-20+10; i++ {
+		for i := 0; i < m.terminalHeight-20; i++ {
 			content += "\n"
 		}
 	case manualTasklogEntryView:
@@ -140,11 +154,10 @@ func (m model) View() string {
 		helpMsg = " " + helpMsgStyle.Render("Press ? for help")
 	}
 
-	footerStr := fmt.Sprintf("%s%s%s%s",
+	footerStr := fmt.Sprintf("%s%s%s",
 		toolNameStyle.Render("hours"),
 		helpMsg,
 		activeMsg,
-		errorMsg,
 	)
 	footer = footerStyle.Render(footerStr)
 

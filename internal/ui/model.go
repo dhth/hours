@@ -92,7 +92,6 @@ type model struct {
 	activeTaskId           int
 	tasklogSaveType        tasklogSaveType
 	message                string
-	errorMessage           string
 	messages               []string
 	showHelpIndicator      bool
 	terminalHeight         int

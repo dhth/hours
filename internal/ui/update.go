@@ -14,7 +14,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	m.message = ""
-	m.errorMessage = ""
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -47,33 +46,57 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, tea.Batch(cmds...)
 				}
 			case askForCommentView:
-				m.activeView = activeTaskListView
-				if m.trackingInputs[entryComment].Value() != "" {
-					m.activeTLEndTS = time.Now()
-					cmds = append(cmds, toggleTracking(m.db, m.activeTaskId, m.activeTLBeginTS, m.activeTLEndTS, m.trackingInputs[entryComment].Value()))
-					m.trackingInputs[entryComment].SetValue("")
+				beginTS, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[entryBeginTS].Value(), time.Local)
+				if err != nil {
+					m.message = err.Error()
 					return m, tea.Batch(cmds...)
 				}
+				m.activeTLBeginTS = beginTS
+
+				endTS, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[entryEndTS].Value(), time.Local)
+
+				if err != nil {
+					m.message = err.Error()
+					return m, tea.Batch(cmds...)
+				}
+				m.activeTLEndTS = endTS
+
+				if m.trackingInputs[entryComment].Value() == "" {
+					m.message = "Comment cannot be empty"
+					return m, tea.Batch(cmds...)
+				}
+
+				if m.activeTLEndTS.Sub(m.activeTLBeginTS).Seconds() <= 0 {
+					m.message = "time spent is zero"
+					return m, tea.Batch(cmds...)
+				}
+
+				cmds = append(cmds, toggleTracking(m.db, m.activeTaskId, m.activeTLBeginTS, m.activeTLEndTS, m.trackingInputs[entryComment].Value()))
+				for i := range m.trackingInputs {
+					m.trackingInputs[i].SetValue("")
+				}
+				m.activeView = activeTaskListView
+				return m, tea.Batch(cmds...)
+
 			case manualTasklogEntryView:
 				beginTS, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[entryBeginTS].Value(), time.Local)
 				if err != nil {
-					m.errorMessage = err.Error()
+					m.message = err.Error()
 					return m, tea.Batch(cmds...)
 				}
 
 				endTS, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[entryEndTS].Value(), time.Local)
 
 				if err != nil {
-					m.errorMessage = err.Error()
+					m.message = err.Error()
 					return m, tea.Batch(cmds...)
 				}
 
 				comment := m.trackingInputs[entryComment].Value()
 
 				if len(comment) == 0 {
-					m.errorMessage = "Comment cannot be empty"
+					m.message = "Comment cannot be empty"
 					return m, tea.Batch(cmds...)
-
 				}
 
 				for i := range m.trackingInputs {
@@ -116,7 +139,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.activeView = inactiveTaskListView
 			case inactiveTaskListView:
 				m.activeView = activeTaskListView
-			case manualTasklogEntryView:
+			case askForCommentView, manualTasklogEntryView:
 				switch m.trackingFocussedField {
 				case entryBeginTS:
 					m.trackingFocussedField = entryEndTS
@@ -138,7 +161,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.activeView = inactiveTaskListView
 			case inactiveTaskListView:
 				m.activeView = taskLogView
-			case manualTasklogEntryView:
+			case askForCommentView, manualTasklogEntryView:
 				switch m.trackingFocussedField {
 				case entryBeginTS:
 					m.trackingFocussedField = entryComment
@@ -163,14 +186,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, tea.Batch(cmds...)
 	case askForCommentView:
-		m.trackingInputs[entryComment], cmd = m.trackingInputs[entryComment].Update(msg)
-		cmds = append(cmds, cmd)
+		for i := range m.trackingInputs {
+			m.trackingInputs[i], cmd = m.trackingInputs[i].Update(msg)
+			cmds = append(cmds, cmd)
+		}
 		return m, tea.Batch(cmds...)
 	case manualTasklogEntryView:
 		for i := range m.trackingInputs {
 			m.trackingInputs[i], cmd = m.trackingInputs[i].Update(msg)
+			cmds = append(cmds, cmd)
 		}
-		cmds = append(cmds, cmd)
 		return m, tea.Batch(cmds...)
 	}
 
@@ -304,7 +329,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							cmds = append(cmds, toggleTracking(m.db, task.id, m.activeTLBeginTS, m.activeTLEndTS, ""))
 						} else if m.lastChange == insertChange {
 							m.activeView = askForCommentView
+							m.activeTLEndTS = time.Now()
+
+							beginTimeStr := m.activeTLBeginTS.Format(timeFormat)
+							currentTimeStr := m.activeTLEndTS.Format(timeFormat)
+
+							m.trackingInputs[entryBeginTS].SetValue(beginTimeStr)
+							m.trackingInputs[entryEndTS].SetValue(currentTimeStr)
 							m.trackingFocussedField = entryComment
+
+							for i := range m.trackingInputs {
+								m.trackingInputs[i].Blur()
+							}
 							m.trackingInputs[m.trackingFocussedField].Focus()
 						}
 					}

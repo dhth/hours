@@ -26,7 +26,7 @@ func insertNewTLInDB(db *sql.DB, taskId int, beginTs time.Time) error {
 	return nil
 }
 
-func updateActiveTLInDB(db *sql.DB, taskLogId int, taskId int, endTs time.Time, secsSpent int, comment string) error {
+func updateActiveTLInDB(db *sql.DB, taskLogId int, taskId int, beginTs, endTs time.Time, secsSpent int, comment string) error {
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -37,6 +37,7 @@ func updateActiveTLInDB(db *sql.DB, taskLogId int, taskId int, endTs time.Time, 
 	stmt, err := tx.Prepare(`
 UPDATE task_log
 SET active = 0,
+    begin_ts = ?,
     end_ts = ?,
     comment = ?
 WHERE id = ?
@@ -47,7 +48,7 @@ AND active = 1;
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(endTs, comment, taskLogId)
+	_, err = stmt.Exec(beginTs, endTs, comment, taskLogId)
 	if err != nil {
 		return err
 	}
