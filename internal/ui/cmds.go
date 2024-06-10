@@ -65,17 +65,20 @@ func insertManualEntry(db *sql.DB, taskId int, beginTS time.Time, endTS time.Tim
 
 func fetchActiveTask(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
-		id, beginTs, err := fetchActiveTaskFromDB(db)
+		activeTaskDetails, err := fetchActiveTaskFromDB(db)
 
 		if err != nil {
 			return activeTaskFetchedMsg{err: err}
 		}
 
-		if id == -1 {
+		if activeTaskDetails.taskId == -1 {
 			return activeTaskFetchedMsg{noneActive: true}
 		}
 
-		return activeTaskFetchedMsg{activeTaskId: id, beginTs: beginTs}
+		return activeTaskFetchedMsg{
+			activeTaskId: activeTaskDetails.taskId,
+			beginTs:      activeTaskDetails.lastLogEntryBeginTS,
+		}
 	}
 }
 
@@ -91,7 +94,7 @@ func updateTaskRep(db *sql.DB, t *task) tea.Cmd {
 
 func fetchTaskLogEntries(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
-		entries, err := fetchTLEntriesFromDB(db)
+		entries, err := fetchTLEntriesFromDB(db, 50)
 		return taskLogEntriesFetchedMsg{
 			entries: entries,
 			err:     err,

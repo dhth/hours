@@ -25,9 +25,22 @@ func Execute() {
 	dbPath := flag.String("db-path", defaultDBPath, "location where hours should create its DB file")
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stdout, "Track time on your tasks.\n\nFlags:\n")
+		fmt.Fprintf(os.Stdout, `Track time on your tasks via a simple TUI.
+
+Usage:
+  hours [flags] [command]
+
+Flags:
+`)
 		flag.CommandLine.SetOutput(os.Stdout)
 		flag.PrintDefaults()
+		fmt.Fprintf(os.Stdout, `
+Commands:
+  report
+        outputs a report of recently added log entries
+  active
+        shows the task currently being tracked
+`)
 	}
 	flag.Parse()
 
@@ -43,6 +56,16 @@ func Execute() {
 		os.Exit(1)
 	}
 
-	ui.RenderUI(db)
+	args := os.Args[1:]
+	out := os.Stdout
 
+	if len(args) > 0 {
+		if args[0] == "report" {
+			ui.RenderTaskLogReport(db, out)
+		} else if args[0] == "active" {
+			ui.ShowActiveTask(db, out)
+		}
+	} else {
+		ui.RenderUI(db)
+	}
 }

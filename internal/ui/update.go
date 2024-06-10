@@ -216,7 +216,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if fs == list.Filtering || fs == list.FilterApplied {
 					m.taskLogList.ResetFilter()
 				} else {
-					return m, tea.Quit
+					m.activeView = activeTaskListView
+				}
+			case inactiveTaskListView:
+				fs := m.inactiveTasksList.FilterState()
+				if fs == list.Filtering || fs == list.FilterApplied {
+					m.inactiveTasksList.ResetFilter()
+				} else {
+					m.activeView = activeTaskListView
 				}
 			case helpView:
 				m.activeView = activeTaskListView
@@ -242,6 +249,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case taskLogView:
 				cmds = append(cmds, fetchTaskLogEntries(m.db))
 				m.taskLogList.ResetSelected()
+			case inactiveTaskListView:
+				cmds = append(cmds, fetchTasks(m.db, false))
+				m.inactiveTasksList.ResetSelected()
 			}
 		case "ctrl+t":
 			if m.activeView == activeTaskListView {

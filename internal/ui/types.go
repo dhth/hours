@@ -27,6 +27,12 @@ type taskLogEntry struct {
 	desc        string
 }
 
+type activeTaskDetails struct {
+	taskId              int
+	taskSummary         string
+	lastLogEntryBeginTS time.Time
+}
+
 func (t task) Title() string {
 	return t.title
 }

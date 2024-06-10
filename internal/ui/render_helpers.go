@@ -32,5 +32,7 @@ func (tl *taskLogEntry) updateDesc() {
 	secsSpent := int(tl.endTS.Sub(tl.beginTS).Seconds())
 	timeSpentStr := humanizeDuration(secsSpent)
 
-	tl.desc = fmt.Sprintf("%s (spent %s)", RightPadTrim(humanize.Time(tl.beginTS), 60), timeSpentStr)
+	timeStr := fmt.Sprintf("%s (spent %s)", RightPadTrim(humanize.Time(tl.beginTS), 30), timeSpentStr)
+
+	tl.desc = fmt.Sprintf("%s %s", RightPadTrim("["+tl.taskSummary+"]", 60), timeStr)
 }

@@ -25,10 +25,6 @@ var (
 		helpSectionStyle.Render(`
   (scroll line by line with j/k/arrow keys or by half a page with <c-d>/<c-u>)
 
-  "hours" is intended for those who want to do some sort of time tracking for their projects,
-  but don't want to use an overly complicated app or website to do so. "hours" has a simple
-  and minimalistic UI; almost everything in it can be achieved with one or two keypresses.
-
   "hours" has 5 panes:
     - Tasks List View                      Shows your tasks
     - Task Management View                 Allows you to create/update tasks
