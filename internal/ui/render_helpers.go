@@ -25,14 +25,14 @@ func (t *task) updateDesc() {
 	}
 	lastUpdated := fmt.Sprintf("last updated: %s", humanize.Time(t.updatedAt))
 
-	t.desc = fmt.Sprintf("%s %s", RightPadTrim(lastUpdated, 60), timeSpent)
+	t.desc = fmt.Sprintf("%s %s", RightPadTrim(lastUpdated, 60, true), timeSpent)
 }
 
 func (tl *taskLogEntry) updateDesc() {
 	secsSpent := int(tl.endTS.Sub(tl.beginTS).Seconds())
 	timeSpentStr := humanizeDuration(secsSpent)
 
-	timeStr := fmt.Sprintf("%s (spent %s)", RightPadTrim(humanize.Time(tl.beginTS), 30), timeSpentStr)
+	timeStr := fmt.Sprintf("%s (spent %s)", RightPadTrim(humanize.Time(tl.beginTS), 30, true), timeSpentStr)
 
-	tl.desc = fmt.Sprintf("%s %s", RightPadTrim("["+tl.taskSummary+"]", 60), timeStr)
+	tl.desc = fmt.Sprintf("%s %s", RightPadTrim("["+tl.taskSummary+"]", 60, true), timeStr)
 }

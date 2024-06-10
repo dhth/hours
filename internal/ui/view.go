@@ -90,7 +90,7 @@ func (m model) View() string {
 			m.trackingInputs[entryBeginTS].View(),
 			formFieldNameStyle.Render("End Time  (format: 2006/01/02 15:04)"),
 			m.trackingInputs[entryEndTS].View(),
-			formFieldNameStyle.Render(RightPadTrim("Comment:", 16)),
+			formFieldNameStyle.Render(RightPadTrim("Comment:", 16, true)),
 			m.trackingInputs[entryComment].View(),
 			formContextStyle.Render("Press enter to submit"),
 		)
@@ -130,7 +130,7 @@ func (m model) View() string {
 			m.trackingInputs[entryBeginTS].View(),
 			formFieldNameStyle.Render("End Time  (format: 2006/01/02 15:04)"),
 			m.trackingInputs[entryEndTS].View(),
-			formFieldNameStyle.Render(RightPadTrim("Comment:", 16)),
+			formFieldNameStyle.Render(RightPadTrim("Comment:", 16, true)),
 			m.trackingInputs[entryComment].View(),
 			formContextStyle.Render("Press enter to submit"),
 		)

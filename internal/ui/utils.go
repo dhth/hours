@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-func RightPadTrim(s string, length int) string {
+func RightPadTrim(s string, length int, dots bool) string {
 	if len(s) >= length {
-		if length > 3 {
+		if dots && length > 3 {
 			return s[:length-3] + "..."
 		}
 		return s[:length]
@@ -30,39 +30,19 @@ func Trim(s string, length int) string {
 func humanizeDuration(durationInSecs int) string {
 	duration := time.Duration(durationInSecs) * time.Second
 
-	dSecs := duration.Seconds()
-	dMins := duration.Minutes()
-	dHours := duration.Hours()
-
-	if dSecs < 60 {
-		if dSecs == 1 {
-			return "1 second"
-		}
-		return fmt.Sprintf("%d seconds", int(duration.Seconds()))
+	if duration.Seconds() < 60 {
+		return fmt.Sprintf("%ds", int(duration.Seconds()))
 	}
 
 	if duration.Minutes() < 60 {
-		if dMins == 1 {
-			return "1 minute"
-		}
-		return fmt.Sprintf("%d minutes", int(duration.Minutes()))
+		return fmt.Sprintf("%dm", int(duration.Minutes()))
 	}
 
 	modMins := int(math.Mod(duration.Minutes(), 60))
 
-	hourStr := "hours"
-	modMinsStr := "minutes"
-
-	if dHours == 1 {
-		hourStr = "hour"
-	}
-	if modMins == 1 {
-		modMinsStr = "minute"
-	}
-
 	if modMins == 0 {
-		return fmt.Sprintf("%d %s", int(duration.Hours()), hourStr)
+		return fmt.Sprintf("%dh", int(duration.Hours()))
 	}
 
-	return fmt.Sprintf("%d %s %d %s", int(duration.Hours()), hourStr, modMins, modMinsStr)
+	return fmt.Sprintf("%dh %dm", int(duration.Hours()), modMins)
 }

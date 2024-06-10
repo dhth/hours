@@ -293,6 +293,40 @@ ORDER by tl.begin_ts DESC LIMIT ?;
 	return logEntries, nil
 }
 
+func fetchTLEntriesFromDBAfterTS(db *sql.DB, beginTs time.Time, limit int) ([]taskLogEntry, error) {
+
+	var logEntries []taskLogEntry
+
+	rows, err := db.Query(`
+SELECT tl.id, tl.task_id, t.summary, tl.begin_ts, tl.end_ts, tl.comment
+FROM task_log tl left join task t on tl.task_id=t.id
+WHERE tl.active=false
+AND begin_ts >= ?
+ORDER by tl.begin_ts ASC LIMIT ?;
+    `, beginTs, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var entry taskLogEntry
+		err = rows.Scan(&entry.id,
+			&entry.taskId,
+			&entry.taskSummary,
+			&entry.beginTS,
+			&entry.endTS,
+			&entry.comment,
+		)
+		if err != nil {
+			return nil, err
+		}
+		logEntries = append(logEntries, entry)
+
+	}
+	return logEntries, nil
+}
+
 func deleteEntry(db *sql.DB, entry *taskLogEntry) error {
 	secsSpent := int(entry.endTS.Sub(entry.beginTS).Seconds())
 

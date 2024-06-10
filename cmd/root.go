@@ -36,6 +36,8 @@ Flags:
 		flag.PrintDefaults()
 		fmt.Fprintf(os.Stdout, `
 Commands:
+  weekreport
+        outputs a report of log entries from the last 7 days
   report
         outputs a report of time spent on tasks
   logreport
@@ -64,6 +66,8 @@ Commands:
 	if len(args) > 0 {
 		if args[0] == "report" {
 			ui.RenderTaskReport(db, out)
+		} else if args[0] == "weekreport" {
+			ui.RenderWeeklyReport(db, out)
 		} else if args[0] == "logreport" {
 			ui.RenderTaskLogReport(db, out)
 		} else if args[0] == "active" {

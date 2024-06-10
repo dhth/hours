@@ -51,7 +51,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.message = err.Error()
 					return m, tea.Batch(cmds...)
 				}
-				m.activeTLBeginTS = beginTS.Local()
+				m.activeTLBeginTS = beginTS
 
 				endTS, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[entryEndTS].Value(), time.Local)
 
@@ -59,7 +59,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.message = err.Error()
 					return m, tea.Batch(cmds...)
 				}
-				m.activeTLEndTS = endTS.Local()
+				m.activeTLEndTS = endTS
 
 				if m.trackingInputs[entryComment].Value() == "" {
 					m.message = "Comment cannot be empty"
@@ -85,7 +85,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.message = err.Error()
 					return m, tea.Batch(cmds...)
 				}
-				beginTS = beginTS.Local()
 
 				endTS, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[entryEndTS].Value(), time.Local)
 
@@ -93,7 +92,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.message = err.Error()
 					return m, tea.Batch(cmds...)
 				}
-				endTS = endTS.Local()
 
 				comment := m.trackingInputs[entryComment].Value()
 
