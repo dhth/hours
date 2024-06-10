@@ -23,7 +23,6 @@ type taskLogEntry struct {
 	beginTS     time.Time
 	endTS       time.Time
 	comment     string
-	title       string
 	desc        string
 }
 

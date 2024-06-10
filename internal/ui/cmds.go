@@ -135,7 +135,7 @@ func updateTaskActiveStatus(db *sql.DB, task *task, active bool) tea.Cmd {
 
 func fetchTasks(db *sql.DB, active bool) tea.Cmd {
 	return func() tea.Msg {
-		tasks, err := fetchTasksFromDB(db, active)
+		tasks, err := fetchTasksFromDB(db, active, 50)
 		return tasksFetched{tasks, active, err}
 	}
 }

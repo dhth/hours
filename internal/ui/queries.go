@@ -55,7 +55,8 @@ AND active = 1;
 
 	tStmt, err := tx.Prepare(`
 UPDATE task
-SET secsSpent = secsSpent+?
+SET secsSpent = secsSpent+?,
+    updated_at = ?
 WHERE id = ?;
     `)
 	if err != nil {
@@ -63,7 +64,7 @@ WHERE id = ?;
 	}
 	defer tStmt.Close()
 
-	_, err = tStmt.Exec(secsSpent, taskId)
+	_, err = tStmt.Exec(secsSpent, time.Now().Local(), taskId)
 	if err != nil {
 		return err
 	}
@@ -101,7 +102,8 @@ VALUES (?, ?, ?, ?, ?);
 
 	tStmt, err := tx.Prepare(`
 UPDATE task
-SET secsSpent = secsSpent+?
+SET secsSpent = secsSpent+?,
+    updated_at = ?
 WHERE id = ?;
     `)
 	if err != nil {
@@ -109,7 +111,7 @@ WHERE id = ?;
 	}
 	defer tStmt.Close()
 
-	_, err = tStmt.Exec(secsSpent, taskId)
+	_, err = tStmt.Exec(secsSpent, time.Now().Local(), taskId)
 	if err != nil {
 		return err
 	}
@@ -168,7 +170,8 @@ func updateTaskInDB(db *sql.DB, id int, summary string) error {
 
 	stmt, err := db.Prepare(`
 UPDATE task
-SET summary = ?
+SET summary = ?,
+    updated_at = ?
 WHERE id = ?
 `)
 	if err != nil {
@@ -176,7 +179,7 @@ WHERE id = ?
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(summary, id)
+	_, err = stmt.Exec(summary, time.Now().Local(), id)
 
 	if err != nil {
 		return err
@@ -188,7 +191,8 @@ func updateTaskActiveStatusInDB(db *sql.DB, id int, active bool) error {
 
 	stmt, err := db.Prepare(`
 UPDATE task
-SET active = ?
+SET active = ?,
+    updated_at = ?
 WHERE id = ?
 `)
 	if err != nil {
@@ -196,7 +200,7 @@ WHERE id = ?
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(active, id)
+	_, err = stmt.Exec(active, time.Now().Local(), id)
 
 	if err != nil {
 		return err
@@ -222,7 +226,7 @@ WHERE id=?;
 	return nil
 }
 
-func fetchTasksFromDB(db *sql.DB, active bool) ([]task, error) {
+func fetchTasksFromDB(db *sql.DB, active bool, limit int) ([]task, error) {
 
 	var tasks []task
 
@@ -231,8 +235,8 @@ SELECT id, summary, secsSpent, created_at, updated_at, active
 FROM task
 WHERE active=?
 ORDER by updated_at DESC
-LIMIT 100;
-    `, active)
+LIMIT ?;
+    `, active, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -314,7 +318,8 @@ WHERE ID=?;
 
 	tStmt, err := tx.Prepare(`
 UPDATE task
-SET secsSpent = secsSpent-?
+SET secsSpent = secsSpent-?,
+    updated_at = ?
 WHERE id = ?;
     `)
 	if err != nil {
@@ -322,7 +327,7 @@ WHERE id = ?;
 	}
 	defer tStmt.Close()
 
-	_, err = tStmt.Exec(secsSpent, entry.taskId)
+	_, err = tStmt.Exec(secsSpent, time.Now().Local(), entry.taskId)
 	if err != nil {
 		return err
 	}

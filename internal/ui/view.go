@@ -34,11 +34,11 @@ func (m model) View() string {
 
 	switch m.activeView {
 	case activeTaskListView:
-		content = taskListStyle.Render(m.activeTasksList.View())
+		content = listStyle.Render(m.activeTasksList.View())
 	case taskLogView:
-		content = taskListStyle.Render(m.taskLogList.View())
+		content = listStyle.Render(m.taskLogList.View())
 	case inactiveTaskListView:
-		content = taskListStyle.Render(m.inactiveTasksList.View())
+		content = listStyle.Render(m.inactiveTasksList.View())
 	case taskInputView:
 		var formTitle string
 		switch m.taskMgmtContext {

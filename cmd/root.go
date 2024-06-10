@@ -37,6 +37,8 @@ Flags:
 		fmt.Fprintf(os.Stdout, `
 Commands:
   report
+        outputs a report of time spent on tasks
+  logreport
         outputs a report of recently added log entries
   active
         shows the task currently being tracked
@@ -61,6 +63,8 @@ Commands:
 
 	if len(args) > 0 {
 		if args[0] == "report" {
+			ui.RenderTaskReport(db, out)
+		} else if args[0] == "logreport" {
 			ui.RenderTaskLogReport(db, out)
 		} else if args[0] == "active" {
 			ui.ShowActiveTask(db, out)

@@ -38,7 +38,7 @@ var (
 			PaddingLeft(1).
 			PaddingBottom(1)
 
-	taskListStyle = baseListStyle
+	listStyle = baseListStyle
 
 	toolNameStyle = baseStyle.
 			Align(lipgloss.Center).

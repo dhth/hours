@@ -3,12 +3,12 @@
 ✨ Overview
 ---
 
-"hours" is a CLI app that allows you to track time on tasks you care about.
+`hours` is a CLI app that allows you to track time on tasks you care about.
 
-"hours" is intended for users who want to do some sort of time tracking for
+It is intended for users who want to do some sort of time tracking for
 their projects, but don't want to use an overly complicated app or website to do
-so. It has a simple and minimalistic UI; almost everything in it can be achieved
-with one or two keypresses.
+so. It has a simple and minimalistic UI; almost everything in `hours` can be
+achieved with one or two keypresses.
 
 💾 Install
 ---
@@ -32,6 +32,8 @@ Flags:
 
 Commands:
   report
+        outputs a report of time spent on tasks
+  logreport
         outputs a report of recently added log entries
   active
         shows the task currently being tracked

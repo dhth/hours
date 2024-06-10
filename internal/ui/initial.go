@@ -30,7 +30,7 @@ func InitialModel(db *sql.DB) model {
 	trackingInputs[entryComment].Placeholder = "Your comment goes here"
 	trackingInputs[entryComment].Focus()
 	trackingInputs[entryComment].CharLimit = 255
-	trackingInputs[entryComment].Width = 60
+	trackingInputs[entryComment].Width = 80
 
 	taskInputs := make([]textinput.Model, 3)
 	taskInputs[summaryField] = textinput.New()

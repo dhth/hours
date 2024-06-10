@@ -51,7 +51,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.message = err.Error()
 					return m, tea.Batch(cmds...)
 				}
-				m.activeTLBeginTS = beginTS
+				m.activeTLBeginTS = beginTS.Local()
 
 				endTS, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[entryEndTS].Value(), time.Local)
 
@@ -59,7 +59,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.message = err.Error()
 					return m, tea.Batch(cmds...)
 				}
-				m.activeTLEndTS = endTS
+				m.activeTLEndTS = endTS.Local()
 
 				if m.trackingInputs[entryComment].Value() == "" {
 					m.message = "Comment cannot be empty"
@@ -72,10 +72,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 
 				cmds = append(cmds, toggleTracking(m.db, m.activeTaskId, m.activeTLBeginTS, m.activeTLEndTS, m.trackingInputs[entryComment].Value()))
+				m.activeView = activeTaskListView
+
 				for i := range m.trackingInputs {
 					m.trackingInputs[i].SetValue("")
 				}
-				m.activeView = activeTaskListView
 				return m, tea.Batch(cmds...)
 
 			case manualTasklogEntryView:
@@ -84,6 +85,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.message = err.Error()
 					return m, tea.Batch(cmds...)
 				}
+				beginTS = beginTS.Local()
 
 				endTS, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[entryEndTS].Value(), time.Local)
 
@@ -91,6 +93,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.message = err.Error()
 					return m, tea.Batch(cmds...)
 				}
+				endTS = endTS.Local()
 
 				comment := m.trackingInputs[entryComment].Value()
 
@@ -99,16 +102,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, tea.Batch(cmds...)
 				}
 
-				for i := range m.trackingInputs {
-					m.trackingInputs[i].SetValue("")
-				}
 				task, ok := m.activeTasksList.SelectedItem().(*task)
 				if ok {
 					switch m.tasklogSaveType {
 					case tasklogInsert:
-						cmds = append(cmds, insertManualEntry(m.db, task.id, beginTS.Local(), endTS.Local(), comment))
+						cmds = append(cmds, insertManualEntry(m.db, task.id, beginTS, endTS, comment))
 						m.activeView = activeTaskListView
 					}
+				}
+				for i := range m.trackingInputs {
+					m.trackingInputs[i].SetValue("")
 				}
 				return m, tea.Batch(cmds...)
 			}
@@ -272,7 +275,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.activeView = manualTasklogEntryView
 				m.tasklogSaveType = tasklogInsert
 				m.trackingFocussedField = entryBeginTS
-				currentTime := time.Now()
+				currentTime := time.Now().Local()
 				dateString := currentTime.Format("2006/01/02")
 				currentTimeStr := currentTime.Format(timeFormat)
 
@@ -335,11 +338,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					} else {
 						if m.lastChange == updateChange {
 							m.changesLocked = true
-							m.activeTLBeginTS = time.Now()
+							m.activeTLBeginTS = time.Now().Local()
 							cmds = append(cmds, toggleTracking(m.db, task.id, m.activeTLBeginTS, m.activeTLEndTS, ""))
 						} else if m.lastChange == insertChange {
 							m.activeView = askForCommentView
-							m.activeTLEndTS = time.Now()
+							m.activeTLEndTS = time.Now().Local()
 
 							beginTimeStr := m.activeTLBeginTS.Format(timeFormat)
 							currentTimeStr := m.activeTLEndTS.Format(timeFormat)
@@ -398,14 +401,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.WindowSizeMsg:
-		w, h := taskListStyle.GetFrameSize()
+		w, h := listStyle.GetFrameSize()
 		m.terminalHeight = msg.Height
 
-		m.activeTasksList.SetHeight(msg.Height - h - 2)
-		m.inactiveTasksList.SetHeight(msg.Height - h - 2)
+		m.taskLogList.SetWidth(msg.Width - w)
+		m.taskLogList.SetHeight(msg.Height - h - 2)
 
-		m.taskLogList.SetHeight(msg.Height - h - 2)
-		m.taskLogList.SetHeight(msg.Height - h - 2)
+		m.activeTasksList.SetWidth(msg.Width - w)
+		m.activeTasksList.SetHeight(msg.Height - h - 2)
+
+		m.inactiveTasksList.SetWidth(msg.Width - w)
+		m.inactiveTasksList.SetHeight(msg.Height - h - 2)
 
 		if !m.helpVPReady {
 			m.helpVP = viewport.New(w-5, m.terminalHeight-7)
