@@ -16,9 +16,6 @@ const (
 	formFieldNameColor     = "#8ec07c"
 	formContextColor       = "#fabd2f"
 	toolNameColor          = "#fe8019"
-	reportColor1           = "#83a598"
-	reportColor2           = "#a58390"
-	reportColor3           = "#fabd2f"
 	reportHeaderColor      = "#d85d5d"
 	reportFooterColor      = "#ef8f62"
 	reportBorderColor      = "#665c54"
@@ -68,15 +65,6 @@ var (
 					PaddingLeft(1).
 					Foreground(lipgloss.Color(activeTaskolor))
 
-	reportStyle1 = lipgloss.NewStyle().
-			Foreground(lipgloss.Color(reportColor1))
-
-	reportStyle2 = lipgloss.NewStyle().
-			Foreground(lipgloss.Color(reportColor2))
-
-	reportStyle3 = lipgloss.NewStyle().
-			Foreground(lipgloss.Color(reportColor3))
-
 	reportHeaderStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color(reportHeaderColor))
 
@@ -124,4 +112,6 @@ var (
 		return lipgloss.NewStyle().
 			Foreground(lipgloss.Color(color))
 	}
+
+	emptyStyle = lipgloss.NewStyle()
 )

@@ -273,7 +273,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.activeView = manualTasklogEntryView
 				m.tasklogSaveType = tasklogInsert
 				m.trackingFocussedField = entryBeginTS
-				currentTime := time.Now().Local()
+				currentTime := time.Now()
 				dateString := currentTime.Format("2006/01/02")
 				currentTimeStr := currentTime.Format(timeFormat)
 
@@ -336,11 +336,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					} else {
 						if m.lastChange == updateChange {
 							m.changesLocked = true
-							m.activeTLBeginTS = time.Now().Local()
+							m.activeTLBeginTS = time.Now()
 							cmds = append(cmds, toggleTracking(m.db, task.id, m.activeTLBeginTS, m.activeTLEndTS, ""))
 						} else if m.lastChange == insertChange {
 							m.activeView = askForCommentView
-							m.activeTLEndTS = time.Now().Local()
+							m.activeTLEndTS = time.Now()
 
 							beginTimeStr := m.activeTLBeginTS.Format(timeFormat)
 							currentTimeStr := m.activeTLEndTS.Format(timeFormat)
@@ -484,7 +484,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case taskLogEntriesFetchedMsg:
 		if msg.err != nil {
 			message := msg.err.Error()
-			m.message = "Error fetching synced task log entries: " + message
+			m.message = "Error fetching task log entries: " + message
 			m.messages = append(m.messages, message)
 		} else {
 			var items []list.Item

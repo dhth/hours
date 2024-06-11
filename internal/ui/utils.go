@@ -5,7 +5,15 @@ import (
 	"math"
 	"strings"
 	"time"
+
+	"github.com/charmbracelet/lipgloss"
 )
+
+type reportStyles struct {
+	headerStyle lipgloss.Style
+	footerStyle lipgloss.Style
+	borderStyle lipgloss.Style
+}
 
 func RightPadTrim(s string, length int, dots bool) string {
 	if len(s) >= length {
@@ -45,4 +53,19 @@ func humanizeDuration(durationInSecs int) string {
 	}
 
 	return fmt.Sprintf("%dh %dm", int(duration.Hours()), modMins)
+}
+
+func getReportStyles(plain bool) reportStyles {
+	if plain {
+		return reportStyles{
+			emptyStyle,
+			emptyStyle,
+			emptyStyle,
+		}
+	}
+	return reportStyles{
+		reportHeaderStyle,
+		reportFooterStyle,
+		reportBorderStyle,
+	}
 }

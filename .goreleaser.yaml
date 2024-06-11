@@ -32,7 +32,7 @@ brews:
     directory: Formula
     license: MIT
     homepage: "https://github.com/dhth/hours"
-    description: "Track time on your tasks"
+    description: "A no-frills command-line app for tracking time on tasks"
 
 changelog:
   sort: asc

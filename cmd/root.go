@@ -11,8 +11,11 @@ import (
 )
 
 var (
-	dbPath string
-	db     *sql.DB
+	dbPath           string
+	db               *sql.DB
+	reportAgg        bool
+	reportNumDays    int
+	reportOrLogPlain bool
 )
 
 func die(msg string, args ...any) {
@@ -43,43 +46,33 @@ var rootCmd = &cobra.Command{
 
 var reportCmd = &cobra.Command{
 	Use:   "report",
-	Short: "Output reports based on tasks/log entries.",
-	Long: `Output reports based on tasks/log entries.
-
-Available reports:
-  tasks     outputs a report of time spent on tasks
-  log       outputs a report of the last few saved task log entries
-  24h       outputs a report of log entries from the last 24h
-  3d        outputs a report of log entries from the last 3 days (from beginning of day) (default)
-  7d        outputs a report of log entries from the last 7 days (from beginning of day)
-`,
-	ValidArgs: []string{"tasks", "log", "24h", "3d", "7d"},
-	Args:      cobra.MatchAll(cobra.MaximumNArgs(1), cobra.OnlyValidArgs),
+	Short: "Output a report based on tasks/log entries",
 	Run: func(cmd *cobra.Command, args []string) {
 		out := os.Stdout
 
-		if len(args) == 0 {
-			ui.Render3DReport(db, out)
-			return
+		if reportNumDays <= 0 || reportNumDays > 7 {
+			die("--num-days/-n needs to be between [1-7] (both inclusive)")
 		}
-		switch args[0] {
-		case "tasks":
-			ui.RenderTaskReport(db, out)
-		case "log":
-			ui.RenderTaskLogReport(db, out)
-		case "24h":
-			ui.Render24hReport(db, out)
-		case "3d":
-			ui.Render3DReport(db, out)
-		case "7d":
-			ui.Render7DReport(db, out)
+
+		if reportAgg {
+			ui.RenderNDaysReportAgg(db, out, reportNumDays, reportOrLogPlain)
+		} else {
+			ui.RenderNDaysReport(db, out, reportNumDays, reportOrLogPlain)
 		}
+	},
+}
+
+var logCmd = &cobra.Command{
+	Use:   "log",
+	Short: "Output task log entries (in reverse chronological order)",
+	Run: func(cmd *cobra.Command, args []string) {
+		ui.RenderTaskLog(db, os.Stdout, reportOrLogPlain)
 	},
 }
 
 var activeCmd = &cobra.Command{
 	Use:   "active",
-	Short: "Shows task being actively tracked by \"hours\".",
+	Short: "Show the task being actively tracked by \"hours\"",
 	Run: func(cmd *cobra.Command, args []string) {
 		ui.ShowActiveTask(db, os.Stdout)
 	},
@@ -89,13 +82,20 @@ func init() {
 	currentUser, err := user.Current()
 
 	if err != nil {
-		die("Error getting your home directory, This is a fatal error; use --dbpath to specify database path manually.\n%s\n", err)
+		die("Error getting your home directory, This is a fatal error; use --dbpath to specify database path manually\n%s\n", err)
 	}
 
 	defaultDBPath := fmt.Sprintf("%s/hours.v%s.db", currentUser.HomeDir, "1")
-	rootCmd.PersistentFlags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location where hours should create its DB file")
+	rootCmd.PersistentFlags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
+
+	reportCmd.Flags().BoolVarP(&reportAgg, "agg", "a", false, "whether to aggregate data by task in report")
+	reportCmd.Flags().BoolVarP(&reportOrLogPlain, "plain", "p", false, "whether to output report without any formatting")
+	reportCmd.Flags().IntVarP(&reportNumDays, "num-days", "n", 3, "number of days to gather data for")
+
+	logCmd.Flags().BoolVarP(&reportOrLogPlain, "plain", "p", false, "whether to output log without any formatting")
 
 	rootCmd.AddCommand(reportCmd)
+	rootCmd.AddCommand(logCmd)
 	rootCmd.AddCommand(activeCmd)
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true

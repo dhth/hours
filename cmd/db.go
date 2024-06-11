@@ -19,7 +19,7 @@ func setupDB(dbpath string) (*sql.DB, error) {
 CREATE TABLE IF NOT EXISTS task (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     summary TEXT NOT NULL,
-    secsSpent INTEGER NOT NULL DEFAULT 0,
+    secs_spent INTEGER NOT NULL DEFAULT 0,
     active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS task_log (
     task_id INTEGER,
     begin_ts TIMESTAMP NOT NULL,
     end_ts TIMESTAMP,
+    secs_spent INTEGER NOT NULL DEFAULT 0,
     comment VARCHAR(255),
     active BOOLEAN NOT NULL,
     FOREIGN KEY(task_id) REFERENCES task(id)
