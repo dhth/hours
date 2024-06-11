@@ -1,12 +1,18 @@
 package cmd
 
 import (
-	"flag"
+	"database/sql"
 	"fmt"
 	"os"
 	"os/user"
 
 	"github.com/dhth/hours/internal/ui"
+	"github.com/spf13/cobra"
+)
+
+var (
+	dbPath string
+	db     *sql.DB
 )
 
 func die(msg string, args ...any) {
@@ -14,74 +20,90 @@ func die(msg string, args ...any) {
 	os.Exit(1)
 }
 
-func Execute() {
+var rootCmd = &cobra.Command{
+	Use:   "hours",
+	Short: "Track time on your tasks via a simple TUI.",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if dbPath == "" {
+			die("dbpath cannot be empty")
+		}
+
+		dbPathFull := expandTilde(dbPath)
+
+		var err error
+		db, err = setupDB(dbPathFull)
+		if err != nil {
+			die("Couldn't set up \"hours\"' local database. This is a fatal error; let @dhth know about this.\n%s\n", err)
+		}
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		ui.RenderUI(db)
+	},
+}
+
+var reportCmd = &cobra.Command{
+	Use:   "report",
+	Short: "Output reports based on tasks/log entries.",
+	Long: `Output reports based on tasks/log entries.
+
+Available reports:
+  tasks     outputs a report of time spent on tasks
+  log       outputs a report of the last few saved task log entries
+  24h       outputs a report of log entries from the last 24h
+  3d        outputs a report of log entries from the last 3 days (from beginning of day) (default)
+  7d        outputs a report of log entries from the last 7 days (from beginning of day)
+`,
+	ValidArgs: []string{"tasks", "log", "24h", "3d", "7d"},
+	Args:      cobra.MatchAll(cobra.MaximumNArgs(1), cobra.OnlyValidArgs),
+	Run: func(cmd *cobra.Command, args []string) {
+		out := os.Stdout
+
+		if len(args) == 0 {
+			ui.Render3DReport(db, out)
+			return
+		}
+		switch args[0] {
+		case "tasks":
+			ui.RenderTaskReport(db, out)
+		case "log":
+			ui.RenderTaskLogReport(db, out)
+		case "24h":
+			ui.Render24hReport(db, out)
+		case "3d":
+			ui.Render3DReport(db, out)
+		case "7d":
+			ui.Render7DReport(db, out)
+		}
+	},
+}
+
+var activeCmd = &cobra.Command{
+	Use:   "active",
+	Short: "Shows task being actively tracked by \"hours\".",
+	Run: func(cmd *cobra.Command, args []string) {
+		ui.ShowActiveTask(db, os.Stdout)
+	},
+}
+
+func init() {
 	currentUser, err := user.Current()
 
 	if err != nil {
-		die("Error getting your home directory, This is a fatal error; use -db-path to specify database path manually.\n%s\n", err)
+		die("Error getting your home directory, This is a fatal error; use --dbpath to specify database path manually.\n%s\n", err)
 	}
 
-	defaultDBPath := fmt.Sprintf("%s/hours.v%s.db", currentUser.HomeDir, DB_VERSION)
-	dbPath := flag.String("db-path", defaultDBPath, "location where hours should create its DB file")
+	defaultDBPath := fmt.Sprintf("%s/hours.v%s.db", currentUser.HomeDir, "1")
+	rootCmd.PersistentFlags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location where hours should create its DB file")
 
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stdout, `Track time on your tasks via a simple TUI.
+	rootCmd.AddCommand(reportCmd)
+	rootCmd.AddCommand(activeCmd)
 
-Usage:
-  hours [flags] [command]
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
+}
 
-Flags:
-`)
-		flag.CommandLine.SetOutput(os.Stdout)
-		flag.PrintDefaults()
-		fmt.Fprintf(os.Stdout, `
-Commands:
-  7d
-        outputs a report of log entries from the last 7 days
-  3d
-        outputs a report of log entries from the last 3 days
-  24h
-        outputs a report of log entries from the last 24h
-  tasks
-        outputs a report of time spent on tasks
-  log
-        outputs the last few saved task log entries
-  active
-        shows the task currently being tracked
-`)
-	}
-	flag.Parse()
-
-	if *dbPath == "" {
-		die("db-path cannot be empty")
-	}
-
-	dbPathFull := expandTilde(*dbPath)
-
-	db, err := setupDB(dbPathFull)
+func Execute() {
+	err := rootCmd.Execute()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Couldn't set up hours' local database. This is a fatal error; let @dhth know about this.\n%s\n", err)
-		os.Exit(1)
-	}
-
-	args := os.Args[1:]
-	out := os.Stdout
-
-	if len(args) > 0 {
-		if args[0] == "tasks" {
-			ui.RenderTaskReport(db, out)
-		} else if args[0] == "24h" {
-			ui.Render24hReport(db, out)
-		} else if args[0] == "7d" {
-			ui.Render7DReport(db, out)
-		} else if args[0] == "3d" {
-			ui.Render3DReport(db, out)
-		} else if args[0] == "log" {
-			ui.RenderTaskLogReport(db, out)
-		} else if args[0] == "active" {
-			ui.ShowActiveTask(db, out)
-		}
-	} else {
-		ui.RenderUI(db)
+		die("Something went wrong: %s\n", err)
 	}
 }
