@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"hash/fnv"
+
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -95,4 +97,31 @@ var (
 
 	helpSectionStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color(helpSectionColor))
+
+	taskColors = []string{
+		"#d3869b",
+		"#b5e48c",
+		"#90e0ef",
+		"#ca7df9",
+		"#ada7ff",
+		"#bbd0ff",
+		"#48cae4",
+		"#8187dc",
+		"#ffb4a2",
+		"#b8bb26",
+		"#ffc6ff",
+		"#4895ef",
+		"#83a598",
+		"#fabd2f",
+	}
+
+	getDynamicStyle = func(str string) lipgloss.Style {
+		h := fnv.New32()
+		h.Write([]byte(str))
+		hash := h.Sum32()
+
+		color := taskColors[int(hash)%len(taskColors)]
+		return lipgloss.NewStyle().
+			Foreground(lipgloss.Color(color))
+	}
 )

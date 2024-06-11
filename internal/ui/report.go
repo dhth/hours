@@ -13,7 +13,7 @@ import (
 )
 
 func RenderTaskLogReport(db *sql.DB, writer io.Writer) {
-	taskLogEntries, err := fetchTLEntriesFromDB(db, 20)
+	taskLogEntries, err := fetchTLEntriesFromDB(db, false, 20)
 	if err != nil {
 		fmt.Fprintf(writer, "Something went wrong generating the report:\n%s", err)
 		os.Exit(1)
@@ -27,16 +27,15 @@ func RenderTaskLogReport(db *sql.DB, writer io.Writer) {
 	var secsSpent int
 	var timeSpentStr string
 
-	flip := 0
-	var reportStyle lipgloss.Style
+	styleCache := make(map[string]lipgloss.Style)
+
 	for i, entry := range taskLogEntries {
-		if flip == 0 {
-			reportStyle = reportStyle1
-			flip = 1
-		} else {
-			reportStyle = reportStyle2
-			flip = 0
+		reportStyle, ok := styleCache[entry.taskSummary]
+		if !ok {
+			reportStyle = getDynamicStyle(entry.taskSummary)
+			styleCache[entry.taskSummary] = reportStyle
 		}
+
 		secsSpent = int(entry.endTS.Sub(entry.beginTS).Seconds())
 		timeSpentStr = humanizeDuration(secsSpent)
 		data[i] = []string{
@@ -78,18 +77,20 @@ var (
 	}
 )
 
-func RenderWeeklyReport(db *sql.DB, writer io.Writer) {
+func Render7DReport(db *sql.DB, writer io.Writer) {
 	numDays := 7
 	now := time.Now().Local()
 
-	// say time.Now is Sunday 16:00
-	// start:     mon
-	// day2:      tues
-	// day3:      wed
-	// day4:      thurs
-	// day5:      fri
-	// yesterday: sat
-	// today:     sun
+	// say now: Sunday, 2024/06/09 16:00
+	// start:   Sunday, 2024/06/02 00:00
+	// day1:    Monday, 2024/06/03 00:00
+	// day2:    Tuesday, 2024/06/04 00:00
+	// day3:    Wednesday, 2024/06/05 00:00
+	// day4:    Thursday, 2024/06/06 00:00
+	// day5:    Friday, 2024/06/07 00:00
+	// yest:    Saturday, 2024/06/08 00:00
+	// today:   Sunday, 2024/06/09 00:00
+
 	sevenDaysFromNow := now.AddDate(0, 0, -7)
 
 	start := time.Date(sevenDaysFromNow.Year(),
@@ -155,6 +156,8 @@ func RenderWeeklyReport(db *sql.DB, writer io.Writer) {
 		totalSecsPerDay[j] = 0
 	}
 
+	styleCache := make(map[string]lipgloss.Style)
+
 	for rowIndex := 0; rowIndex < maxEntryForADay; rowIndex++ {
 		row := make([]string, numDays)
 		for colIndex := 0; colIndex < numDays; colIndex++ {
@@ -164,11 +167,17 @@ func RenderWeeklyReport(db *sql.DB, writer io.Writer) {
 			}
 
 			tl := dayEntries[colIndex][rowIndex]
+			reportStyle, ok := styleCache[tl.taskSummary]
+			if !ok {
+				reportStyle = getDynamicStyle(tl.taskSummary)
+				styleCache[tl.taskSummary] = reportStyle
+			}
+
 			secsSpent := int(tl.endTS.Sub(tl.beginTS).Seconds())
 			timeSpent := humanizeDuration(secsSpent)
 			row[colIndex] = fmt.Sprintf("%s %s",
-				reportStyle1.Render(RightPadTrim(tl.taskSummary, 8, false)),
-				reportStyle3.Render(fmt.Sprintf("(%s)", timeSpent)),
+				reportStyle.Render(RightPadTrim(tl.taskSummary, 8, false)),
+				reportStyle.Render(fmt.Sprintf("%s", timeSpent)),
 			)
 			totalSecsPerDay[colIndex] += secsSpent
 		}
@@ -207,6 +216,183 @@ func RenderWeeklyReport(db *sql.DB, writer io.Writer) {
 	table.Render()
 }
 
+func Render3DReport(db *sql.DB, writer io.Writer) {
+	numDays := 3
+	now := time.Now().Local()
+
+	threeDaysFromNow := now.AddDate(0, 0, -3)
+
+	start := time.Date(threeDaysFromNow.Year(),
+		threeDaysFromNow.Month(),
+		threeDaysFromNow.Day(),
+		0,
+		0,
+		0,
+		0,
+		threeDaysFromNow.Location(),
+	)
+
+	day1 := start.AddDate(0, 0, 1)
+	yesterday := start.AddDate(0, 0, 2)
+	today := start.AddDate(0, 0, 3)
+
+	taskLogEntries, err := fetchTLEntriesFromDBAfterTS(db, day1, 100)
+	if err != nil {
+		fmt.Fprintf(writer, "Something went wrong generating the report:\n%s", err)
+		os.Exit(1)
+	}
+
+	if len(taskLogEntries) == 0 {
+		return
+	}
+
+	dayEntries := make(map[int][]*taskLogEntry)
+
+	for _, entry := range taskLogEntries {
+		switch {
+		case entry.beginTS.Before(yesterday):
+			dayEntries[0] = append(dayEntries[0], &entry)
+		case entry.beginTS.Before(today):
+			dayEntries[1] = append(dayEntries[1], &entry)
+		default:
+			dayEntries[2] = append(dayEntries[2], &entry)
+		}
+	}
+	var maxEntryForADay int
+	for _, entries := range dayEntries {
+		if len(entries) > maxEntryForADay {
+			maxEntryForADay = len(entries)
+		}
+	}
+
+	data := make([][]string, len(taskLogEntries))
+
+	totalSecsPerDay := make(map[int]int)
+
+	for j := 0; j < numDays; j++ {
+		totalSecsPerDay[j] = 0
+	}
+
+	styleCache := make(map[string]lipgloss.Style)
+
+	for rowIndex := 0; rowIndex < maxEntryForADay; rowIndex++ {
+		row := make([]string, numDays)
+		for colIndex := 0; colIndex < numDays; colIndex++ {
+			if rowIndex >= len(dayEntries[colIndex]) {
+				row[colIndex] = ""
+				continue
+			}
+
+			tl := dayEntries[colIndex][rowIndex]
+			reportStyle, ok := styleCache[tl.taskSummary]
+			if !ok {
+				reportStyle = getDynamicStyle(tl.taskSummary)
+				styleCache[tl.taskSummary] = reportStyle
+			}
+
+			secsSpent := int(tl.endTS.Sub(tl.beginTS).Seconds())
+			timeSpent := humanizeDuration(secsSpent)
+			row[colIndex] = fmt.Sprintf("%s %s",
+				reportStyle.Render(RightPadTrim(tl.taskSummary, 8, false)),
+				reportStyle.Render(fmt.Sprintf("%s", timeSpent)),
+			)
+			totalSecsPerDay[colIndex] += secsSpent
+		}
+		data[rowIndex] = row
+	}
+
+	totalTimePerDay := make([]string, numDays)
+	for i, ts := range totalSecsPerDay {
+		if ts != 0 {
+			totalTimePerDay[i] = reportFooterStyle.Render(fmt.Sprintf("%s", humanizeDuration(ts)))
+		} else {
+			totalTimePerDay[i] = " "
+		}
+	}
+
+	table := tablewriter.NewWriter(writer)
+
+	table.SetHeader([]string{
+		reportHeaderStyle.Render(day1.Weekday().String()),
+		reportHeaderStyle.Render("Yesterday"),
+		reportHeaderStyle.Render("Today"),
+	})
+
+	table.SetRowSeparator(reportBorderStyle.Render("-"))
+	table.SetColumnSeparator(reportBorderStyle.Render("|"))
+	table.SetCenterSeparator(reportBorderStyle.Render("+"))
+	table.SetAutoWrapText(false)
+	table.SetAutoFormatHeaders(false)
+	table.AppendBulk(data)
+	table.SetFooter(totalTimePerDay)
+
+	table.Render()
+}
+
+func Render24hReport(db *sql.DB, writer io.Writer) {
+	now := time.Now().Local()
+
+	start := now.AddDate(0, 0, -1)
+
+	taskLogEntries, err := fetchTLEntriesFromDBAfterTS(db, start, 100)
+	if err != nil {
+		fmt.Fprintf(writer, "Something went wrong generating the report:\n%s", err)
+		os.Exit(1)
+	}
+
+	if len(taskLogEntries) == 0 {
+		return
+	}
+
+	data := make([][]string, len(taskLogEntries))
+
+	totalSecs := 0
+
+	styleCache := make(map[string]lipgloss.Style)
+
+	for i, tl := range taskLogEntries {
+		reportStyle, ok := styleCache[tl.taskSummary]
+		if !ok {
+			reportStyle = getDynamicStyle(tl.taskSummary)
+			styleCache[tl.taskSummary] = reportStyle
+		}
+
+		secsSpent := int(tl.endTS.Sub(tl.beginTS).Seconds())
+		timeSpent := humanizeDuration(secsSpent)
+		data[i] = []string{
+			reportStyle.Render(RightPadTrim(tl.taskSummary, 8, false)),
+			reportStyle.Render(RightPadTrim(tl.comment, 40, false)),
+			reportStyle.Render(tl.beginTS.Format(timeFormat)),
+			reportStyle.Render(fmt.Sprintf("%s", timeSpent)),
+		}
+		totalSecs += secsSpent
+	}
+
+	table := tablewriter.NewWriter(writer)
+
+	table.SetHeader([]string{
+		reportHeaderStyle.Render("Task"),
+		reportHeaderStyle.Render("Comment"),
+		reportHeaderStyle.Render("Started"),
+		reportHeaderStyle.Render("TimeSpent"),
+	})
+
+	table.SetRowSeparator(reportBorderStyle.Render("-"))
+	table.SetColumnSeparator(reportBorderStyle.Render("|"))
+	table.SetCenterSeparator(reportBorderStyle.Render("+"))
+	table.SetAutoWrapText(false)
+	table.SetAutoFormatHeaders(false)
+	table.AppendBulk(data)
+	table.SetFooter([]string{
+		"",
+		"",
+		"",
+		reportFooterStyle.Render(fmt.Sprintf("%s", humanizeDuration(totalSecs))),
+	})
+
+	table.Render()
+}
+
 func RenderTaskReport(db *sql.DB, writer io.Writer) {
 	tasks, err := fetchTasksFromDB(db, true, 30)
 	if err != nil {
@@ -221,17 +407,15 @@ func RenderTaskReport(db *sql.DB, writer io.Writer) {
 	data := make([][]string, len(tasks))
 	var timeSpentStr string
 
-	var reportStyle lipgloss.Style
+	styleCache := make(map[string]lipgloss.Style)
 
-	flip := 0
 	for i, entry := range tasks {
-		if flip == 0 {
-			reportStyle = reportStyle1
-			flip = 1
-		} else {
-			reportStyle = reportStyle2
-			flip = 0
+		reportStyle, ok := styleCache[entry.summary]
+		if !ok {
+			reportStyle = getDynamicStyle(entry.summary)
+			styleCache[entry.summary] = reportStyle
 		}
+
 		timeSpentStr = humanizeDuration(entry.secsSpent)
 		data[i] = []string{
 			reportStyle.Render(fmt.Sprintf("%d", i+1)),

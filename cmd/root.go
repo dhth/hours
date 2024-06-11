@@ -36,12 +36,16 @@ Flags:
 		flag.PrintDefaults()
 		fmt.Fprintf(os.Stdout, `
 Commands:
-  weekreport
+  7d
         outputs a report of log entries from the last 7 days
-  report
+  3d
+        outputs a report of log entries from the last 3 days
+  24h
+        outputs a report of log entries from the last 24h
+  tasks
         outputs a report of time spent on tasks
-  logreport
-        outputs a report of recently added log entries
+  log
+        outputs the last few saved task log entries
   active
         shows the task currently being tracked
 `)
@@ -64,11 +68,15 @@ Commands:
 	out := os.Stdout
 
 	if len(args) > 0 {
-		if args[0] == "report" {
+		if args[0] == "tasks" {
 			ui.RenderTaskReport(db, out)
-		} else if args[0] == "weekreport" {
-			ui.RenderWeeklyReport(db, out)
-		} else if args[0] == "logreport" {
+		} else if args[0] == "24h" {
+			ui.Render24hReport(db, out)
+		} else if args[0] == "7d" {
+			ui.Render7DReport(db, out)
+		} else if args[0] == "3d" {
+			ui.Render3DReport(db, out)
+		} else if args[0] == "log" {
 			ui.RenderTaskLogReport(db, out)
 		} else if args[0] == "active" {
 			ui.ShowActiveTask(db, out)

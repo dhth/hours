@@ -94,7 +94,7 @@ func updateTaskRep(db *sql.DB, t *task) tea.Cmd {
 
 func fetchTaskLogEntries(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
-		entries, err := fetchTLEntriesFromDB(db, 50)
+		entries, err := fetchTLEntriesFromDB(db, true, 50)
 		return taskLogEntriesFetchedMsg{
 			entries: entries,
 			err:     err,

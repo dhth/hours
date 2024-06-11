@@ -3,6 +3,7 @@ package ui
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -260,16 +261,25 @@ LIMIT ?;
 	return tasks, nil
 }
 
-func fetchTLEntriesFromDB(db *sql.DB, limit int) ([]taskLogEntry, error) {
+func fetchTLEntriesFromDB(db *sql.DB, desc bool, limit int) ([]taskLogEntry, error) {
 
 	var logEntries []taskLogEntry
 
-	rows, err := db.Query(`
+	var order string
+	if desc {
+		order = "DESC"
+	} else {
+		order = "ASC"
+	}
+	query := fmt.Sprintf(`
 SELECT tl.id, tl.task_id, t.summary, tl.begin_ts, tl.end_ts, tl.comment
 FROM task_log tl left join task t on tl.task_id=t.id
 WHERE tl.active=false
-ORDER by tl.begin_ts DESC LIMIT ?;
-    `, limit)
+ORDER by tl.begin_ts %s
+LIMIT ?;
+`, order)
+
+	rows, err := db.Query(query, limit)
 	if err != nil {
 		return nil, err
 	}
