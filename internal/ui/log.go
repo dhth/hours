@@ -5,37 +5,121 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/dustin/go-humanize"
 	"github.com/olekukonko/tablewriter"
 )
 
-func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool) {
-	taskLogEntries, err := fetchTLEntriesFromDB(db, true, 20)
-	if err != nil {
-		fmt.Fprintf(writer, "Something went wrong generating the log:\n%s", err)
+const (
+	logLimit = 100
+)
+
+func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string) {
+	if period == "" {
+		fmt.Fprint(writer, "Something went wrong, time period shouldn't be empty\n")
 		os.Exit(1)
 	}
 
-	if len(taskLogEntries) == 0 {
+	switch period {
+	case "all":
+		taskLogEntries, err := fetchTLEntriesFromDB(db, true, 20)
+		if err != nil {
+			fmt.Fprintf(writer, "Something went wrong generating the log: %s\n", err)
+			os.Exit(1)
+		}
+		renderTaskLog(writer, plain, taskLogEntries)
+
+	case "today":
+		today := time.Now()
+
+		start := time.Date(today.Year(),
+			today.Month(),
+			today.Day(),
+			0,
+			0,
+			0,
+			0,
+			today.Location(),
+		)
+		taskLogEntries, err := fetchTLEntriesBetweenTSFromDB(db, start, start.AddDate(0, 0, 1), logLimit)
+		if err != nil {
+			fmt.Fprintf(writer, "Something went wrong generating the log: %s\n", err)
+			os.Exit(1)
+		}
+		renderTaskLog(writer, plain, taskLogEntries)
+
+	case "yest":
+		yest := time.Now().AddDate(0, 0, -1)
+
+		start := time.Date(yest.Year(),
+			yest.Month(),
+			yest.Day(),
+			0,
+			0,
+			0,
+			0,
+			yest.Location(),
+		)
+		taskLogEntries, err := fetchTLEntriesBetweenTSFromDB(db, start, start.AddDate(0, 0, 1), logLimit)
+		if err != nil {
+			fmt.Fprintf(writer, "Something went wrong generating the log: %s\n", err)
+			os.Exit(1)
+		}
+		renderTaskLog(writer, plain, taskLogEntries)
+
+	default:
+		var start, end time.Time
+		var err error
+
+		if strings.Contains(period, "...") {
+			var ts timePeriod
+			ts, err = parseDateDuration(period)
+			if err != nil {
+				fmt.Fprintf(writer, "%s\n", err)
+				os.Exit(1)
+			}
+			start = ts.start
+			end = ts.end.AddDate(0, 0, 1)
+		} else {
+			start, err = time.ParseInLocation(string(dateFormat), period, time.Local)
+			if err != nil {
+				fmt.Fprintf(writer, "Couldn't parse date: %s\n", err)
+				os.Exit(1)
+			}
+			end = start.AddDate(0, 0, 1)
+		}
+
+		taskLogEntries, err := fetchTLEntriesBetweenTSFromDB(db, start, end, logLimit)
+		if err != nil {
+			fmt.Fprintf(writer, "Something went wrong generating the log: %s\n", err)
+			os.Exit(1)
+		}
+		renderTaskLog(writer, plain, taskLogEntries)
+	}
+}
+
+func renderTaskLog(writer io.Writer, plain bool, entries []taskLogEntry) {
+
+	if len(entries) == 0 {
 		return
 	}
 
-	data := make([][]string, len(taskLogEntries))
+	data := make([][]string, len(entries))
 	var timeSpentStr string
 
 	rs := getReportStyles(plain)
 	styleCache := make(map[string]lipgloss.Style)
 
-	for i, entry := range taskLogEntries {
+	for i, entry := range entries {
 		timeSpentStr = humanizeDuration(entry.secsSpent)
 
 		if plain {
 			data[i] = []string{
 				Trim(entry.taskSummary, 50),
 				Trim(entry.comment, 80),
-				fmt.Sprintf("%s (%s)", entry.beginTS.Format(timeFormat), humanize.Time(entry.beginTS)),
+				fmt.Sprintf("%s  ...  %s", entry.beginTS.Format(timeFormat), entry.beginTS.Format(timeFormat)),
 				timeSpentStr,
 			}
 		} else {
@@ -47,14 +131,14 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool) {
 			data[i] = []string{
 				reportStyle.Render(Trim(entry.taskSummary, 50)),
 				reportStyle.Render(Trim(entry.comment, 80)),
-				reportStyle.Render(fmt.Sprintf("%s (%s)", entry.beginTS.Format(timeFormat), humanize.Time(entry.beginTS))),
+				reportStyle.Render(fmt.Sprintf("%s  ...  %s", entry.beginTS.Format(timeFormat), entry.endTS.Format(timeFormat))),
 				reportStyle.Render(timeSpentStr),
 			}
 		}
 	}
 	table := tablewriter.NewWriter(writer)
 
-	headerValues := []string{"Task", "Comment", "Begin", "TimeSpent"}
+	headerValues := []string{"Task", "Comment", "Duration", "TimeSpent"}
 	headers := make([]string, len(headerValues))
 	for i, h := range headerValues {
 		headers[i] = rs.headerStyle.Render(h)

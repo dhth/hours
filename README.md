@@ -42,6 +42,15 @@ Besides a TUI, `hours` also offers reports and logs based on the time tracking
 you do. These can be viewed using the subcommands `report` and `log`
 respectively.
 
+### Reports
+
+Reports show time spent on tasks in the last `n` days. These can also be
+aggregated (using `-a`) to consolidate all task entries and show the cumulative
+time spent on each task per day.
+
+This subcommand accepts a `-p` flag, which can be anything in the range [1-7]
+(both inclusive) to see reports for the last "n" days (including today).
+
 ```
 hours report -h
 
@@ -54,6 +63,31 @@ Flags:
   -a, --agg            whether to aggregate data by task in report
   -n, --num-days int   number of days to gather data for (default 3)
   -p, --plain          whether to output report without any formatting
+```
+
+```bash
+hours report
+# or
+hours report -n=7
+```
+
+### Logs
+
+As the name suggests, logs are just that: list of task entries you've saved
+using `hours`. This subcommand accepts an argument, which can be one of the following:
+
+- `all`:     all recent log entries (in reverse chronological order)
+- `today`:   for log entries from today
+- `yest`:    for log entries from yesterday
+- `<date>`:  for log entries from that day
+- `<range>`: for log entries from in that range
+
+```bash
+hours log today
+# or
+hours log 2024/06/08
+# or
+hours log 2024/06/08...2024/06/12
 ```
 
 📋 TUI Reference Manual

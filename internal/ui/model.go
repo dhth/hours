@@ -65,7 +65,9 @@ const (
 )
 
 const (
-	timeFormat = "2006/01/02 15:04"
+	timeFormat         = "2006/01/02 15:04"
+	friendlyTimeFormat = "Mon, 15:04"
+	dateFormat         = "2006/01/02"
 )
 
 type model struct {

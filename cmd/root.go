@@ -64,9 +64,27 @@ var reportCmd = &cobra.Command{
 
 var logCmd = &cobra.Command{
 	Use:   "log",
-	Short: "Output task log entries (in reverse chronological order)",
+	Short: "Output task log entries",
+	Long: `Output task log entries
+
+Accepts an argument, which can be one of the following:
+
+  all:   all recent log entries (in reverse chronological order)
+  today: for log entries from today
+  yest:  for log entries from yesterday
+  date:  for log entries from that day (eg. "2024/06/08")
+  range: for log entries from that range (eg. "2024/06/08...2024/06/12")
+    `,
+	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		ui.RenderTaskLog(db, os.Stdout, reportOrLogPlain)
+		if len(args) == 0 {
+			ui.RenderTaskLog(db, os.Stdout, reportOrLogPlain, "all")
+		} else {
+			if args[0] == "" {
+				die("Time period shouldn't be empty\n")
+			}
+			ui.RenderTaskLog(db, os.Stdout, reportOrLogPlain, args[0])
+		}
 	},
 }
 
