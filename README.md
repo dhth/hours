@@ -15,8 +15,8 @@ reports and logs based on time tracked.
 I wanted to keep track of the time I spend on side projects and other
 non-day-job activities. I also wanted to be able to generate plaintext reports
 of the time tracked, so I could get a general sense of how much of my time was
-being spent on what. I couldn't find a tool that precisely fit these needs, so I
-decided to build one myself.
+being spent on what. When I couldn't find a tool that precisely fit these needs,
+I decided to build one myself.
 
 💾 Install
 ---
@@ -54,7 +54,7 @@ This subcommand accepts a `-p` flag, which can be anything in the range [1-7]
 ```
 hours report -h
 
-Output reports based on tasks/log entries.
+Output reports based on tasks/log entries
 
 Usage:
   hours report [flags]
@@ -66,8 +66,13 @@ Flags:
 ```
 
 ```bash
+# see report from last 3 days
 hours report
-# or
+
+# see aggregated time spent on tasks
+hours report -a
+
+# see report for the last week
 hours report -n=7
 ```
 
@@ -83,10 +88,13 @@ using `hours`. This subcommand accepts an argument, which can be one of the foll
 - `<range>`: for log entries from in that range
 
 ```bash
+# see log entries from today
 hours log today
-# or
+
+# see log entries from a specific day
 hours log 2024/06/08
-# or
+
+# see log entries from a specific date range
 hours log 2024/06/08...2024/06/12
 ```
 

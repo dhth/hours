@@ -138,7 +138,7 @@ WHERE tl.active=true;
 	err := row.Scan(
 		&activeTaskDetails.taskId,
 		&activeTaskDetails.taskSummary,
-		&activeTaskDetails.lastLogEntryBeginTS,
+		&activeTaskDetails.lastLogEntryBeginTs,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		activeTaskDetails.taskId = -1
@@ -146,7 +146,7 @@ WHERE tl.active=true;
 	} else if err != nil {
 		return activeTaskDetails, err
 	}
-	activeTaskDetails.lastLogEntryBeginTS = activeTaskDetails.lastLogEntryBeginTS.Local()
+	activeTaskDetails.lastLogEntryBeginTs = activeTaskDetails.lastLogEntryBeginTs.Local()
 	return activeTaskDetails, nil
 }
 
@@ -295,16 +295,16 @@ LIMIT ?;
 		err = rows.Scan(&entry.id,
 			&entry.taskId,
 			&entry.taskSummary,
-			&entry.beginTS,
-			&entry.endTS,
+			&entry.beginTs,
+			&entry.endTs,
 			&entry.secsSpent,
 			&entry.comment,
 		)
 		if err != nil {
 			return nil, err
 		}
-		entry.beginTS = entry.beginTS.Local()
-		entry.endTS = entry.endTS.Local()
+		entry.beginTs = entry.beginTs.Local()
+		entry.endTs = entry.endTs.Local()
 		logEntries = append(logEntries, entry)
 
 	}
@@ -319,10 +319,10 @@ func fetchTLEntriesBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit i
 SELECT tl.id, tl.task_id, t.summary, tl.begin_ts, tl.end_ts, tl.secs_spent, tl.comment
 FROM task_log tl left join task t on tl.task_id=t.id
 WHERE tl.active=false
-AND begin_ts >= ?
-AND end_ts < ?
+AND tl.end_ts >= ?
+AND tl.end_ts < ?
 ORDER by tl.begin_ts ASC LIMIT ?;
-    `, beginTs, endTs, limit)
+    `, beginTs.UTC(), endTs.UTC(), limit)
 	if err != nil {
 		return nil, err
 	}
@@ -333,16 +333,16 @@ ORDER by tl.begin_ts ASC LIMIT ?;
 		err = rows.Scan(&entry.id,
 			&entry.taskId,
 			&entry.taskSummary,
-			&entry.beginTS,
-			&entry.endTS,
+			&entry.beginTs,
+			&entry.endTs,
 			&entry.secsSpent,
 			&entry.comment,
 		)
 		if err != nil {
 			return nil, err
 		}
-		entry.beginTS = entry.beginTS.Local()
-		entry.endTS = entry.endTS.Local()
+		entry.beginTs = entry.beginTs.Local()
+		entry.endTs = entry.endTs.Local()
 		logEntries = append(logEntries, entry)
 
 	}
@@ -355,7 +355,7 @@ func fetchReportBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit int)
 SELECT tl.task_id, t.summary, SUM(tl.secs_spent) AS secs_spent
 FROM task_log tl 
 LEFT JOIN task t ON tl.task_id = t.id
-WHERE tl.begin_ts >= ? AND tl.end_ts < ?
+WHERE tl.end_ts >= ? AND tl.end_ts < ?
 GROUP BY tl.task_id
 ORDER BY t.updated_at ASC
 LIMIT ?;

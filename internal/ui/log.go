@@ -119,7 +119,7 @@ func renderTaskLog(writer io.Writer, plain bool, entries []taskLogEntry) {
 			data[i] = []string{
 				Trim(entry.taskSummary, 50),
 				Trim(entry.comment, 80),
-				fmt.Sprintf("%s  ...  %s", entry.beginTS.Format(timeFormat), entry.beginTS.Format(timeFormat)),
+				fmt.Sprintf("%s  ...  %s", entry.beginTs.Format(timeFormat), entry.beginTs.Format(timeFormat)),
 				timeSpentStr,
 			}
 		} else {
@@ -131,7 +131,7 @@ func renderTaskLog(writer io.Writer, plain bool, entries []taskLogEntry) {
 			data[i] = []string{
 				reportStyle.Render(Trim(entry.taskSummary, 50)),
 				reportStyle.Render(Trim(entry.comment, 80)),
-				reportStyle.Render(fmt.Sprintf("%s  ...  %s", entry.beginTS.Format(timeFormat), entry.endTS.Format(timeFormat))),
+				reportStyle.Render(fmt.Sprintf("%s  ...  %s", entry.beginTs.Format(timeFormat), entry.endTs.Format(timeFormat))),
 				reportStyle.Render(timeSpentStr),
 			}
 		}

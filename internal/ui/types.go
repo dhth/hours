@@ -20,8 +20,8 @@ type taskLogEntry struct {
 	id          int
 	taskId      int
 	taskSummary string
-	beginTS     time.Time
-	endTS       time.Time
+	beginTs     time.Time
+	endTs       time.Time
 	secsSpent   int
 	comment     string
 	desc        string
@@ -30,7 +30,7 @@ type taskLogEntry struct {
 type activeTaskDetails struct {
 	taskId              int
 	taskSummary         string
-	lastLogEntryBeginTS time.Time
+	lastLogEntryBeginTs time.Time
 }
 
 type taskReportEntry struct {

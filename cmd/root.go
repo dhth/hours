@@ -47,6 +47,15 @@ var rootCmd = &cobra.Command{
 var reportCmd = &cobra.Command{
 	Use:   "report",
 	Short: "Output a report based on tasks/log entries",
+	Long: `Output a report based on tasks/log entries.
+
+Reports show time spent on tasks in the last n days. These can also be
+aggregated (using -a) to consolidate all task entries and show the
+cumulative time spent on each task per day.
+
+Note: If a task log continues past midnight in your local timezone, it
+will be reported on the day it ends.
+    `,
 	Run: func(cmd *cobra.Command, args []string) {
 		out := os.Stdout
 
@@ -69,11 +78,14 @@ var logCmd = &cobra.Command{
 
 Accepts an argument, which can be one of the following:
 
-  all:   all recent log entries (in reverse chronological order)
+  all:   for all recent log entries (in reverse chronological order)
   today: for log entries from today
   yest:  for log entries from yesterday
-  date:  for log entries from that day (eg. "2024/06/08")
+  date:  for log entries from that date (eg. "2024/06/08")
   range: for log entries from that range (eg. "2024/06/08...2024/06/12")
+
+Note: If a task log continues past midnight in your local timezone, it'll
+appear in the log on the day it ends.
     `,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {

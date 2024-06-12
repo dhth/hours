@@ -77,7 +77,7 @@ func fetchActiveTask(db *sql.DB) tea.Cmd {
 
 		return activeTaskFetchedMsg{
 			activeTaskId: activeTaskDetails.taskId,
-			beginTs:      activeTaskDetails.lastLogEntryBeginTS,
+			beginTs:      activeTaskDetails.lastLogEntryBeginTs,
 		}
 	}
 }
