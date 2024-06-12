@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
@@ -12,21 +13,106 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-func RenderNDaysReport(db *sql.DB, writer io.Writer, numDays int, plain bool) {
-	now := time.Now()
+func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg bool) {
+	if period == "" {
+		return
+	}
 
-	nDaysBack := now.AddDate(0, 0, -1*(numDays-1))
+	var start time.Time
+	var numDays int
 
-	start := time.Date(nDaysBack.Year(),
-		nDaysBack.Month(),
-		nDaysBack.Day(),
-		0,
-		0,
-		0,
-		0,
-		nDaysBack.Location(),
-	)
+	switch period {
+	case "today":
+		numDays = 1
+		now := time.Now()
+		nDaysBack := now.AddDate(0, 0, -1*(numDays-1))
 
+		start = time.Date(nDaysBack.Year(),
+			nDaysBack.Month(),
+			nDaysBack.Day(),
+			0,
+			0,
+			0,
+			0,
+			nDaysBack.Location(),
+		)
+
+	case "yest":
+		numDays = 1
+		now := time.Now().AddDate(0, 0, -1)
+		nDaysBack := now.AddDate(0, 0, -1*(numDays-1))
+
+		start = time.Date(nDaysBack.Year(),
+			nDaysBack.Month(),
+			nDaysBack.Day(),
+			0,
+			0,
+			0,
+			0,
+			nDaysBack.Location(),
+		)
+
+	case "3d":
+		numDays = 3
+		now := time.Now()
+		nDaysBack := now.AddDate(0, 0, -1*(numDays-1))
+
+		start = time.Date(nDaysBack.Year(),
+			nDaysBack.Month(),
+			nDaysBack.Day(),
+			0,
+			0,
+			0,
+			0,
+			nDaysBack.Location(),
+		)
+	case "week":
+		numDays = 7
+		now := time.Now()
+		nDaysBack := now.AddDate(0, 0, -1*(numDays-1))
+
+		start = time.Date(nDaysBack.Year(),
+			nDaysBack.Month(),
+			nDaysBack.Day(),
+			0,
+			0,
+			0,
+			0,
+			nDaysBack.Location(),
+		)
+
+	default:
+		var end time.Time
+		var err error
+
+		if strings.Contains(period, "...") {
+			var ts timePeriod
+			ts, err = parseDateDuration(period)
+			if err != nil {
+				fmt.Fprintf(writer, "%s\n", err)
+				os.Exit(1)
+			}
+			start = ts.start
+			end = ts.end.AddDate(0, 0, 1)
+		} else {
+			start, err = time.ParseInLocation(string(dateFormat), period, time.Local)
+			if err != nil {
+				fmt.Fprintf(writer, "Couldn't parse date: %s\n", err)
+				os.Exit(1)
+			}
+			end = start.AddDate(0, 0, 1)
+		}
+		numDays = int(end.Sub(start).Hours() / 24)
+	}
+
+	if agg {
+		renderNDaysReportAgg(db, writer, start, numDays, plain)
+	} else {
+		renderNDaysReport(db, writer, start, numDays, plain)
+	}
+}
+
+func renderNDaysReport(db *sql.DB, writer io.Writer, start time.Time, numDays int, plain bool) {
 	day := start
 	var nextDay time.Time
 
@@ -107,18 +193,11 @@ func RenderNDaysReport(db *sql.DB, writer io.Writer, numDays int, plain bool) {
 	day = start
 	counter := 0
 
-	if numDays > 2 {
-		for counter < numDays-2 {
-			headersValues[counter] = day.Weekday().String()
-			day = day.AddDate(0, 0, 1)
-			counter++
-		}
-	}
-	if numDays > 1 {
-		headersValues[counter] = "Yesterday"
+	for counter < numDays {
+		headersValues[counter] = day.Format(dateFormat)
+		day = day.AddDate(0, 0, 1)
 		counter++
 	}
-	headersValues[counter] = "Today"
 
 	headers := make([]string, numDays)
 	for i := 0; i < numDays; i++ {
@@ -138,20 +217,7 @@ func RenderNDaysReport(db *sql.DB, writer io.Writer, numDays int, plain bool) {
 	table.Render()
 }
 
-func RenderNDaysReportAgg(db *sql.DB, writer io.Writer, numDays int, plain bool) {
-	now := time.Now()
-
-	nDaysBack := now.AddDate(0, 0, -1*(numDays-1))
-
-	start := time.Date(nDaysBack.Year(),
-		nDaysBack.Month(),
-		nDaysBack.Day(),
-		0,
-		0,
-		0,
-		0,
-		nDaysBack.Location(),
-	)
+func renderNDaysReportAgg(db *sql.DB, writer io.Writer, start time.Time, numDays int, plain bool) {
 
 	day := start
 	var nextDay time.Time
@@ -230,19 +296,11 @@ func RenderNDaysReportAgg(db *sql.DB, writer io.Writer, numDays int, plain bool)
 	day = start
 	counter := 0
 
-	if numDays > 2 {
-		for counter < numDays-2 {
-			headersValues[counter] = day.Weekday().String()
-			day = day.AddDate(0, 0, 1)
-			counter++
-		}
-	}
-
-	if numDays > 2 {
-		headersValues[counter] = "Yesterday"
+	for counter < numDays {
+		headersValues[counter] = day.Format(dateFormat)
+		day = day.AddDate(0, 0, 1)
 		counter++
 	}
-	headersValues[counter] = "Today"
 
 	headers := make([]string, numDays)
 	for i := 0; i < numDays; i++ {

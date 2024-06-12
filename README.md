@@ -12,11 +12,12 @@ reports and logs based on time tracked.
 🤔 Motivation
 ---
 
-I wanted to keep track of the time I spend on side projects and other
-non-day-job activities. I also wanted to be able to generate plaintext reports
-of the time tracked, so I could get a general sense of how much of my time was
-being spent on what. When I couldn't find a tool that precisely fit these needs,
-I decided to build one myself.
+For a while, I've been wanting to keep track of time I spend on side projects
+and other non-day-job activities. I also wanted to be able to generate plain
+text reports to get an overview of time allocation. All of this needed to be
+done via a fast command line tool that prioritised ease of use over unnecessary
+features. After I couldn't find a tool that precisely fit these needs, I decided
+to build one myself.
 
 💾 Install
 ---
@@ -48,21 +49,30 @@ Reports show time spent on tasks in the last `n` days. These can also be
 aggregated (using `-a`) to consolidate all task entries and show the cumulative
 time spent on each task per day.
 
-This subcommand accepts a `-p` flag, which can be anything in the range [1-7]
-(both inclusive) to see reports for the last "n" days (including today).
-
 ```
 hours report -h
 
-Output reports based on tasks/log entries
+Output a report based on tasks/log entries.
 
-Usage:
-  hours report [flags]
+Reports show time spent on tasks in the last n days. These can also be
+aggregated (using -a) to consolidate all task entries and show the
+cumulative time spent on each task per day.
+
+Accepts an argument, which can be one of the following:
+
+  today:     for today's report
+  yest:      for yesterday's report
+  3d:        for a report on the last 3 days (default)
+  week:      for a report on the last 7 days
+  date:      for a report on a specific date (eg. "2024/06/08")
+  range:     for a report on a date range (eg. "2024/06/08...2024/06/12")
+
+Note: If a task log continues past midnight in your local timezone, it
+will be reported on the day it ends.
 
 Flags:
-  -a, --agg            whether to aggregate data by task in report
-  -n, --num-days int   number of days to gather data for (default 3)
-  -p, --plain          whether to output report without any formatting
+  -a, --agg     whether to aggregate data by task in report
+  -p, --plain   whether to output report without any formatting
 ```
 
 ```bash
@@ -72,20 +82,42 @@ hours report
 # see aggregated time spent on tasks
 hours report -a
 
-# see report for the last week
-hours report -n=7
+# see report for the 7 days
+hours report week
+
+# see report for a specific date range
+hours report 2024/06/08...2024/06/12
 ```
 
 ### Logs
 
 As the name suggests, logs are just that: list of task entries you've saved
-using `hours`. This subcommand accepts an argument, which can be one of the following:
+using `hours`.
 
-- `all`:     all recent log entries (in reverse chronological order)
-- `today`:   for log entries from today
-- `yest`:    for log entries from yesterday
-- `<date>`:  for log entries from that day
-- `<range>`: for log entries from in that range
+```
+hours log -h
+
+Output task log entries
+
+Accepts an argument, which can be one of the following:
+
+  today:     for log entries from today
+  yest:      for log entries from yesterday
+  3d:        for log entries from the last 3 days (default)
+  week:      for log entries from the last 7 days
+  date:      for log entries from that date (eg. "2024/06/08")
+  range:     for log entries from that date range (eg. "2024/06/08...2024/06/12")
+  all:       for all recent log entries (in reverse chronological order)
+
+Note: If a task log continues past midnight in your local timezone, it'll
+appear in the log on the day it ends.
+
+Usage:
+  hours log [flags]
+
+Flags:
+  -p, --plain   whether to output log without any formatting
+```
 
 ```bash
 # see log entries from today

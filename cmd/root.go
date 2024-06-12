@@ -14,7 +14,6 @@ var (
 	dbPath           string
 	db               *sql.DB
 	reportAgg        bool
-	reportNumDays    int
 	reportOrLogPlain bool
 )
 
@@ -53,21 +52,28 @@ Reports show time spent on tasks in the last n days. These can also be
 aggregated (using -a) to consolidate all task entries and show the
 cumulative time spent on each task per day.
 
+Accepts an argument, which can be one of the following:
+
+  today:     for today's report
+  yest:      for yesterday's report
+  3d:        for a report on the last 3 days (default)
+  week:      for a report on the last 7 days
+  date:      for a report on a specific date (eg. "2024/06/08")
+  range:     for a report on a date range (eg. "2024/06/08...2024/06/12")
+
 Note: If a task log continues past midnight in your local timezone, it
 will be reported on the day it ends.
     `,
+	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		out := os.Stdout
-
-		if reportNumDays <= 0 || reportNumDays > 7 {
-			die("--num-days/-n needs to be between [1-7] (both inclusive)")
-		}
-
-		if reportAgg {
-			ui.RenderNDaysReportAgg(db, out, reportNumDays, reportOrLogPlain)
+		var period string
+		if len(args) == 0 {
+			period = "3d"
 		} else {
-			ui.RenderNDaysReport(db, out, reportNumDays, reportOrLogPlain)
+			period = args[0]
 		}
+
+		ui.RenderReport(db, os.Stdout, reportOrLogPlain, period, reportAgg)
 	},
 }
 
@@ -78,25 +84,27 @@ var logCmd = &cobra.Command{
 
 Accepts an argument, which can be one of the following:
 
-  all:   for all recent log entries (in reverse chronological order)
-  today: for log entries from today
-  yest:  for log entries from yesterday
-  date:  for log entries from that date (eg. "2024/06/08")
-  range: for log entries from that range (eg. "2024/06/08...2024/06/12")
+  today:     for log entries from today
+  yest:      for log entries from yesterday
+  3d:        for log entries from the last 3 days (default)
+  week:      for log entries from the last 7 days
+  date:      for log entries from that date (eg. "2024/06/08")
+  range:     for log entries from that date range (eg. "2024/06/08...2024/06/12")
+  all:       for all recent log entries (in reverse chronological order)
 
 Note: If a task log continues past midnight in your local timezone, it'll
 appear in the log on the day it ends.
     `,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		var period string
 		if len(args) == 0 {
-			ui.RenderTaskLog(db, os.Stdout, reportOrLogPlain, "all")
+			period = "3d"
 		} else {
-			if args[0] == "" {
-				die("Time period shouldn't be empty\n")
-			}
-			ui.RenderTaskLog(db, os.Stdout, reportOrLogPlain, args[0])
+			period = args[0]
 		}
+
+		ui.RenderTaskLog(db, os.Stdout, reportOrLogPlain, period)
 	},
 }
 
@@ -120,7 +128,6 @@ func init() {
 
 	reportCmd.Flags().BoolVarP(&reportAgg, "agg", "a", false, "whether to aggregate data by task in report")
 	reportCmd.Flags().BoolVarP(&reportOrLogPlain, "plain", "p", false, "whether to output report without any formatting")
-	reportCmd.Flags().IntVarP(&reportNumDays, "num-days", "n", 3, "number of days to gather data for")
 
 	logCmd.Flags().BoolVarP(&reportOrLogPlain, "plain", "p", false, "whether to output log without any formatting")
 

@@ -18,8 +18,7 @@ const (
 
 func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string) {
 	if period == "" {
-		fmt.Fprint(writer, "Something went wrong, time period shouldn't be empty\n")
-		os.Exit(1)
+		return
 	}
 
 	switch period {
@@ -63,6 +62,44 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string) {
 			yest.Location(),
 		)
 		taskLogEntries, err := fetchTLEntriesBetweenTSFromDB(db, start, start.AddDate(0, 0, 1), logLimit)
+		if err != nil {
+			fmt.Fprintf(writer, "Something went wrong generating the log: %s\n", err)
+			os.Exit(1)
+		}
+		renderTaskLog(writer, plain, taskLogEntries)
+
+	case "3d":
+		threeDaysAgo := time.Now().AddDate(0, 0, -2)
+
+		start := time.Date(threeDaysAgo.Year(),
+			threeDaysAgo.Month(),
+			threeDaysAgo.Day(),
+			0,
+			0,
+			0,
+			0,
+			threeDaysAgo.Location(),
+		)
+		taskLogEntries, err := fetchTLEntriesBetweenTSFromDB(db, start, time.Now(), logLimit)
+		if err != nil {
+			fmt.Fprintf(writer, "Something went wrong generating the log: %s\n", err)
+			os.Exit(1)
+		}
+		renderTaskLog(writer, plain, taskLogEntries)
+
+	case "week":
+		aWeekBack := time.Now().AddDate(0, 0, -6)
+
+		start := time.Date(aWeekBack.Year(),
+			aWeekBack.Month(),
+			aWeekBack.Day(),
+			0,
+			0,
+			0,
+			0,
+			aWeekBack.Location(),
+		)
+		taskLogEntries, err := fetchTLEntriesBetweenTSFromDB(db, start, time.Now(), logLimit)
 		if err != nil {
 			fmt.Fprintf(writer, "Something went wrong generating the log: %s\n", err)
 			os.Exit(1)
