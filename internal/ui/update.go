@@ -61,13 +61,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.activeTLEndTS = endTS
 
-				if m.trackingInputs[entryComment].Value() == "" {
-					m.message = "Comment cannot be empty"
+				if m.activeTLEndTS.Sub(m.activeTLBeginTS).Seconds() <= 0 {
+					m.message = "time spent needs to be positive"
 					return m, tea.Batch(cmds...)
 				}
 
-				if m.activeTLEndTS.Sub(m.activeTLBeginTS).Seconds() <= 0 {
-					m.message = "time spent is zero"
+				if m.trackingInputs[entryComment].Value() == "" {
+					m.message = "Comment cannot be empty"
 					return m, tea.Batch(cmds...)
 				}
 
@@ -90,6 +90,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				if err != nil {
 					m.message = err.Error()
+					return m, tea.Batch(cmds...)
+				}
+
+				if endTS.Sub(beginTS).Seconds() <= 0 {
+					m.message = "time spent needs to be positive"
 					return m, tea.Batch(cmds...)
 				}
 

@@ -349,10 +349,79 @@ ORDER by tl.begin_ts ASC LIMIT ?;
 	return logEntries, nil
 }
 
+func fetchStatsFromDB(db *sql.DB, limit int) ([]taskReportEntry, error) {
+
+	rows, err := db.Query(`
+SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries, t.secs_spent
+from task_log tl
+LEFT JOIN task t on tl.task_id = t.id
+GROUP BY tl.task_id
+ORDER BY t.secs_spent DESC
+limit ?;
+`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tLE []taskReportEntry
+
+	for rows.Next() {
+		var entry taskReportEntry
+		err = rows.Scan(
+			&entry.taskId,
+			&entry.taskSummary,
+			&entry.numEntries,
+			&entry.secsSpent,
+		)
+		if err != nil {
+			return nil, err
+		}
+		tLE = append(tLE, entry)
+
+	}
+	return tLE, nil
+}
+
+func fetchStatsBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit int) ([]taskReportEntry, error) {
+
+	rows, err := db.Query(`
+SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries,  SUM(tl.secs_spent) AS secs_spent
+FROM task_log tl 
+LEFT JOIN task t ON tl.task_id = t.id
+WHERE tl.end_ts >= ? AND tl.end_ts < ?
+GROUP BY tl.task_id
+ORDER BY secs_spent DESC
+LIMIT ?;
+`, beginTs.UTC(), endTs.UTC(), limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tLE []taskReportEntry
+
+	for rows.Next() {
+		var entry taskReportEntry
+		err = rows.Scan(
+			&entry.taskId,
+			&entry.taskSummary,
+			&entry.numEntries,
+			&entry.secsSpent,
+		)
+		if err != nil {
+			return nil, err
+		}
+		tLE = append(tLE, entry)
+
+	}
+	return tLE, nil
+}
+
 func fetchReportBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit int) ([]taskReportEntry, error) {
 
 	rows, err := db.Query(`
-SELECT tl.task_id, t.summary, SUM(tl.secs_spent) AS secs_spent
+SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries,  SUM(tl.secs_spent) AS secs_spent
 FROM task_log tl 
 LEFT JOIN task t ON tl.task_id = t.id
 WHERE tl.end_ts >= ? AND tl.end_ts < ?
@@ -372,6 +441,7 @@ LIMIT ?;
 		err = rows.Scan(
 			&entry.taskId,
 			&entry.taskSummary,
+			&entry.numEntries,
 			&entry.secsSpent,
 		)
 		if err != nil {

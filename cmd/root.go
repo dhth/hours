@@ -11,10 +11,10 @@ import (
 )
 
 var (
-	dbPath           string
-	db               *sql.DB
-	reportAgg        bool
-	reportOrLogPlain bool
+	dbPath      string
+	db          *sql.DB
+	reportAgg   bool
+	outputPlain bool
 )
 
 func die(msg string, args ...any) {
@@ -45,11 +45,11 @@ var rootCmd = &cobra.Command{
 
 var reportCmd = &cobra.Command{
 	Use:   "report",
-	Short: "Output a report based on tasks/log entries",
-	Long: `Output a report based on tasks/log entries.
+	Short: "Output a report based on task log entries",
+	Long: `Output a report based on task log entries.
 
-Reports show time spent on tasks in the last n days. These can also be
-aggregated (using -a) to consolidate all task entries and show the
+Reports show time spent on tasks per day in the time period you specify. These
+can also be aggregated (using -a) to consolidate all task entries and show the
 cumulative time spent on each task per day.
 
 Accepts an argument, which can be one of the following:
@@ -57,9 +57,9 @@ Accepts an argument, which can be one of the following:
   today:     for today's report
   yest:      for yesterday's report
   3d:        for a report on the last 3 days (default)
-  week:      for a report on the last 7 days
-  date:      for a report on a specific date (eg. "2024/06/08")
-  range:     for a report on a date range (eg. "2024/06/08...2024/06/12")
+  week:      for a report on the current week
+  date:      for a report for a specific date (eg. "2024/06/08")
+  range:     for a report for a date range (eg. "2024/06/08...2024/06/12")
 
 Note: If a task log continues past midnight in your local timezone, it
 will be reported on the day it ends.
@@ -73,27 +73,26 @@ will be reported on the day it ends.
 			period = args[0]
 		}
 
-		ui.RenderReport(db, os.Stdout, reportOrLogPlain, period, reportAgg)
+		ui.RenderReport(db, os.Stdout, outputPlain, period, reportAgg)
 	},
 }
 
 var logCmd = &cobra.Command{
 	Use:   "log",
 	Short: "Output task log entries",
-	Long: `Output task log entries
+	Long: `Output task log entries.
 
 Accepts an argument, which can be one of the following:
 
   today:     for log entries from today
   yest:      for log entries from yesterday
   3d:        for log entries from the last 3 days (default)
-  week:      for log entries from the last 7 days
-  date:      for log entries from that date (eg. "2024/06/08")
-  range:     for log entries from that date range (eg. "2024/06/08...2024/06/12")
-  all:       for all recent log entries (in reverse chronological order)
+  week:      for log entries from the current week
+  date:      for log entries from a specific date (eg. "2024/06/08")
+  range:     for log entries from a specific date range (eg. "2024/06/08...2024/06/12")
 
 Note: If a task log continues past midnight in your local timezone, it'll
-appear in the log on the day it ends.
+appear in the log for the day it ends.
     `,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -104,7 +103,39 @@ appear in the log on the day it ends.
 			period = args[0]
 		}
 
-		ui.RenderTaskLog(db, os.Stdout, reportOrLogPlain, period)
+		ui.RenderTaskLog(db, os.Stdout, outputPlain, period)
+	},
+}
+
+var statsCmd = &cobra.Command{
+	Use:   "stats",
+	Short: "Output statistics for tracked time",
+	Long: `Output statistics for tracked time.
+
+Accepts an argument, which can be one of the following:
+
+  today:     show stats for today
+  yest:      show stats for yesterday
+  3d:        show stats for the last 3 days (default)
+  week:      show stats for the current week
+  month:     show stats for the current month
+  date:      show stats for a specific date (eg. "2024/06/08")
+  range:     show stats for a specific date range (eg. "2024/06/08...2024/06/12")
+  all:       show stats for all log entries
+
+Note: If a task log continues past midnight in your local timezone, it'll
+be considered in the stats for the day it ends.
+    `,
+	Args: cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		var period string
+		if len(args) == 0 {
+			period = "3d"
+		} else {
+			period = args[0]
+		}
+
+		ui.RenderStats(db, os.Stdout, outputPlain, period)
 	},
 }
 
@@ -126,13 +157,16 @@ func init() {
 	defaultDBPath := fmt.Sprintf("%s/hours.v%s.db", currentUser.HomeDir, "1")
 	rootCmd.PersistentFlags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 
-	reportCmd.Flags().BoolVarP(&reportAgg, "agg", "a", false, "whether to aggregate data by task in report")
-	reportCmd.Flags().BoolVarP(&reportOrLogPlain, "plain", "p", false, "whether to output report without any formatting")
+	reportCmd.Flags().BoolVarP(&reportAgg, "agg", "a", false, "whether to aggregate data by task for each day in report")
+	reportCmd.Flags().BoolVarP(&outputPlain, "plain", "p", false, "whether to output report without any formatting")
 
-	logCmd.Flags().BoolVarP(&reportOrLogPlain, "plain", "p", false, "whether to output log without any formatting")
+	logCmd.Flags().BoolVarP(&outputPlain, "plain", "p", false, "whether to output log without any formatting")
+
+	statsCmd.Flags().BoolVarP(&outputPlain, "plain", "p", false, "whether to output stats without any formatting")
 
 	rootCmd.AddCommand(reportCmd)
 	rootCmd.AddCommand(logCmd)
+	rootCmd.AddCommand(statsCmd)
 	rootCmd.AddCommand(activeCmd)
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true

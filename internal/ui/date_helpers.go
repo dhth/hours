@@ -2,18 +2,12 @@ package ui
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 )
 
-const (
-	timePeriodHoursUpperBound = 168
-)
-
 var (
 	timePeriodNotValidErr = errors.New("time period is not valid")
-	timePeriodTooLargeErr = fmt.Errorf("time period is too large; maximum allowed time period is %d hours", timePeriodHoursUpperBound)
 )
 
 type timePeriod struct {
@@ -21,34 +15,32 @@ type timePeriod struct {
 	end   time.Time
 }
 
-func parseDateDuration(period string) (timePeriod, error) {
+func parseDateDuration(period string) (timePeriod, int, error) {
 	var tp timePeriod
+	var numDaysBothInclusive int
 
 	elements := strings.Split(period, "...")
 	if len(elements) != 2 {
-		return tp, timePeriodNotValidErr
+		return tp, numDaysBothInclusive, timePeriodNotValidErr
 	}
 
 	start, err := time.ParseInLocation(string(dateFormat), elements[0], time.Local)
 	if err != nil {
-		return tp, timePeriodNotValidErr
+		return tp, numDaysBothInclusive, timePeriodNotValidErr
 	}
 
 	end, err := time.ParseInLocation(string(dateFormat), elements[1], time.Local)
 	if err != nil {
-		return tp, timePeriodNotValidErr
+		return tp, numDaysBothInclusive, timePeriodNotValidErr
 	}
 
 	if end.Sub(start) <= 0 {
-		return tp, timePeriodNotValidErr
-	}
-
-	if end.Sub(start).Hours() >= timePeriodHoursUpperBound {
-		return tp, timePeriodTooLargeErr
+		return tp, numDaysBothInclusive, timePeriodNotValidErr
 	}
 
 	tp.start = start
 	tp.end = end
+	numDaysBothInclusive = int(end.Sub(start).Hours()/24) + 1
 
-	return tp, nil
+	return tp, numDaysBothInclusive, nil
 }

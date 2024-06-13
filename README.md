@@ -7,7 +7,7 @@
 designed for users who want basic time tracking for their tasks/projects right
 in the terminal. With a simple and minimalistic UI, almost everything in `hours`
 can be achieved with one or two keypresses. It can also generate plaintext
-reports and logs based on time tracked.
+reports, summary statistics, and logs based on time tracked.
 
 🤔 Motivation
 ---
@@ -39,23 +39,19 @@ Open the TUI by simply running `hours`. The TUI lets you do the following:
 - deactivate/activate a task
 - view historical task log entries
 
-Besides a TUI, `hours` also offers reports and logs based on the time tracking
-you do. These can be viewed using the subcommands `report` and `log`
-respectively.
+Besides a TUI, `hours` also offers reports, statistics, and logs based on the
+time tracking you do. These can be viewed using the subcommands `report`,
+`stats`, and `log` respectively.
 
 ### Reports
-
-Reports show time spent on tasks in the last `n` days. These can also be
-aggregated (using `-a`) to consolidate all task entries and show the cumulative
-time spent on each task per day.
 
 ```
 hours report -h
 
-Output a report based on tasks/log entries.
+Output a report based on task log entries.
 
-Reports show time spent on tasks in the last n days. These can also be
-aggregated (using -a) to consolidate all task entries and show the
+Reports show time spent on tasks per day in the time period you specify. These
+can also be aggregated (using -a) to consolidate all task entries and show the
 cumulative time spent on each task per day.
 
 Accepts an argument, which can be one of the following:
@@ -63,15 +59,18 @@ Accepts an argument, which can be one of the following:
   today:     for today's report
   yest:      for yesterday's report
   3d:        for a report on the last 3 days (default)
-  week:      for a report on the last 7 days
-  date:      for a report on a specific date (eg. "2024/06/08")
-  range:     for a report on a date range (eg. "2024/06/08...2024/06/12")
+  week:      for a report on the current week
+  date:      for a report for a specific date (eg. "2024/06/08")
+  range:     for a report for a date range (eg. "2024/06/08...2024/06/12")
 
 Note: If a task log continues past midnight in your local timezone, it
 will be reported on the day it ends.
 
+Usage:
+  hours report [flags]
+
 Flags:
-  -a, --agg     whether to aggregate data by task in report
+  -a, --agg     whether to aggregate data by task for each day in report
   -p, --plain   whether to output report without any formatting
 ```
 
@@ -89,28 +88,53 @@ hours report week
 hours report 2024/06/08...2024/06/12
 ```
 
-### Logs
+Statistics
+---
 
-As the name suggests, logs are just that: list of task entries you've saved
-using `hours`.
+```
+hours stats -h
+
+Output statistics for tracked time.
+
+Accepts an argument, which can be one of the following:
+
+  today:     show stats for today
+  yest:      show stats for yesterday
+  3d:        show stats for the last 3 days (default)
+  week:      show stats for the current week
+  month:     show stats for the current month
+  date:      show stats for a specific date (eg. "2024/06/08")
+  range:     show stats for a specific date range (eg. "2024/06/08...2024/06/12")
+  all:       show stats for all log entries
+
+Note: If a task log continues past midnight in your local timezone, it'll
+be considered in the stats for the day it ends.
+
+Usage:
+  hours stats [flags]
+
+Flags:
+  -p, --plain   whether to output stats without any formatting
+```
+
+### Logs
 
 ```
 hours log -h
 
-Output task log entries
+Output task log entries.
 
 Accepts an argument, which can be one of the following:
 
   today:     for log entries from today
   yest:      for log entries from yesterday
   3d:        for log entries from the last 3 days (default)
-  week:      for log entries from the last 7 days
-  date:      for log entries from that date (eg. "2024/06/08")
-  range:     for log entries from that date range (eg. "2024/06/08...2024/06/12")
-  all:       for all recent log entries (in reverse chronological order)
+  week:      for log entries from the current week
+  date:      for log entries from a specific date (eg. "2024/06/08")
+  range:     for log entries from a specific date range (eg. "2024/06/08...2024/06/12")
 
 Note: If a task log continues past midnight in your local timezone, it'll
-appear in the log on the day it ends.
+appear in the log for the day it ends.
 
 Usage:
   hours log [flags]

@@ -13,20 +13,22 @@ import (
 )
 
 const (
-	logEntriesLimit      = 100
-	logNumDaysUpperBound = 7
+	statsLogEntriesLimit   = 10000
+	statsNumDaysUpperBound = 3650
 )
 
-func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string) {
+func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string) {
 	if period == "" {
 		return
 	}
 
-	var start time.Time
-	var entries []taskLogEntry
+	var start, end time.Time
+	var entries []taskReportEntry
 	var err error
 
 	switch period {
+	case "all":
+		entries, err = fetchStatsFromDB(db, statsLogEntriesLimit)
 
 	case "today":
 		today := time.Now()
@@ -40,7 +42,8 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string) {
 			0,
 			today.Location(),
 		)
-		entries, err = fetchTLEntriesBetweenTSFromDB(db, start, start.AddDate(0, 0, 1), logEntriesLimit)
+		end = start.AddDate(0, 0, 1)
+		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)
 
 	case "yest":
 		yest := time.Now().AddDate(0, 0, -1)
@@ -54,7 +57,8 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string) {
 			0,
 			yest.Location(),
 		)
-		entries, err = fetchTLEntriesBetweenTSFromDB(db, start, start.AddDate(0, 0, 1), logEntriesLimit)
+		end = start.AddDate(0, 0, 1)
+		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)
 
 	case "3d":
 		threeDaysAgo := time.Now().AddDate(0, 0, -2)
@@ -68,7 +72,8 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string) {
 			0,
 			threeDaysAgo.Location(),
 		)
-		entries, err = fetchTLEntriesBetweenTSFromDB(db, start, time.Now(), logEntriesLimit)
+		end = time.Now()
+		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)
 
 	case "week":
 		now := time.Now()
@@ -77,11 +82,17 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string) {
 		startOfWeek := now.AddDate(0, 0, -int(offset))
 		start = time.Date(startOfWeek.Year(), startOfWeek.Month(), startOfWeek.Day(), 0, 0, 0, 0, startOfWeek.Location())
 
-		entries, err = fetchTLEntriesBetweenTSFromDB(db, start, time.Now(), logEntriesLimit)
+		end = time.Now()
+		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)
+
+	case "month":
+		now := time.Now()
+
+		start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		end = time.Now()
+		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)
 
 	default:
-		var end time.Time
-
 		if strings.Contains(period, "...") {
 			var ts timePeriod
 			var nd int
@@ -90,12 +101,10 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string) {
 				fmt.Fprintf(writer, "%s\n", err)
 				os.Exit(1)
 			}
-
-			if nd > logNumDaysUpperBound {
-				fmt.Fprintf(writer, "Time period is too large; maximum number of days allowed in range (both inclusive): %d\n", logNumDaysUpperBound)
+			if nd > statsNumDaysUpperBound {
+				fmt.Fprintf(writer, "Time period is too large; maximum number of days allowed in range (both inclusive): %d\n", statsNumDaysUpperBound)
 				os.Exit(1)
 			}
-
 			start = ts.start
 			end = ts.end.AddDate(0, 0, 1)
 		} else {
@@ -107,7 +116,7 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string) {
 			end = start.AddDate(0, 0, 1)
 		}
 
-		entries, err = fetchTLEntriesBetweenTSFromDB(db, start, end, logEntriesLimit)
+		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)
 	}
 
 	if err != nil {
@@ -118,11 +127,10 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string) {
 	if len(entries) == 0 {
 		return
 	}
-
-	renderTaskLog(writer, plain, entries)
+	renderStats(writer, plain, entries)
 }
 
-func renderTaskLog(writer io.Writer, plain bool, entries []taskLogEntry) {
+func renderStats(writer io.Writer, plain bool, entries []taskReportEntry) {
 
 	data := make([][]string, len(entries))
 	var timeSpentStr string
@@ -136,8 +144,7 @@ func renderTaskLog(writer io.Writer, plain bool, entries []taskLogEntry) {
 		if plain {
 			data[i] = []string{
 				Trim(entry.taskSummary, 50),
-				Trim(entry.comment, 80),
-				fmt.Sprintf("%s  ...  %s", entry.beginTs.Format(timeFormat), entry.beginTs.Format(timeFormat)),
+				fmt.Sprintf("%d", entry.numEntries),
 				timeSpentStr,
 			}
 		} else {
@@ -148,15 +155,14 @@ func renderTaskLog(writer io.Writer, plain bool, entries []taskLogEntry) {
 			}
 			data[i] = []string{
 				reportStyle.Render(Trim(entry.taskSummary, 50)),
-				reportStyle.Render(Trim(entry.comment, 80)),
-				reportStyle.Render(fmt.Sprintf("%s  ...  %s", entry.beginTs.Format(timeFormat), entry.endTs.Format(timeFormat))),
+				reportStyle.Render(fmt.Sprintf("%d", entry.numEntries)),
 				reportStyle.Render(timeSpentStr),
 			}
 		}
 	}
 	table := tablewriter.NewWriter(writer)
 
-	headerValues := []string{"Task", "Comment", "Duration", "TimeSpent"}
+	headerValues := []string{"Task", "#LogEntries", "TimeSpent"}
 	headers := make([]string, len(headerValues))
 	for i, h := range headerValues {
 		headers[i] = rs.headerStyle.Render(h)

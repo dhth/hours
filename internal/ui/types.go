@@ -36,6 +36,7 @@ type activeTaskDetails struct {
 type taskReportEntry struct {
 	taskId      int
 	taskSummary string
+	numEntries  int
 	secsSpent   int
 }
 

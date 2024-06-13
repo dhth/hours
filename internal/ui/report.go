@@ -13,6 +13,10 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+const (
+	reportNumDaysUpperBound = 7
+)
+
 func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg bool) {
 	if period == "" {
 		return
@@ -67,19 +71,12 @@ func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg b
 			nDaysBack.Location(),
 		)
 	case "week":
-		numDays = 7
 		now := time.Now()
-		nDaysBack := now.AddDate(0, 0, -1*(numDays-1))
-
-		start = time.Date(nDaysBack.Year(),
-			nDaysBack.Month(),
-			nDaysBack.Day(),
-			0,
-			0,
-			0,
-			0,
-			nDaysBack.Location(),
-		)
+		weekday := now.Weekday()
+		offset := (7 + weekday - time.Monday) % 7
+		startOfWeek := now.AddDate(0, 0, -int(offset))
+		start = time.Date(startOfWeek.Year(), startOfWeek.Month(), startOfWeek.Day(), 0, 0, 0, 0, startOfWeek.Location())
+		numDays = int(offset) + 1
 
 	default:
 		var end time.Time
@@ -87,11 +84,17 @@ func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg b
 
 		if strings.Contains(period, "...") {
 			var ts timePeriod
-			ts, err = parseDateDuration(period)
+			var nd int
+			ts, nd, err = parseDateDuration(period)
 			if err != nil {
 				fmt.Fprintf(writer, "%s\n", err)
 				os.Exit(1)
 			}
+			if nd > reportNumDaysUpperBound {
+				fmt.Fprintf(writer, "Time period is too large; maximum number of days allowed in range (both inclusive): %d\n", reportNumDaysUpperBound)
+				os.Exit(1)
+			}
+
 			start = ts.start
 			end = ts.end.AddDate(0, 0, 1)
 		} else {
