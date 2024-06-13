@@ -275,20 +275,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "ctrl+s":
 			if m.activeView == activeTaskListView && !m.trackingActive {
-				m.activeView = manualTasklogEntryView
-				m.tasklogSaveType = tasklogInsert
-				m.trackingFocussedField = entryBeginTS
-				currentTime := time.Now()
-				dateString := currentTime.Format("2006/01/02")
-				currentTimeStr := currentTime.Format(timeFormat)
+				_, ok := m.activeTasksList.SelectedItem().(*task)
+				if !ok {
+					message := "Couldn't select a task"
+					m.message = message
+					m.messages = append(m.messages, message)
+				} else {
+					m.activeView = manualTasklogEntryView
+					m.tasklogSaveType = tasklogInsert
+					m.trackingFocussedField = entryBeginTS
+					currentTime := time.Now()
+					dateString := currentTime.Format("2006/01/02")
+					currentTimeStr := currentTime.Format(timeFormat)
 
-				m.trackingInputs[entryBeginTS].SetValue(dateString + " ")
-				m.trackingInputs[entryEndTS].SetValue(currentTimeStr)
+					m.trackingInputs[entryBeginTS].SetValue(dateString + " ")
+					m.trackingInputs[entryEndTS].SetValue(currentTimeStr)
 
-				for i := range m.trackingInputs {
-					m.trackingInputs[i].Blur()
+					for i := range m.trackingInputs {
+						m.trackingInputs[i].Blur()
+					}
+					m.trackingInputs[m.trackingFocussedField].Focus()
 				}
-				m.trackingInputs[m.trackingFocussedField].Focus()
 			}
 		case "ctrl+d":
 			switch m.activeView {

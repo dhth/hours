@@ -2,12 +2,18 @@ package cmd
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/user"
 
 	"github.com/dhth/hours/internal/ui"
 	"github.com/spf13/cobra"
+)
+
+const (
+	repoIssuesUrl = "https://github.com/dhth/hours/issues"
 )
 
 var (
@@ -33,13 +39,65 @@ var rootCmd = &cobra.Command{
 		dbPathFull := expandTilde(dbPath)
 
 		var err error
-		db, err = setupDB(dbPathFull)
-		if err != nil {
-			die("Couldn't set up \"hours\"' local database. This is a fatal error; let @dhth know about this.\n%s\n", err)
+
+		_, err = os.Stat(dbPathFull)
+		if errors.Is(err, fs.ErrNotExist) {
+			db, err = getDB(dbPathFull)
+
+			if err != nil {
+				die("Couldn't create hours' local database. This is a fatal error; let @dhth know about this via %s.\nError: %s",
+					repoIssuesUrl,
+					err)
+			}
+
+			err = initDB(db)
+			if err != nil {
+				die("Couldn't create hours' local database. This is a fatal error; let @dhth know about this via %s.\nError: %s",
+					repoIssuesUrl,
+					err)
+			}
+			upgradeDB(db, 1)
+		} else {
+			db, err = getDB(dbPathFull)
+			if err != nil {
+				die("Couldn't open hours' local database. This is a fatal error; let @dhth know about this via %s.\nError: %s",
+					repoIssuesUrl,
+					err)
+			}
 		}
+	},
+	PreRun: func(cmd *cobra.Command, args []string) {
+		exitIfDBNeedsUpgrade(db)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ui.RenderUI(db)
+	},
+}
+
+var dbCmd = &cobra.Command{
+	Use:   "db",
+	Short: "Operations on hours' local database",
+	Long: `Operations on hours' local database.
+
+Accepts an argument, which can be one of the following:
+
+  upgrade:   upgrade hours' local database to the latest version
+`,
+	ValidArgs: []string{"upgrade"},
+	Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+	Run: func(cmd *cobra.Command, args []string) {
+
+		latestVersion, versionErr := fetchDBVersion(db)
+		if versionErr != nil {
+			die("Couldn't get hours' latest database version. This is a fatal error; let @dhth know about this via %s.\nError: %s", repoIssuesUrl, versionErr)
+		}
+
+		if latestVersion.version == latestDBVersion {
+			die("database is already at latest version")
+		}
+
+		upgradeDB(db, latestVersion.version)
+		fmt.Printf("done\n")
 	},
 }
 
@@ -65,6 +123,9 @@ Note: If a task log continues past midnight in your local timezone, it
 will be reported on the day it ends.
     `,
 	Args: cobra.MaximumNArgs(1),
+	PreRun: func(cmd *cobra.Command, args []string) {
+		exitIfDBNeedsUpgrade(db)
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		var period string
 		if len(args) == 0 {
@@ -95,6 +156,9 @@ Note: If a task log continues past midnight in your local timezone, it'll
 appear in the log for the day it ends.
     `,
 	Args: cobra.MaximumNArgs(1),
+	PreRun: func(cmd *cobra.Command, args []string) {
+		exitIfDBNeedsUpgrade(db)
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		var period string
 		if len(args) == 0 {
@@ -127,6 +191,9 @@ Note: If a task log continues past midnight in your local timezone, it'll
 be considered in the stats for the day it ends.
     `,
 	Args: cobra.MaximumNArgs(1),
+	PreRun: func(cmd *cobra.Command, args []string) {
+		exitIfDBNeedsUpgrade(db)
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		var period string
 		if len(args) == 0 {
@@ -142,6 +209,9 @@ be considered in the stats for the day it ends.
 var activeCmd = &cobra.Command{
 	Use:   "active",
 	Short: "Show the task being actively tracked by \"hours\"",
+	PreRun: func(cmd *cobra.Command, args []string) {
+		exitIfDBNeedsUpgrade(db)
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ui.ShowActiveTask(db, os.Stdout)
 	},
@@ -154,7 +224,7 @@ func init() {
 		die("Error getting your home directory, This is a fatal error; use --dbpath to specify database path manually\n%s\n", err)
 	}
 
-	defaultDBPath := fmt.Sprintf("%s/hours.v%s.db", currentUser.HomeDir, "1")
+	defaultDBPath := fmt.Sprintf("%s/hours.db", currentUser.HomeDir)
 	rootCmd.PersistentFlags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 
 	reportCmd.Flags().BoolVarP(&reportAgg, "agg", "a", false, "whether to aggregate data by task for each day in report")
@@ -168,6 +238,7 @@ func init() {
 	rootCmd.AddCommand(logCmd)
 	rootCmd.AddCommand(statsCmd)
 	rootCmd.AddCommand(activeCmd)
+	rootCmd.AddCommand(dbCmd)
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 }

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/dustin/go-humanize"
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -122,12 +121,16 @@ func renderNDaysReport(db *sql.DB, writer io.Writer, start time.Time, numDays in
 	var maxEntryForADay int
 	reportData := make(map[int][]taskLogEntry)
 
+	noEntriesFound := true
 	for i := 0; i < numDays; i++ {
 		nextDay = day.AddDate(0, 0, 1)
 		taskLogEntries, err := fetchTLEntriesBetweenTSFromDB(db, day, nextDay, 100)
 		if err != nil {
 			fmt.Fprintf(writer, "Something went wrong generating the report:\n%s", err)
 			os.Exit(1)
+		}
+		if noEntriesFound && len(taskLogEntries) > 0 {
+			noEntriesFound = false
 		}
 
 		day = nextDay
@@ -136,6 +139,11 @@ func renderNDaysReport(db *sql.DB, writer io.Writer, start time.Time, numDays in
 			maxEntryForADay = len(taskLogEntries)
 		}
 	}
+
+	if noEntriesFound {
+		return
+	}
+
 	data := make([][]string, maxEntryForADay)
 	totalSecsPerDay := make(map[int]int)
 
@@ -228,12 +236,16 @@ func renderNDaysReportAgg(db *sql.DB, writer io.Writer, start time.Time, numDays
 	var maxEntryForADay int
 	reportData := make(map[int][]taskReportEntry)
 
+	noEntriesFound := true
 	for i := 0; i < numDays; i++ {
 		nextDay = day.AddDate(0, 0, 1)
 		taskLogEntries, err := fetchReportBetweenTSFromDB(db, day, nextDay, 100)
 		if err != nil {
 			fmt.Fprintf(writer, "Something went wrong generating the report:\n%s", err)
 			os.Exit(1)
+		}
+		if noEntriesFound && len(taskLogEntries) > 0 {
+			noEntriesFound = false
 		}
 
 		day = nextDay
@@ -242,6 +254,11 @@ func renderNDaysReportAgg(db *sql.DB, writer io.Writer, start time.Time, numDays
 			maxEntryForADay = len(taskLogEntries)
 		}
 	}
+
+	if noEntriesFound {
+		return
+	}
+
 	data := make([][]string, maxEntryForADay)
 	totalSecsPerDay := make(map[int]int)
 
@@ -319,57 +336,6 @@ func renderNDaysReportAgg(db *sql.DB, writer io.Writer, start time.Time, numDays
 	table.SetAutoFormatHeaders(false)
 	table.AppendBulk(data)
 	table.SetFooter(totalTimePerDay)
-
-	table.Render()
-}
-
-func RenderTaskReport(db *sql.DB, writer io.Writer) {
-	tasks, err := fetchTasksFromDB(db, true, 30)
-	if err != nil {
-		fmt.Fprintf(writer, "Something went wrong generating the report:\n%s", err)
-		os.Exit(1)
-	}
-
-	if len(tasks) == 0 {
-		return
-	}
-
-	data := make([][]string, len(tasks))
-	var timeSpentStr string
-
-	styleCache := make(map[string]lipgloss.Style)
-
-	for i, entry := range tasks {
-		reportStyle, ok := styleCache[entry.summary]
-		if !ok {
-			reportStyle = getDynamicStyle(entry.summary)
-			styleCache[entry.summary] = reportStyle
-		}
-
-		timeSpentStr = humanizeDuration(entry.secsSpent)
-		data[i] = []string{
-			reportStyle.Render(fmt.Sprintf("%d", i+1)),
-			reportStyle.Render(Trim(entry.summary, 50)),
-			reportStyle.Render(timeSpentStr),
-			reportStyle.Render(humanize.Time(entry.updatedAt)),
-		}
-	}
-
-	table := tablewriter.NewWriter(writer)
-
-	headerValues := []string{"#", "Task", "TimeSpent", "LastUpdated"}
-	headers := make([]string, len(headerValues))
-	for i, h := range headerValues {
-		headers[i] = reportHeaderStyle.Render(h)
-	}
-	table.SetHeader(headers)
-
-	table.SetRowSeparator(reportBorderStyle.Render("-"))
-	table.SetColumnSeparator(reportBorderStyle.Render("|"))
-	table.SetCenterSeparator(reportBorderStyle.Render("+"))
-	table.SetAutoWrapText(false)
-	table.SetAutoFormatHeaders(false)
-	table.AppendBulk(data)
 
 	table.Render()
 }

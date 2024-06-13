@@ -4,7 +4,7 @@
 ---
 
 `hours` is a no-frills command-line app for tracking time on tasks. It's
-designed for users who want basic time tracking for their tasks/projects right
+designed for users who want basic time tracking for their tasks/projects, right
 in the terminal. With a simple and minimalistic UI, almost everything in `hours`
 can be achieved with one or two keypresses. It can also generate plaintext
 reports, summary statistics, and logs based on time tracked.
@@ -15,9 +15,9 @@ reports, summary statistics, and logs based on time tracked.
 For a while, I've been wanting to keep track of time I spend on side projects
 and other non-day-job activities. I also wanted to be able to generate plain
 text reports to get an overview of time allocation. All of this needed to be
-done via a fast command line tool that prioritised ease of use over unnecessary
-features. After I couldn't find a tool that precisely fit these needs, I decided
-to build one myself.
+done via a fast command line tool that prioritised ease of use over
+fancy-but-ultimately-not-so-useful features. I couldn't find a tool that
+precisely fit these needs, so I decided to build one for myself.
 
 💾 Install
 ---
