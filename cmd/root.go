@@ -31,7 +31,12 @@ func die(msg string, args ...any) {
 
 var rootCmd = &cobra.Command{
 	Use:   "hours",
-	Short: "Track time on your tasks via a simple TUI.",
+	Short: "\"hours\" is a no-frills time tracking toolkit for the command line",
+	Long: `"hours" is a no-frills time tracking toolkit for the command line.
+
+You can use "hours" to track time on your tasks, or view logs, reports, and
+summary statistics for your tracked time.
+`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if dbPath == "" {
 			die("dbpath cannot be empty")

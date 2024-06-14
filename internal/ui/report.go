@@ -153,6 +153,18 @@ func renderNDaysReport(db *sql.DB, writer io.Writer, start time.Time, numDays in
 
 	rs := getReportStyles(plain)
 
+	var summaryBudget int
+	switch numDays {
+	case 7:
+		summaryBudget = 8
+	case 6:
+		summaryBudget = 10
+	case 5:
+		summaryBudget = 14
+	default:
+		summaryBudget = 16
+	}
+
 	styleCache := make(map[string]lipgloss.Style)
 	for rowIndex := 0; rowIndex < maxEntryForADay; rowIndex++ {
 		row := make([]string, numDays)
@@ -166,8 +178,8 @@ func renderNDaysReport(db *sql.DB, writer io.Writer, start time.Time, numDays in
 			timeSpentStr := humanizeDuration(tr.secsSpent)
 
 			if plain {
-				row[colIndex] = fmt.Sprintf("%s %s",
-					RightPadTrim(tr.taskSummary, 8, false),
+				row[colIndex] = fmt.Sprintf("%s  %s",
+					RightPadTrim(tr.taskSummary, summaryBudget, false),
 					timeSpentStr,
 				)
 			} else {
@@ -178,8 +190,8 @@ func renderNDaysReport(db *sql.DB, writer io.Writer, start time.Time, numDays in
 					styleCache[tr.taskSummary] = reportStyle
 				}
 
-				row[colIndex] = fmt.Sprintf("%s %s",
-					reportStyle.Render(RightPadTrim(tr.taskSummary, 8, false)),
+				row[colIndex] = fmt.Sprintf("%s  %s",
+					reportStyle.Render(RightPadTrim(tr.taskSummary, summaryBudget, false)),
 					reportStyle.Render(timeSpentStr),
 				)
 			}
@@ -268,6 +280,18 @@ func renderNDaysReportAgg(db *sql.DB, writer io.Writer, start time.Time, numDays
 
 	rs := getReportStyles(plain)
 
+	var summaryBudget int
+	switch numDays {
+	case 7:
+		summaryBudget = 8
+	case 6:
+		summaryBudget = 10
+	case 5:
+		summaryBudget = 14
+	default:
+		summaryBudget = 16
+	}
+
 	styleCache := make(map[string]lipgloss.Style)
 	for rowIndex := 0; rowIndex < maxEntryForADay; rowIndex++ {
 		row := make([]string, numDays)
@@ -281,8 +305,8 @@ func renderNDaysReportAgg(db *sql.DB, writer io.Writer, start time.Time, numDays
 			timeSpentStr := humanizeDuration(tr.secsSpent)
 
 			if plain {
-				row[colIndex] = fmt.Sprintf("%s %s",
-					RightPadTrim(tr.taskSummary, 8, false),
+				row[colIndex] = fmt.Sprintf("%s  %s",
+					RightPadTrim(tr.taskSummary, summaryBudget, false),
 					timeSpentStr,
 				)
 			} else {
@@ -292,8 +316,8 @@ func renderNDaysReportAgg(db *sql.DB, writer io.Writer, start time.Time, numDays
 					styleCache[tr.taskSummary] = reportStyle
 				}
 
-				row[colIndex] = fmt.Sprintf("%s %s",
-					reportStyle.Render(RightPadTrim(tr.taskSummary, 8, false)),
+				row[colIndex] = fmt.Sprintf("%s  %s",
+					reportStyle.Render(RightPadTrim(tr.taskSummary, summaryBudget, false)),
 					reportStyle.Render(timeSpentStr),
 				)
 			}

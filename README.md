@@ -1,13 +1,15 @@
 # hours
 
-✨ Overview
----
+`hours` is a no-frills time tracking toolkit for the command line.
 
-`hours` is a no-frills command-line app for tracking time on tasks. It's
-designed for users who want basic time tracking for their tasks/projects, right
-in the terminal. With a simple and minimalistic UI, almost everything in `hours`
-can be achieved with one or two keypresses. It can also generate plaintext
-reports, summary statistics, and logs based on time tracked.
+It's designed for users who want basic time tracking for their tasks/projects
+right in the terminal. With a simple and minimalistic UI, almost everything in
+`hours` can be achieved with one or two keypresses. It can also generate
+plaintext reports, summary statistics, and logs based on time tracked.
+
+![Usage](https://tools.dhruvs.space/images/hours/hours.gif)
+
+[Link to Video][2]
 
 🤔 Motivation
 ---
@@ -22,6 +24,12 @@ precisely fit these needs, so I decided to build one for myself.
 💾 Install
 ---
 
+**homebrew**:
+
+```sh
+brew install dhth/tap/hours
+```
+
 **go**:
 
 ```sh
@@ -31,6 +39,8 @@ go install github.com/dhth/hours@latest
 ⚡️ Usage
 ---
 
+### TUI
+
 Open the TUI by simply running `hours`. The TUI lets you do the following:
 
 - create/update tasks
@@ -39,125 +49,93 @@ Open the TUI by simply running `hours`. The TUI lets you do the following:
 - deactivate/activate a task
 - view historical task log entries
 
+![Usage](https://tools.dhruvs.space/images/hours/tui-1.png)
+
+![Usage](https://tools.dhruvs.space/images/hours/tui-2.png)
+
+![Usage](https://tools.dhruvs.space/images/hours/tui-3.png)
+
 Besides a TUI, `hours` also offers reports, statistics, and logs based on the
 time tracking you do. These can be viewed using the subcommands `report`,
 `stats`, and `log` respectively.
 
 ### Reports
 
+```bash
+hours report [flags] [arg]
 ```
-hours report -h
 
 Output a report based on task log entries.
 
 Reports show time spent on tasks per day in the time period you specify. These
-can also be aggregated (using -a) to consolidate all task entries and show the
+can also be aggregated (using `-a`) to consolidate all task entries and show the
 cumulative time spent on each task per day.
 
 Accepts an argument, which can be one of the following:
 
-  today:     for today's report
-  yest:      for yesterday's report
-  3d:        for a report on the last 3 days (default)
-  week:      for a report on the current week
-  date:      for a report for a specific date (eg. "2024/06/08")
-  range:     for a report for a date range (eg. "2024/06/08...2024/06/12")
+    today:     for today's report
+    yest:      for yesterday's report
+    3d:        for a report on the last 3 days (default)
+    week:      for a report on the current week
+    date:      for a report for a specific date (eg. "2024/06/08")
+    range:     for a report for a date range (eg. "2024/06/08...2024/06/12")
 
-Note: If a task log continues past midnight in your local timezone, it
-will be reported on the day it ends.
+*Note: If a task log continues past midnight in your local timezone, it will be
+reported on the day it ends.*
 
-Usage:
-  hours report [flags]
-
-Flags:
-  -a, --agg     whether to aggregate data by task for each day in report
-  -p, --plain   whether to output report without any formatting
-```
-
-```bash
-# see report from last 3 days
-hours report
-
-# see aggregated time spent on tasks
-hours report -a
-
-# see report for the 7 days
-hours report week
-
-# see report for a specific date range
-hours report 2024/06/08...2024/06/12
-```
-
-Statistics
----
-
-```
-hours stats -h
-
-Output statistics for tracked time.
-
-Accepts an argument, which can be one of the following:
-
-  today:     show stats for today
-  yest:      show stats for yesterday
-  3d:        show stats for the last 3 days (default)
-  week:      show stats for the current week
-  month:     show stats for the current month
-  date:      show stats for a specific date (eg. "2024/06/08")
-  range:     show stats for a specific date range (eg. "2024/06/08...2024/06/12")
-  all:       show stats for all log entries
-
-Note: If a task log continues past midnight in your local timezone, it'll
-be considered in the stats for the day it ends.
-
-Usage:
-  hours stats [flags]
-
-Flags:
-  -p, --plain   whether to output stats without any formatting
-```
+![Usage](https://tools.dhruvs.space/images/hours/report-1.png)
 
 ### Logs
 
+```bash
+hours log [flags] [arg]
 ```
-hours log -h
 
 Output task log entries.
 
 Accepts an argument, which can be one of the following:
 
-  today:     for log entries from today
-  yest:      for log entries from yesterday
-  3d:        for log entries from the last 3 days (default)
-  week:      for log entries from the current week
-  date:      for log entries from a specific date (eg. "2024/06/08")
-  range:     for log entries from a specific date range (eg. "2024/06/08...2024/06/12")
+    today:     for log entries from today
+    yest:      for log entries from yesterday
+    3d:        for log entries from the last 3 days (default)
+    week:      for log entries from the current week
+    date:      for log entries from a specific date (eg. "2024/06/08")
+    range:     for log entries from a specific date range (eg. "2024/06/08...2024/06/12")
 
-Note: If a task log continues past midnight in your local timezone, it'll
-appear in the log for the day it ends.
+*Note: If a task log continues past midnight in your local timezone, it'll
+appear in the log for the day it ends.*
 
-Usage:
-  hours log [flags]
+![Usage](https://tools.dhruvs.space/images/hours/log-1.png)
 
-Flags:
-  -p, --plain   whether to output log without any formatting
-```
+Statistics
+---
 
 ```bash
-# see log entries from today
-hours log today
-
-# see log entries from a specific day
-hours log 2024/06/08
-
-# see log entries from a specific date range
-hours log 2024/06/08...2024/06/12
+hours stats [flag] [arg]
 ```
+
+Output statistics for tracked time.
+
+Accepts an argument, which can be one of the following:
+
+    today:     show stats for today
+    yest:      show stats for yesterday
+    3d:        show stats for the last 3 days (default)
+    week:      show stats for the current week
+    month:     show stats for the current month
+    date:      show stats for a specific date (eg. "2024/06/08")
+    range:     show stats for a specific date range (eg. "2024/06/08...2024/06/12")
+    all:       show stats for all log entries
+
+*Note: If a task log continues past midnight in your local timezone, it'll
+be considered in the stats for the day it ends.*
+
+![Usage](https://tools.dhruvs.space/images/hours/stats-1.png)
 
 📋 TUI Reference Manual
 ---
 
-```
+```text
 "hours" has 5 panes:
   - Tasks List View                      Shows your tasks
   - Task Management View                 Allows you to create/update tasks
@@ -213,3 +191,4 @@ Acknowledgements
 `hours` is built using the TUI framework [bubbletea][1].
 
 [1]: https://github.com/charmbracelet/bubbletea
+[2]: https://www.youtube.com/watch?v=o244r1nyxac
