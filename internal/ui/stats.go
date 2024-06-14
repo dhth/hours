@@ -143,7 +143,7 @@ func renderStats(writer io.Writer, plain bool, entries []taskReportEntry) {
 
 		if plain {
 			data[i] = []string{
-				Trim(entry.taskSummary, 50),
+				Trim(entry.taskSummary, 30),
 				fmt.Sprintf("%d", entry.numEntries),
 				timeSpentStr,
 			}
@@ -154,7 +154,7 @@ func renderStats(writer io.Writer, plain bool, entries []taskReportEntry) {
 				styleCache[entry.taskSummary] = reportStyle
 			}
 			data[i] = []string{
-				reportStyle.Render(Trim(entry.taskSummary, 50)),
+				reportStyle.Render(Trim(entry.taskSummary, 30)),
 				reportStyle.Render(fmt.Sprintf("%d", entry.numEntries)),
 				reportStyle.Render(timeSpentStr),
 			}

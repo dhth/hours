@@ -41,7 +41,7 @@ type taskReportEntry struct {
 }
 
 func (t task) Title() string {
-	return t.title
+	return Trim(t.title, 60)
 }
 
 func (t task) Description() string {
@@ -53,7 +53,7 @@ func (t task) FilterValue() string {
 }
 
 func (e taskLogEntry) Title() string {
-	return e.comment
+	return Trim(e.comment, 60)
 }
 
 func (e taskLogEntry) Description() string {

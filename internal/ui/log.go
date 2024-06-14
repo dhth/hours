@@ -135,8 +135,8 @@ func renderTaskLog(writer io.Writer, plain bool, entries []taskLogEntry) {
 
 		if plain {
 			data[i] = []string{
-				Trim(entry.taskSummary, 50),
-				Trim(entry.comment, 80),
+				Trim(entry.taskSummary, 30),
+				Trim(entry.comment, 30),
 				fmt.Sprintf("%s  ...  %s", entry.beginTs.Format(timeFormat), entry.beginTs.Format(timeFormat)),
 				timeSpentStr,
 			}
@@ -147,8 +147,8 @@ func renderTaskLog(writer io.Writer, plain bool, entries []taskLogEntry) {
 				styleCache[entry.taskSummary] = reportStyle
 			}
 			data[i] = []string{
-				reportStyle.Render(Trim(entry.taskSummary, 50)),
-				reportStyle.Render(Trim(entry.comment, 80)),
+				reportStyle.Render(Trim(entry.taskSummary, 30)),
+				reportStyle.Render(Trim(entry.comment, 30)),
 				reportStyle.Render(fmt.Sprintf("%s  ...  %s", entry.beginTs.Format(timeFormat), entry.endTs.Format(timeFormat))),
 				reportStyle.Render(timeSpentStr),
 			}
