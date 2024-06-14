@@ -48,10 +48,12 @@ var (
     k/<Down>                                Move cursor down
     h<Left>                                 Go to previous page
     l<Right>                                Go to next page
-    /                                       Start filtering
+    <ctrl+r>                                Refresh list
 `),
 		helpHeaderStyle.Render("Task List View"),
 		helpSectionStyle.Render(`
+    a                                       Add a task
+    u                                       Update task details
     s                                       Toggle recording time on the currently selected task,
                                                 will open up a form to record a comment on the
                                                 second "s" keypress
@@ -62,7 +64,6 @@ var (
 		helpHeaderStyle.Render("Task Log List View"),
 		helpSectionStyle.Render(`
     <ctrl+d>                                Delete task log entry
-    <ctrl+r>                                Refresh list
 `),
 		helpHeaderStyle.Render("Inactive Task List View"),
 		helpSectionStyle.Render(`

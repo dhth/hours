@@ -160,10 +160,12 @@ General List Controls
   k/<Down>                                Move cursor down
   h<Left>                                 Go to previous page
   l<Right>                                Go to next page
-  /                                       Start filtering
+  <ctrl+r>                                Refresh list
 
 Task List View
 
+  a                                       Add a task
+  u                                       Update task details
   s                                       Toggle recording time on the currently selected task,
                                               will open up a form to record a comment on the
                                               second "s" keypress

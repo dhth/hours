@@ -19,6 +19,7 @@ const (
 	reportHeaderColor      = "#d85d5d"
 	reportFooterColor      = "#ef8f62"
 	reportBorderColor      = "#665c54"
+	initialHelpMsgColor    = "#a58390"
 	helpMsgColor           = "#83a598"
 	helpViewTitleColor     = "#83a598"
 	helpHeaderColor        = "#83a598"
@@ -35,6 +36,9 @@ var (
 			PaddingLeft(1).
 			Bold(true).
 			Foreground(lipgloss.Color(helpMsgColor))
+
+	initialHelpMsgStyle = helpMsgStyle.
+				Foreground(lipgloss.Color(initialHelpMsgColor))
 
 	baseListStyle = lipgloss.NewStyle().PaddingTop(1).PaddingRight(2).PaddingLeft(1).PaddingBottom(1)
 	viewPortStyle = lipgloss.NewStyle().

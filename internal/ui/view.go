@@ -151,7 +151,10 @@ func (m model) View() string {
 
 	var helpMsg string
 	if m.showHelpIndicator {
-		helpMsg = " " + helpMsgStyle.Render("Press ? for help")
+		if m.activeView == activeTaskListView && len(m.activeTasksList.Items()) == 0 {
+			helpMsg += " " + initialHelpMsgStyle.Render("Press a to add a task")
+		}
+		helpMsg += " " + helpMsgStyle.Render("Press ? for help")
 	}
 
 	footerStr := fmt.Sprintf("%s%s%s",
