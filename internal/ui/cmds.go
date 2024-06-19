@@ -145,3 +145,20 @@ func hideHelp(interval time.Duration) tea.Cmd {
 		return HideHelpMsg{}
 	})
 }
+
+func getReportData(db *sql.DB, start time.Time, numDays int, plain bool, agg bool) tea.Cmd {
+	return func() tea.Msg {
+		var report string
+		var err error
+		if agg {
+			report, err = getReportAgg(db, start, numDays, plain)
+		} else {
+			report, err = getReport(db, start, numDays, plain)
+		}
+		return reportDataFetchedMsg{
+			start:  start,
+			report: report,
+			err:    err,
+		}
+	}
+}

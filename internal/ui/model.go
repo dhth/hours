@@ -108,3 +108,21 @@ func (m model) Init() tea.Cmd {
 		fetchTasks(m.db, false),
 	)
 }
+
+type reportModel struct {
+	db       *sql.DB
+	start    time.Time
+	period   string
+	numDays  int
+	agg      bool
+	plain    bool
+	report   string
+	quitting bool
+	busy     bool
+	err      error
+	message  string
+}
+
+func (m reportModel) Init() tea.Cmd {
+	return nil
+}

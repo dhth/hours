@@ -501,6 +501,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			var items []list.Item
 			for _, e := range msg.entries {
+				e.updateTitle()
 				e.updateDesc()
 				items = append(items, e)
 			}
@@ -606,5 +607,90 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	}
 
+	return m, tea.Batch(cmds...)
+}
+
+func (m reportModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmds []tea.Cmd
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "q":
+			m.quitting = true
+			return m, tea.Quit
+		case "left", "h":
+			if !m.busy {
+				var newStart time.Time
+				var numDays int
+
+				switch m.period {
+				case "week":
+					weekday := m.start.Weekday()
+					offset := (7 + weekday - time.Monday) % 7
+					startOfPrevWeek := m.start.AddDate(0, 0, -int(offset+7))
+					newStart = time.Date(startOfPrevWeek.Year(), startOfPrevWeek.Month(), startOfPrevWeek.Day(), 0, 0, 0, 0, startOfPrevWeek.Location())
+					numDays = 7
+				default:
+					newStart = m.start.AddDate(0, 0, 1*(-m.numDays))
+					numDays = m.numDays
+				}
+				cmds = append(cmds, getReportData(m.db, newStart, numDays, m.plain, m.agg))
+				m.busy = true
+			}
+		case "right", "l":
+			if !m.busy {
+				var newStart time.Time
+				var numDays int
+
+				switch m.period {
+				case "week":
+					weekday := m.start.Weekday()
+					offset := (7 + weekday - time.Monday) % 7
+					startOfNextWeek := m.start.AddDate(0, 0, 7-int(offset))
+					newStart = time.Date(startOfNextWeek.Year(), startOfNextWeek.Month(), startOfNextWeek.Day(), 0, 0, 0, 0, startOfNextWeek.Location())
+					numDays = 7
+
+				default:
+					newStart = m.start.AddDate(0, 0, 1*(m.numDays))
+					numDays = m.numDays
+				}
+				cmds = append(cmds, getReportData(m.db, newStart, numDays, m.plain, m.agg))
+				m.busy = true
+			}
+		case "ctrl+t":
+			if !m.busy {
+				var start time.Time
+				var numDays int
+
+				switch m.period {
+				case "week":
+					now := time.Now()
+					weekday := now.Weekday()
+					offset := (7 + weekday - time.Monday) % 7
+					startOfWeek := now.AddDate(0, 0, -int(offset))
+					start = time.Date(startOfWeek.Year(), startOfWeek.Month(), startOfWeek.Day(), 0, 0, 0, 0, startOfWeek.Location())
+					numDays = 7
+				default:
+					now := time.Now()
+					nDaysBack := now.AddDate(0, 0, -1*(m.numDays-1))
+
+					start = time.Date(nDaysBack.Year(), nDaysBack.Month(), nDaysBack.Day(), 0, 0, 0, 0, nDaysBack.Location())
+					numDays = m.numDays
+				}
+				cmds = append(cmds, getReportData(m.db, start, numDays, m.plain, m.agg))
+				m.busy = true
+			}
+		}
+	case reportDataFetchedMsg:
+		if msg.err != nil {
+			m.err = msg.err
+			m.quitting = true
+			return m, tea.Quit
+		} else {
+			m.start = msg.start
+			m.report = msg.report
+			m.busy = false
+		}
+	}
 	return m, tea.Batch(cmds...)
 }

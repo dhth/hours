@@ -18,10 +18,12 @@ const (
 )
 
 var (
-	dbPath      string
-	db          *sql.DB
-	reportAgg   bool
-	outputPlain bool
+	dbPath            string
+	db                *sql.DB
+	reportAgg         bool
+	reportInteractive bool
+	outputPlain       bool
+	activeTemplate    string
 )
 
 func die(msg string, args ...any) {
@@ -120,7 +122,7 @@ will be reported on the day it ends.
 			period = args[0]
 		}
 
-		ui.RenderReport(db, os.Stdout, outputPlain, period, reportAgg)
+		ui.RenderReport(db, os.Stdout, outputPlain, period, reportAgg, reportInteractive)
 	},
 }
 
@@ -190,7 +192,7 @@ var activeCmd = &cobra.Command{
 	Use:   "active",
 	Short: "Show the task being actively tracked by \"hours\"",
 	Run: func(cmd *cobra.Command, args []string) {
-		ui.ShowActiveTask(db, os.Stdout)
+		ui.ShowActiveTask(db, os.Stdout, activeTemplate)
 	},
 }
 
@@ -209,11 +211,15 @@ Error: %s`, author, repoIssuesUrl, err)
 	rootCmd.PersistentFlags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 
 	reportCmd.Flags().BoolVarP(&reportAgg, "agg", "a", false, "whether to aggregate data by task for each day in report")
+	reportCmd.Flags().BoolVarP(&reportInteractive, "interactive", "i", false, "whether to view report interactively")
 	reportCmd.Flags().BoolVarP(&outputPlain, "plain", "p", false, "whether to output report without any formatting")
 
 	logCmd.Flags().BoolVarP(&outputPlain, "plain", "p", false, "whether to output log without any formatting")
 
 	statsCmd.Flags().BoolVarP(&outputPlain, "plain", "p", false, "whether to output stats without any formatting")
+
+	activeCmd.Flags().StringVarP(&activeTemplate, "template", "t", ui.ActiveTaskPlaceholder,
+		fmt.Sprintf("string template to use for outputting active task; use \"%s\" as placeholder for the task", ui.ActiveTaskPlaceholder))
 
 	rootCmd.AddCommand(reportCmd)
 	rootCmd.AddCommand(logCmd)

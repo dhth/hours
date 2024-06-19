@@ -20,6 +20,7 @@ const (
 	reportFooterColor      = "#ef8f62"
 	reportBorderColor      = "#665c54"
 	initialHelpMsgColor    = "#a58390"
+	reportHelpColor        = "#928374"
 	helpMsgColor           = "#83a598"
 	helpViewTitleColor     = "#83a598"
 	helpHeaderColor        = "#83a598"
@@ -77,6 +78,9 @@ var (
 
 	reportBorderStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color(reportBorderColor))
+
+	reportHelpStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(reportHelpColor))
 
 	helpTitleStyle = baseStyle.
 			Bold(true).

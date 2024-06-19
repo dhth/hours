@@ -59,3 +59,9 @@ type tasksFetched struct {
 	active bool
 	err    error
 }
+
+type reportDataFetchedMsg struct {
+	start  time.Time
+	report string
+	err    error
+}

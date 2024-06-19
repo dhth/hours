@@ -170,3 +170,23 @@ func (m model) View() string {
 		footer,
 	)
 }
+
+func (m reportModel) View() string {
+	if m.err != nil {
+		return fmt.Sprintf("Something went wrong: %s\n", m.err)
+	}
+	var help string
+	helpStr := `
+ go backwards:      h or <-
+ go forwards:       l or ->
+ go to today:       ctrl+t
+
+ press ctrl+c/q to quit
+`
+	if m.plain {
+		help = helpStr
+	} else {
+		help = reportHelpStyle.Render(helpStr)
+	}
+	return fmt.Sprintf("%s%s", m.report, help)
+}

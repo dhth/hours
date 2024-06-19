@@ -5,9 +5,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
-func ShowActiveTask(db *sql.DB, writer io.Writer) {
+const (
+	ActiveTaskPlaceholder = "{{task}}"
+)
+
+func ShowActiveTask(db *sql.DB, writer io.Writer, template string) {
 	activeTaskDetails, err := fetchActiveTaskFromDB(db)
 
 	if err != nil {
@@ -19,5 +24,6 @@ func ShowActiveTask(db *sql.DB, writer io.Writer) {
 		return
 	}
 
-	fmt.Fprintf(writer, "%s", activeTaskDetails.taskSummary)
+	activeStr := strings.Replace(template, ActiveTaskPlaceholder, activeTaskDetails.taskSummary, 1)
+	fmt.Fprint(writer, activeStr)
 }

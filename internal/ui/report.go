@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"io"
@@ -8,15 +9,17 @@ import (
 	"strings"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/olekukonko/tablewriter"
 )
 
 const (
 	reportNumDaysUpperBound = 7
+	timeCharsBudget         = 6
 )
 
-func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg bool) {
+func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg bool, interactive bool) {
 	if period == "" {
 		return
 	}
@@ -30,52 +33,33 @@ func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg b
 		now := time.Now()
 		nDaysBack := now.AddDate(0, 0, -1*(numDays-1))
 
-		start = time.Date(nDaysBack.Year(),
-			nDaysBack.Month(),
-			nDaysBack.Day(),
-			0,
-			0,
-			0,
-			0,
-			nDaysBack.Location(),
-		)
+		start = time.Date(nDaysBack.Year(), nDaysBack.Month(), nDaysBack.Day(), 0, 0, 0, 0, nDaysBack.Location())
 
 	case "yest":
 		numDays = 1
 		now := time.Now().AddDate(0, 0, -1)
 		nDaysBack := now.AddDate(0, 0, -1*(numDays-1))
 
-		start = time.Date(nDaysBack.Year(),
-			nDaysBack.Month(),
-			nDaysBack.Day(),
-			0,
-			0,
-			0,
-			0,
-			nDaysBack.Location(),
-		)
+		start = time.Date(nDaysBack.Year(), nDaysBack.Month(), nDaysBack.Day(), 0, 0, 0, 0, nDaysBack.Location())
 
 	case "3d":
 		numDays = 3
 		now := time.Now()
 		nDaysBack := now.AddDate(0, 0, -1*(numDays-1))
 
-		start = time.Date(nDaysBack.Year(),
-			nDaysBack.Month(),
-			nDaysBack.Day(),
-			0,
-			0,
-			0,
-			0,
-			nDaysBack.Location(),
-		)
+		start = time.Date(nDaysBack.Year(), nDaysBack.Month(), nDaysBack.Day(), 0, 0, 0, 0, nDaysBack.Location())
+
 	case "week":
 		now := time.Now()
 		weekday := now.Weekday()
 		offset := (7 + weekday - time.Monday) % 7
 		startOfWeek := now.AddDate(0, 0, -int(offset))
 		start = time.Date(startOfWeek.Year(), startOfWeek.Month(), startOfWeek.Day(), 0, 0, 0, 0, startOfWeek.Location())
-		numDays = int(offset) + 1
+		if interactive {
+			numDays = 7
+		} else {
+			numDays = int(offset) + 1
+		}
 
 	default:
 		var end time.Time
@@ -107,14 +91,30 @@ func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg b
 		numDays = int(end.Sub(start).Hours() / 24)
 	}
 
+	var report string
+	var err error
+
 	if agg {
-		renderNDaysReportAgg(db, writer, start, numDays, plain)
+		report, err = getReportAgg(db, start, numDays, plain)
 	} else {
-		renderNDaysReport(db, writer, start, numDays, plain)
+		report, err = getReport(db, start, numDays, plain)
+	}
+	if err != nil {
+		fmt.Printf("Something went wrong generating the report: %s\n", err)
+	}
+
+	if interactive {
+		p := tea.NewProgram(initialReportModel(db, start, plain, period, numDays, agg, report))
+		if _, err := p.Run(); err != nil {
+			fmt.Printf("Alas, there has been an error: %v", err)
+			os.Exit(1)
+		}
+	} else {
+		fmt.Fprint(writer, report)
 	}
 }
 
-func renderNDaysReport(db *sql.DB, writer io.Writer, start time.Time, numDays int, plain bool) {
+func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, error) {
 	day := start
 	var nextDay time.Time
 
@@ -126,8 +126,7 @@ func renderNDaysReport(db *sql.DB, writer io.Writer, start time.Time, numDays in
 		nextDay = day.AddDate(0, 0, 1)
 		taskLogEntries, err := fetchTLEntriesBetweenTSFromDB(db, day, nextDay, 100)
 		if err != nil {
-			fmt.Fprintf(writer, "Something went wrong generating the report:\n%s", err)
-			os.Exit(1)
+			return "", err
 		}
 		if noEntriesFound && len(taskLogEntries) > 0 {
 			noEntriesFound = false
@@ -135,13 +134,14 @@ func renderNDaysReport(db *sql.DB, writer io.Writer, start time.Time, numDays in
 
 		day = nextDay
 		reportData[i] = taskLogEntries
+
 		if len(taskLogEntries) > maxEntryForADay {
 			maxEntryForADay = len(taskLogEntries)
 		}
 	}
 
 	if noEntriesFound {
-		return
+		maxEntryForADay = 1
 	}
 
 	data := make([][]string, maxEntryForADay)
@@ -170,7 +170,10 @@ func renderNDaysReport(db *sql.DB, writer io.Writer, start time.Time, numDays in
 		row := make([]string, numDays)
 		for colIndex := 0; colIndex < numDays; colIndex++ {
 			if rowIndex >= len(reportData[colIndex]) {
-				row[colIndex] = ""
+				row[colIndex] = fmt.Sprintf("%s  %s",
+					RightPadTrim("", summaryBudget, false),
+					RightPadTrim("", timeCharsBudget, false),
+				)
 				continue
 			}
 
@@ -180,7 +183,7 @@ func renderNDaysReport(db *sql.DB, writer io.Writer, start time.Time, numDays in
 			if plain {
 				row[colIndex] = fmt.Sprintf("%s  %s",
 					RightPadTrim(tr.taskSummary, summaryBudget, false),
-					timeSpentStr,
+					RightPadTrim(timeSpentStr, timeCharsBudget, false),
 				)
 			} else {
 				reportStyle, ok := styleCache[tr.taskSummary]
@@ -192,7 +195,7 @@ func renderNDaysReport(db *sql.DB, writer io.Writer, start time.Time, numDays in
 
 				row[colIndex] = fmt.Sprintf("%s  %s",
 					reportStyle.Render(RightPadTrim(tr.taskSummary, summaryBudget, false)),
-					reportStyle.Render(timeSpentStr),
+					reportStyle.Render(RightPadTrim(timeSpentStr, timeCharsBudget, false)),
 				)
 			}
 			totalSecsPerDay[colIndex] += tr.secsSpent
@@ -209,7 +212,9 @@ func renderNDaysReport(db *sql.DB, writer io.Writer, start time.Time, numDays in
 			totalTimePerDay[i] = " "
 		}
 	}
-	table := tablewriter.NewWriter(writer)
+
+	b := bytes.Buffer{}
+	table := tablewriter.NewWriter(&b)
 
 	headersValues := make([]string, numDays)
 
@@ -238,9 +243,11 @@ func renderNDaysReport(db *sql.DB, writer io.Writer, start time.Time, numDays in
 	table.SetFooter(totalTimePerDay)
 
 	table.Render()
+
+	return b.String(), nil
 }
 
-func renderNDaysReportAgg(db *sql.DB, writer io.Writer, start time.Time, numDays int, plain bool) {
+func getReportAgg(db *sql.DB, start time.Time, numDays int, plain bool) (string, error) {
 
 	day := start
 	var nextDay time.Time
@@ -253,8 +260,7 @@ func renderNDaysReportAgg(db *sql.DB, writer io.Writer, start time.Time, numDays
 		nextDay = day.AddDate(0, 0, 1)
 		taskLogEntries, err := fetchReportBetweenTSFromDB(db, day, nextDay, 100)
 		if err != nil {
-			fmt.Fprintf(writer, "Something went wrong generating the report:\n%s", err)
-			os.Exit(1)
+			return "", err
 		}
 		if noEntriesFound && len(taskLogEntries) > 0 {
 			noEntriesFound = false
@@ -268,7 +274,7 @@ func renderNDaysReportAgg(db *sql.DB, writer io.Writer, start time.Time, numDays
 	}
 
 	if noEntriesFound {
-		return
+		maxEntryForADay = 1
 	}
 
 	data := make([][]string, maxEntryForADay)
@@ -297,7 +303,10 @@ func renderNDaysReportAgg(db *sql.DB, writer io.Writer, start time.Time, numDays
 		row := make([]string, numDays)
 		for colIndex := 0; colIndex < numDays; colIndex++ {
 			if rowIndex >= len(reportData[colIndex]) {
-				row[colIndex] = ""
+				row[colIndex] = fmt.Sprintf("%s  %s",
+					RightPadTrim("", summaryBudget, false),
+					RightPadTrim("", timeCharsBudget, false),
+				)
 				continue
 			}
 
@@ -307,7 +316,7 @@ func renderNDaysReportAgg(db *sql.DB, writer io.Writer, start time.Time, numDays
 			if plain {
 				row[colIndex] = fmt.Sprintf("%s  %s",
 					RightPadTrim(tr.taskSummary, summaryBudget, false),
-					timeSpentStr,
+					RightPadTrim(timeSpentStr, timeCharsBudget, false),
 				)
 			} else {
 				reportStyle, ok := styleCache[tr.taskSummary]
@@ -318,7 +327,7 @@ func renderNDaysReportAgg(db *sql.DB, writer io.Writer, start time.Time, numDays
 
 				row[colIndex] = fmt.Sprintf("%s  %s",
 					reportStyle.Render(RightPadTrim(tr.taskSummary, summaryBudget, false)),
-					reportStyle.Render(timeSpentStr),
+					reportStyle.Render(RightPadTrim(timeSpentStr, timeCharsBudget, false)),
 				)
 			}
 			totalSecsPerDay[colIndex] += tr.secsSpent
@@ -333,7 +342,9 @@ func renderNDaysReportAgg(db *sql.DB, writer io.Writer, start time.Time, numDays
 			totalTimePerDay[i] = " "
 		}
 	}
-	table := tablewriter.NewWriter(writer)
+
+	b := bytes.Buffer{}
+	table := tablewriter.NewWriter(&b)
 
 	headersValues := make([]string, numDays)
 
@@ -362,4 +373,6 @@ func renderNDaysReportAgg(db *sql.DB, writer io.Writer, start time.Time, numDays
 	table.SetFooter(totalTimePerDay)
 
 	table.Render()
+
+	return b.String(), nil
 }

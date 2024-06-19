@@ -2,6 +2,7 @@ package ui
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -70,4 +71,17 @@ func InitialModel(db *sql.DB) model {
 	m.inactiveTasksList.Styles.Title = m.inactiveTasksList.Styles.Title.Foreground(lipgloss.Color(defaultBackgroundColor)).Background(lipgloss.Color(inactiveTaskListColor)).Bold(true)
 
 	return m
+}
+
+func initialReportModel(db *sql.DB, start time.Time, plain bool, period string, numDays int, agg bool, initialReport string) reportModel {
+
+	return reportModel{
+		db:      db,
+		start:   start,
+		period:  period,
+		numDays: numDays,
+		agg:     agg,
+		plain:   plain,
+		report:  initialReport,
+	}
 }

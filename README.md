@@ -85,6 +85,9 @@ reported on the day it ends.*
 
 ![Usage](https://tools.dhruvs.space/images/hours/report-1.png)
 
+Reports can be viewed via an interactive interface by using the
+`-i`/`--interactive` flag.
+
 ### Logs
 
 ```bash
