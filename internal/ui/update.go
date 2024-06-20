@@ -610,7 +610,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m reportModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -620,7 +620,7 @@ func (m reportModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "left", "h":
 			if !m.busy {
-				var newStart time.Time
+				var newStart, newEnd time.Time
 				var numDays int
 
 				switch m.period {
@@ -631,15 +631,16 @@ func (m reportModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					newStart = time.Date(startOfPrevWeek.Year(), startOfPrevWeek.Month(), startOfPrevWeek.Day(), 0, 0, 0, 0, startOfPrevWeek.Location())
 					numDays = 7
 				default:
-					newStart = m.start.AddDate(0, 0, 1*(-m.numDays))
+					newStart = m.start.AddDate(0, 0, -m.numDays)
 					numDays = m.numDays
 				}
-				cmds = append(cmds, getReportData(m.db, newStart, numDays, m.plain, m.agg))
+				newEnd = newStart.AddDate(0, 0, numDays)
+				cmds = append(cmds, getRecordsData(m.typ, m.db, m.period, newStart, newEnd, numDays, m.plain))
 				m.busy = true
 			}
 		case "right", "l":
 			if !m.busy {
-				var newStart time.Time
+				var newStart, newEnd time.Time
 				var numDays int
 
 				switch m.period {
@@ -654,12 +655,13 @@ func (m reportModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					newStart = m.start.AddDate(0, 0, 1*(m.numDays))
 					numDays = m.numDays
 				}
-				cmds = append(cmds, getReportData(m.db, newStart, numDays, m.plain, m.agg))
+				newEnd = newStart.AddDate(0, 0, numDays)
+				cmds = append(cmds, getRecordsData(m.typ, m.db, m.period, newStart, newEnd, numDays, m.plain))
 				m.busy = true
 			}
 		case "ctrl+t":
 			if !m.busy {
-				var start time.Time
+				var start, end time.Time
 				var numDays int
 
 				switch m.period {
@@ -677,17 +679,19 @@ func (m reportModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					start = time.Date(nDaysBack.Year(), nDaysBack.Month(), nDaysBack.Day(), 0, 0, 0, 0, nDaysBack.Location())
 					numDays = m.numDays
 				}
-				cmds = append(cmds, getReportData(m.db, start, numDays, m.plain, m.agg))
+				end = start.AddDate(0, 0, numDays)
+				cmds = append(cmds, getRecordsData(m.typ, m.db, m.period, start, end, numDays, m.plain))
 				m.busy = true
 			}
 		}
-	case reportDataFetchedMsg:
+	case recordsDataFetchedMsg:
 		if msg.err != nil {
 			m.err = msg.err
 			m.quitting = true
 			return m, tea.Quit
 		} else {
 			m.start = msg.start
+			m.end = msg.end
 			m.report = msg.report
 			m.busy = false
 		}

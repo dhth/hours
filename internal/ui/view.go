@@ -171,22 +171,41 @@ func (m model) View() string {
 	)
 }
 
-func (m reportModel) View() string {
+func (m recordsModel) View() string {
 	if m.err != nil {
 		return fmt.Sprintf("Something went wrong: %s\n", m.err)
 	}
 	var help string
-	helpStr := `
+
+	var dateRangeStr string
+	var dateRange string
+	if m.numDays > 1 {
+		dateRangeStr = fmt.Sprintf(`
+ range:             %s...%s
+ `,
+			m.start.Format(dateFormat), m.end.AddDate(0, 0, -1).Format(dateFormat))
+	} else {
+		dateRangeStr = fmt.Sprintf(`
+ date:              %s
+`,
+			m.start.Format(dateFormat))
+	}
+
+	helpStr := fmt.Sprintf(`
  go backwards:      h or <-
  go forwards:       l or ->
  go to today:       ctrl+t
 
  press ctrl+c/q to quit
-`
+`)
+
 	if m.plain {
 		help = helpStr
+		dateRange = dateRangeStr
 	} else {
 		help = reportHelpStyle.Render(helpStr)
+		dateRange = reportDateRangeStyle.Render(dateRangeStr)
 	}
-	return fmt.Sprintf("%s%s", m.report, help)
+
+	return fmt.Sprintf("%s%s%s", m.report, dateRange, help)
 }

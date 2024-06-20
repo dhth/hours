@@ -73,15 +73,16 @@ func InitialModel(db *sql.DB) model {
 	return m
 }
 
-func initialReportModel(db *sql.DB, start time.Time, plain bool, period string, numDays int, agg bool, initialReport string) reportModel {
+func initialRecordsModel(typ recordsType, db *sql.DB, start, end time.Time, plain bool, period string, numDays int, initialData string) recordsModel {
 
-	return reportModel{
+	return recordsModel{
+		typ:     typ,
 		db:      db,
 		start:   start,
+		end:     end,
 		period:  period,
 		numDays: numDays,
-		agg:     agg,
 		plain:   plain,
-		report:  initialReport,
+		report:  initialData,
 	}
 }

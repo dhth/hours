@@ -60,8 +60,9 @@ type tasksFetched struct {
 	err    error
 }
 
-type reportDataFetchedMsg struct {
+type recordsDataFetchedMsg struct {
 	start  time.Time
+	end    time.Time
 	report string
 	err    error
 }

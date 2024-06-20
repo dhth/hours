@@ -59,6 +59,15 @@ const (
 
 type tasklogSaveType uint
 
+type recordsType uint
+
+const (
+	reportRecords recordsType = iota
+	reportAggRecords
+	reportLogs
+	reportStats
+)
+
 const (
 	tasklogInsert tasklogSaveType = iota
 	tasklogUpdate
@@ -109,12 +118,13 @@ func (m model) Init() tea.Cmd {
 	)
 }
 
-type reportModel struct {
+type recordsModel struct {
 	db       *sql.DB
+	typ      recordsType
 	start    time.Time
+	end      time.Time
 	period   string
 	numDays  int
-	agg      bool
 	plain    bool
 	report   string
 	quitting bool
@@ -123,6 +133,6 @@ type reportModel struct {
 	message  string
 }
 
-func (m reportModel) Init() tea.Cmd {
+func (m recordsModel) Init() tea.Cmd {
 	return nil
 }

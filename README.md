@@ -85,10 +85,7 @@ reported on the day it ends.*
 
 ![Usage](https://tools.dhruvs.space/images/hours/report-1.png)
 
-Reports can be viewed via an interactive interface by using the
-`-i`/`--interactive` flag.
-
-### Logs
+### Log
 
 ```bash
 hours log [flags] [arg]
@@ -98,9 +95,9 @@ Output task log entries.
 
 Accepts an argument, which can be one of the following:
 
-    today:     for log entries from today
+    today:     for log entries from today (default)
     yest:      for log entries from yesterday
-    3d:        for log entries from the last 3 days (default)
+    3d:        for log entries from the last 3 days
     week:      for log entries from the current week
     date:      for log entries from a specific date (eg. "2024/06/08")
     range:     for log entries from a specific date range (eg. "2024/06/08...2024/06/12")

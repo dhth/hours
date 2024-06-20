@@ -1,13 +1,14 @@
 package ui
 
 import (
+	"bytes"
 	"database/sql"
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/olekukonko/tablewriter"
 )
@@ -15,124 +16,91 @@ import (
 const (
 	statsLogEntriesLimit   = 10000
 	statsNumDaysUpperBound = 3650
+	statsTimeCharsBudget   = 6
 )
 
-func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string) {
+func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string, interactive bool) {
 	if period == "" {
 		return
 	}
 
-	var start, end time.Time
-	var entries []taskReportEntry
+	var stats string
 	var err error
 
-	switch period {
-	case "all":
-		entries, err = fetchStatsFromDB(db, statsLogEntriesLimit)
-
-	case "today":
-		today := time.Now()
-
-		start = time.Date(today.Year(),
-			today.Month(),
-			today.Day(),
-			0,
-			0,
-			0,
-			0,
-			today.Location(),
-		)
-		end = start.AddDate(0, 0, 1)
-		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)
-
-	case "yest":
-		yest := time.Now().AddDate(0, 0, -1)
-
-		start = time.Date(yest.Year(),
-			yest.Month(),
-			yest.Day(),
-			0,
-			0,
-			0,
-			0,
-			yest.Location(),
-		)
-		end = start.AddDate(0, 0, 1)
-		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)
-
-	case "3d":
-		threeDaysAgo := time.Now().AddDate(0, 0, -2)
-
-		start = time.Date(threeDaysAgo.Year(),
-			threeDaysAgo.Month(),
-			threeDaysAgo.Day(),
-			0,
-			0,
-			0,
-			0,
-			threeDaysAgo.Location(),
-		)
-		end = time.Now()
-		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)
-
-	case "week":
-		now := time.Now()
-		weekday := now.Weekday()
-		offset := (7 + weekday - time.Monday) % 7
-		startOfWeek := now.AddDate(0, 0, -int(offset))
-		start = time.Date(startOfWeek.Year(), startOfWeek.Month(), startOfWeek.Day(), 0, 0, 0, 0, startOfWeek.Location())
-
-		end = time.Now()
-		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)
-
-	case "month":
-		now := time.Now()
-
-		start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
-		end = time.Now()
-		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)
-
-	default:
-		if strings.Contains(period, "...") {
-			var ts timePeriod
-			var nd int
-			ts, nd, err = parseDateDuration(period)
-			if err != nil {
-				fmt.Fprintf(writer, "%s\n", err)
-				os.Exit(1)
-			}
-			if nd > statsNumDaysUpperBound {
-				fmt.Fprintf(writer, "Time period is too large; maximum number of days allowed in range (both inclusive): %d\n", statsNumDaysUpperBound)
-				os.Exit(1)
-			}
-			start = ts.start
-			end = ts.end.AddDate(0, 0, 1)
-		} else {
-			start, err = time.ParseInLocation(string(dateFormat), period, time.Local)
-			if err != nil {
-				fmt.Fprintf(writer, "Couldn't parse date: %s\n", err)
-				os.Exit(1)
-			}
-			end = start.AddDate(0, 0, 1)
-		}
-
-		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)
+	if interactive && period == "all" {
+		fmt.Print("Interactive mode cannot be used when period='all'\n")
+		os.Exit(1)
 	}
+
+	if period == "all" {
+		// TODO: find a better way for this, passing start, end for "all" doesn't make sense
+		stats, err = renderStats(db, period, time.Now(), time.Now(), plain)
+		if err != nil {
+			fmt.Fprintf(writer, "Something went wrong generating the log: %s\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprint(writer, stats)
+		return
+	}
+
+	var fullWeek bool
+	if interactive {
+		fullWeek = true
+	}
+	ts, tsErr := getTimePeriod(period, time.Now(), fullWeek)
+
+	if tsErr != nil {
+		fmt.Printf("error: %s\n", err)
+		os.Exit(1)
+	}
+	stats, err = renderStats(db, period, ts.start, ts.end, plain)
 
 	if err != nil {
 		fmt.Fprintf(writer, "Something went wrong generating the log: %s\n", err)
 		os.Exit(1)
 	}
 
-	if len(entries) == 0 {
-		return
+	if interactive {
+		p := tea.NewProgram(initialRecordsModel(reportStats, db, ts.start, ts.end, plain, period, ts.numDays, stats))
+		if _, err := p.Run(); err != nil {
+			fmt.Printf("Alas, there has been an error: %v", err)
+			os.Exit(1)
+		}
+	} else {
+		fmt.Fprint(writer, stats)
 	}
-	renderStats(writer, plain, entries)
 }
 
-func renderStats(writer io.Writer, plain bool, entries []taskReportEntry) {
+func renderStats(db *sql.DB, period string, start, end time.Time, plain bool) (string, error) {
+	var entries []taskReportEntry
+	var err error
 
-	data := make([][]string, len(entries))
+	if period == "all" {
+		entries, err = fetchStatsFromDB(db, statsLogEntriesLimit)
+	} else {
+		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	var numEntriesInTable int
+	if len(entries) == 0 {
+		numEntriesInTable = 1
+	} else {
+		numEntriesInTable = len(entries)
+	}
+
+	data := make([][]string, numEntriesInTable)
+	if len(entries) == 0 {
+		data[0] = []string{
+			RightPadTrim("", 20, false),
+			"",
+			RightPadTrim("", statsTimeCharsBudget, false),
+		}
+	}
+
 	var timeSpentStr string
 
 	rs := getReportStyles(plain)
@@ -143,9 +111,9 @@ func renderStats(writer io.Writer, plain bool, entries []taskReportEntry) {
 
 		if plain {
 			data[i] = []string{
-				Trim(entry.taskSummary, 30),
+				RightPadTrim(entry.taskSummary, 20, false),
 				fmt.Sprintf("%d", entry.numEntries),
-				timeSpentStr,
+				RightPadTrim("", statsTimeCharsBudget, false),
 			}
 		} else {
 			reportStyle, ok := styleCache[entry.taskSummary]
@@ -154,13 +122,14 @@ func renderStats(writer io.Writer, plain bool, entries []taskReportEntry) {
 				styleCache[entry.taskSummary] = reportStyle
 			}
 			data[i] = []string{
-				reportStyle.Render(Trim(entry.taskSummary, 30)),
+				reportStyle.Render(RightPadTrim(entry.taskSummary, 20, false)),
 				reportStyle.Render(fmt.Sprintf("%d", entry.numEntries)),
-				reportStyle.Render(timeSpentStr),
+				RightPadTrim(timeSpentStr, statsTimeCharsBudget, false),
 			}
 		}
 	}
-	table := tablewriter.NewWriter(writer)
+	b := bytes.Buffer{}
+	table := tablewriter.NewWriter(&b)
 
 	headerValues := []string{"Task", "#LogEntries", "TimeSpent"}
 	headers := make([]string, len(headerValues))
@@ -177,4 +146,6 @@ func renderStats(writer io.Writer, plain bool, entries []taskReportEntry) {
 	table.AppendBulk(data)
 
 	table.Render()
+
+	return b.String(), nil
 }

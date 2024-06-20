@@ -18,12 +18,12 @@ const (
 )
 
 var (
-	dbPath            string
-	db                *sql.DB
-	reportAgg         bool
-	reportInteractive bool
-	outputPlain       bool
-	activeTemplate    string
+	dbPath             string
+	db                 *sql.DB
+	reportAgg          bool
+	recordsInteractive bool
+	recordsOutputPlain bool
+	activeTemplate     string
 )
 
 func die(msg string, args ...any) {
@@ -122,7 +122,7 @@ will be reported on the day it ends.
 			period = args[0]
 		}
 
-		ui.RenderReport(db, os.Stdout, outputPlain, period, reportAgg, reportInteractive)
+		ui.RenderReport(db, os.Stdout, recordsOutputPlain, period, reportAgg, recordsInteractive)
 	},
 }
 
@@ -133,9 +133,9 @@ var logCmd = &cobra.Command{
 
 Accepts an argument, which can be one of the following:
 
-  today:     for log entries from today
+  today:     for log entries from today (default)
   yest:      for log entries from yesterday
-  3d:        for log entries from the last 3 days (default)
+  3d:        for log entries from the last 3 days
   week:      for log entries from the current week
   date:      for log entries from a specific date (eg. "2024/06/08")
   range:     for log entries from a specific date range (eg. "2024/06/08...2024/06/12")
@@ -147,12 +147,12 @@ appear in the log for the day it ends.
 	Run: func(cmd *cobra.Command, args []string) {
 		var period string
 		if len(args) == 0 {
-			period = "3d"
+			period = "today"
 		} else {
 			period = args[0]
 		}
 
-		ui.RenderTaskLog(db, os.Stdout, outputPlain, period)
+		ui.RenderTaskLog(db, os.Stdout, recordsOutputPlain, period, recordsInteractive)
 	},
 }
 
@@ -184,7 +184,7 @@ be considered in the stats for the day it ends.
 			period = args[0]
 		}
 
-		ui.RenderStats(db, os.Stdout, outputPlain, period)
+		ui.RenderStats(db, os.Stdout, recordsOutputPlain, period, recordsInteractive)
 	},
 }
 
@@ -211,12 +211,14 @@ Error: %s`, author, repoIssuesUrl, err)
 	rootCmd.PersistentFlags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 
 	reportCmd.Flags().BoolVarP(&reportAgg, "agg", "a", false, "whether to aggregate data by task for each day in report")
-	reportCmd.Flags().BoolVarP(&reportInteractive, "interactive", "i", false, "whether to view report interactively")
-	reportCmd.Flags().BoolVarP(&outputPlain, "plain", "p", false, "whether to output report without any formatting")
+	reportCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view report interactively")
+	reportCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output report without any formatting")
 
-	logCmd.Flags().BoolVarP(&outputPlain, "plain", "p", false, "whether to output log without any formatting")
+	logCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output logs without any formatting")
+	logCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view logs interactively")
 
-	statsCmd.Flags().BoolVarP(&outputPlain, "plain", "p", false, "whether to output stats without any formatting")
+	statsCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output stats without any formatting")
+	statsCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view stats interactively")
 
 	activeCmd.Flags().StringVarP(&activeTemplate, "template", "t", ui.ActiveTaskPlaceholder,
 		fmt.Sprintf("string template to use for outputting active task; use \"%s\" as placeholder for the task", ui.ActiveTaskPlaceholder))

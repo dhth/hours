@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -15,8 +14,7 @@ import (
 )
 
 const (
-	reportNumDaysUpperBound = 7
-	timeCharsBudget         = 6
+	reportTimeCharsBudget = 6
 )
 
 func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg bool, interactive bool) {
@@ -24,87 +22,33 @@ func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg b
 		return
 	}
 
-	var start time.Time
-	var numDays int
+	var fullWeek bool
+	if interactive {
+		fullWeek = true
+	}
+	ts, err := getTimePeriod(period, time.Now(), fullWeek)
 
-	switch period {
-	case "today":
-		numDays = 1
-		now := time.Now()
-		nDaysBack := now.AddDate(0, 0, -1*(numDays-1))
-
-		start = time.Date(nDaysBack.Year(), nDaysBack.Month(), nDaysBack.Day(), 0, 0, 0, 0, nDaysBack.Location())
-
-	case "yest":
-		numDays = 1
-		now := time.Now().AddDate(0, 0, -1)
-		nDaysBack := now.AddDate(0, 0, -1*(numDays-1))
-
-		start = time.Date(nDaysBack.Year(), nDaysBack.Month(), nDaysBack.Day(), 0, 0, 0, 0, nDaysBack.Location())
-
-	case "3d":
-		numDays = 3
-		now := time.Now()
-		nDaysBack := now.AddDate(0, 0, -1*(numDays-1))
-
-		start = time.Date(nDaysBack.Year(), nDaysBack.Month(), nDaysBack.Day(), 0, 0, 0, 0, nDaysBack.Location())
-
-	case "week":
-		now := time.Now()
-		weekday := now.Weekday()
-		offset := (7 + weekday - time.Monday) % 7
-		startOfWeek := now.AddDate(0, 0, -int(offset))
-		start = time.Date(startOfWeek.Year(), startOfWeek.Month(), startOfWeek.Day(), 0, 0, 0, 0, startOfWeek.Location())
-		if interactive {
-			numDays = 7
-		} else {
-			numDays = int(offset) + 1
-		}
-
-	default:
-		var end time.Time
-		var err error
-
-		if strings.Contains(period, "...") {
-			var ts timePeriod
-			var nd int
-			ts, nd, err = parseDateDuration(period)
-			if err != nil {
-				fmt.Fprintf(writer, "%s\n", err)
-				os.Exit(1)
-			}
-			if nd > reportNumDaysUpperBound {
-				fmt.Fprintf(writer, "Time period is too large; maximum number of days allowed in range (both inclusive): %d\n", reportNumDaysUpperBound)
-				os.Exit(1)
-			}
-
-			start = ts.start
-			end = ts.end.AddDate(0, 0, 1)
-		} else {
-			start, err = time.ParseInLocation(string(dateFormat), period, time.Local)
-			if err != nil {
-				fmt.Fprintf(writer, "Couldn't parse date: %s\n", err)
-				os.Exit(1)
-			}
-			end = start.AddDate(0, 0, 1)
-		}
-		numDays = int(end.Sub(start).Hours() / 24)
+	if err != nil {
+		fmt.Printf("error: %s\n", err)
+		os.Exit(1)
 	}
 
 	var report string
-	var err error
+	var analyticsType recordsType
 
 	if agg {
-		report, err = getReportAgg(db, start, numDays, plain)
+		analyticsType = reportAggRecords
+		report, err = getReportAgg(db, ts.start, ts.numDays, plain)
 	} else {
-		report, err = getReport(db, start, numDays, plain)
+		analyticsType = reportRecords
+		report, err = getReport(db, ts.start, ts.numDays, plain)
 	}
 	if err != nil {
 		fmt.Printf("Something went wrong generating the report: %s\n", err)
 	}
 
 	if interactive {
-		p := tea.NewProgram(initialReportModel(db, start, plain, period, numDays, agg, report))
+		p := tea.NewProgram(initialRecordsModel(analyticsType, db, ts.start, ts.end, plain, period, ts.numDays, report))
 		if _, err := p.Run(); err != nil {
 			fmt.Printf("Alas, there has been an error: %v", err)
 			os.Exit(1)
@@ -172,7 +116,7 @@ func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, er
 			if rowIndex >= len(reportData[colIndex]) {
 				row[colIndex] = fmt.Sprintf("%s  %s",
 					RightPadTrim("", summaryBudget, false),
-					RightPadTrim("", timeCharsBudget, false),
+					RightPadTrim("", reportTimeCharsBudget, false),
 				)
 				continue
 			}
@@ -183,7 +127,7 @@ func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, er
 			if plain {
 				row[colIndex] = fmt.Sprintf("%s  %s",
 					RightPadTrim(tr.taskSummary, summaryBudget, false),
-					RightPadTrim(timeSpentStr, timeCharsBudget, false),
+					RightPadTrim(timeSpentStr, reportTimeCharsBudget, false),
 				)
 			} else {
 				reportStyle, ok := styleCache[tr.taskSummary]
@@ -195,7 +139,7 @@ func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, er
 
 				row[colIndex] = fmt.Sprintf("%s  %s",
 					reportStyle.Render(RightPadTrim(tr.taskSummary, summaryBudget, false)),
-					reportStyle.Render(RightPadTrim(timeSpentStr, timeCharsBudget, false)),
+					reportStyle.Render(RightPadTrim(timeSpentStr, reportTimeCharsBudget, false)),
 				)
 			}
 			totalSecsPerDay[colIndex] += tr.secsSpent
@@ -305,7 +249,7 @@ func getReportAgg(db *sql.DB, start time.Time, numDays int, plain bool) (string,
 			if rowIndex >= len(reportData[colIndex]) {
 				row[colIndex] = fmt.Sprintf("%s  %s",
 					RightPadTrim("", summaryBudget, false),
-					RightPadTrim("", timeCharsBudget, false),
+					RightPadTrim("", reportTimeCharsBudget, false),
 				)
 				continue
 			}
@@ -316,7 +260,7 @@ func getReportAgg(db *sql.DB, start time.Time, numDays int, plain bool) (string,
 			if plain {
 				row[colIndex] = fmt.Sprintf("%s  %s",
 					RightPadTrim(tr.taskSummary, summaryBudget, false),
-					RightPadTrim(timeSpentStr, timeCharsBudget, false),
+					RightPadTrim(timeSpentStr, reportTimeCharsBudget, false),
 				)
 			} else {
 				reportStyle, ok := styleCache[tr.taskSummary]
@@ -327,7 +271,7 @@ func getReportAgg(db *sql.DB, start time.Time, numDays int, plain bool) (string,
 
 				row[colIndex] = fmt.Sprintf("%s  %s",
 					reportStyle.Render(RightPadTrim(tr.taskSummary, summaryBudget, false)),
-					reportStyle.Render(RightPadTrim(timeSpentStr, timeCharsBudget, false)),
+					reportStyle.Render(RightPadTrim(timeSpentStr, reportTimeCharsBudget, false)),
 				)
 			}
 			totalSecsPerDay[colIndex] += tr.secsSpent
