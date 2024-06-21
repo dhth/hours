@@ -11,7 +11,7 @@ const (
 )
 
 var (
-	timePeriodNotValidErr = fmt.Errorf("time period is not valid; accepted format: %s or %s...%s", dateFormat, dateFormat, dateFormat)
+	timePeriodNotValidErr = fmt.Errorf("time period is not valid; accepted values: day, yest, week, 3d, date (eg. %s), or date range (eg. %s...%s)", dateFormat, dateFormat, dateFormat)
 	timePeriodTooLargeErr = fmt.Errorf("time period is too large; maximum number of days allowed (both inclusive): %d", timePeriodDaysUpperBound)
 )
 
@@ -21,33 +21,33 @@ type timePeriod struct {
 	numDays int
 }
 
-func parseDateDuration(dateRange string) (timePeriod, error) {
+func parseDateDuration(dateRange string) (timePeriod, bool) {
 	var tp timePeriod
 
 	elements := strings.Split(dateRange, "...")
 	if len(elements) != 2 {
-		return tp, timePeriodNotValidErr
+		return tp, false
 	}
 
 	start, err := time.ParseInLocation(string(dateFormat), elements[0], time.Local)
 	if err != nil {
-		return tp, timePeriodNotValidErr
+		return tp, false
 	}
 
 	end, err := time.ParseInLocation(string(dateFormat), elements[1], time.Local)
 	if err != nil {
-		return tp, timePeriodNotValidErr
+		return tp, false
 	}
 
 	if end.Sub(start) <= 0 {
-		return tp, timePeriodNotValidErr
+		return tp, false
 	}
 
 	tp.start = start
 	tp.end = end
 	tp.numDays = int(end.Sub(start).Hours()/24) + 1
 
-	return tp, nil
+	return tp, true
 }
 
 func getTimePeriod(period string, now time.Time, fullWeek bool) (timePeriod, error) {
@@ -92,9 +92,10 @@ func getTimePeriod(period string, now time.Time, fullWeek bool) (timePeriod, err
 
 		if strings.Contains(period, "...") {
 			var ts timePeriod
-			ts, err = parseDateDuration(period)
-			if err != nil {
-				return ts, err
+			var ok bool
+			ts, ok = parseDateDuration(period)
+			if !ok {
+				return ts, timePeriodNotValidErr
 			}
 			if ts.numDays > timePeriodDaysUpperBound {
 				return ts, timePeriodTooLargeErr

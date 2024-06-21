@@ -50,7 +50,7 @@ func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string, intera
 	ts, tsErr := getTimePeriod(period, time.Now(), fullWeek)
 
 	if tsErr != nil {
-		fmt.Printf("error: %s\n", err)
+		fmt.Printf("error: %s\n", tsErr)
 		os.Exit(1)
 	}
 	stats, err = renderStats(db, period, ts.start, ts.end, plain)
@@ -116,15 +116,15 @@ func renderStats(db *sql.DB, period string, start, end time.Time, plain bool) (s
 				RightPadTrim("", statsTimeCharsBudget, false),
 			}
 		} else {
-			reportStyle, ok := styleCache[entry.taskSummary]
+			rowStyle, ok := styleCache[entry.taskSummary]
 			if !ok {
-				reportStyle = getDynamicStyle(entry.taskSummary)
-				styleCache[entry.taskSummary] = reportStyle
+				rowStyle = getDynamicStyle(entry.taskSummary)
+				styleCache[entry.taskSummary] = rowStyle
 			}
 			data[i] = []string{
-				reportStyle.Render(RightPadTrim(entry.taskSummary, 20, false)),
-				reportStyle.Render(fmt.Sprintf("%d", entry.numEntries)),
-				RightPadTrim(timeSpentStr, statsTimeCharsBudget, false),
+				rowStyle.Render(RightPadTrim(entry.taskSummary, 20, false)),
+				rowStyle.Render(fmt.Sprintf("%d", entry.numEntries)),
+				rowStyle.Render(RightPadTrim(timeSpentStr, statsTimeCharsBudget, false)),
 			}
 		}
 	}

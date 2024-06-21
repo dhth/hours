@@ -39,6 +39,10 @@ go install github.com/dhth/hours@latest
 ⚡️ Usage
 ---
 
+> Newbie tip: If you want to see how `hours` works without having to track time,
+> you can have it generate dummy data for you. See [here](#generate-dummy-data)
+> for more details.
+
 ### TUI
 
 Open the TUI by simply running `hours`. The TUI lets you do the following:
@@ -85,6 +89,11 @@ reported on the day it ends.*
 
 ![Usage](https://tools.dhruvs.space/images/hours/report-1.png)
 
+Reports can also be viewed via an interactive interface using the
+`--interactive`/`-i` flag.
+
+![Usage](https://tools.dhruvs.space/images/hours/report-interactive-1.gif)
+
 ### Log
 
 ```bash
@@ -107,8 +116,13 @@ appear in the log for the day it ends.*
 
 ![Usage](https://tools.dhruvs.space/images/hours/log-1.png)
 
-Statistics
----
+Logs can also be viewed via an interactive interface using the
+`--interactive`/`-i` flag.
+
+![Usage](https://tools.dhruvs.space/images/hours/log-interactive-1.gif)
+
+
+### Statistics
 
 ```bash
 hours stats [flag] [arg]
@@ -122,7 +136,6 @@ Accepts an argument, which can be one of the following:
     yest:      show stats for yesterday
     3d:        show stats for the last 3 days (default)
     week:      show stats for the current week
-    month:     show stats for the current month
     date:      show stats for a specific date (eg. "2024/06/08")
     range:     show stats for a specific date range (eg. "2024/06/08...2024/06/12")
     all:       show stats for all log entries
@@ -131,6 +144,22 @@ Accepts an argument, which can be one of the following:
 be considered in the stats for the day it ends.*
 
 ![Usage](https://tools.dhruvs.space/images/hours/stats-1.png)
+
+Stats can also be viewed via an interactive interface using the
+`--interactive`/`-i` flag.
+
+![Usage](https://tools.dhruvs.space/images/hours/stats-interactive-1.gif)
+
+### Generate Dummy Data
+
+You can have `hours` generate dummy data for you, so you can play around with
+it, and see if its approach of showing reports/logs/stats works for you. You can
+do so using the `gen` subcommand.
+
+```bash
+hours gen --dbpath=/var/tmp/throwaway.db
+```
+
 
 📋 TUI Reference Manual
 ---

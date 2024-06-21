@@ -16,16 +16,17 @@ const (
 	formFieldNameColor     = "#8ec07c"
 	formContextColor       = "#fabd2f"
 	toolNameColor          = "#fe8019"
-	reportHeaderColor      = "#d85d5d"
-	reportFooterColor      = "#ef8f62"
-	reportBorderColor      = "#665c54"
+	recordsHeaderColor     = "#d85d5d"
+	recordsFooterColor     = "#ef8f62"
+	recordsBorderColor     = "#665c54"
 	initialHelpMsgColor    = "#a58390"
-	reportDateRangeColor   = "#fabd2f"
-	reportHelpColor        = "#928374"
+	recordsDateRangeColor  = "#fabd2f"
+	recordsHelpColor       = "#928374"
 	helpMsgColor           = "#83a598"
 	helpViewTitleColor     = "#83a598"
 	helpHeaderColor        = "#83a598"
 	helpSectionColor       = "#fabd2f"
+	warningColor           = "#fb4934"
 )
 
 var (
@@ -71,20 +72,20 @@ var (
 					PaddingLeft(1).
 					Foreground(lipgloss.Color(activeTaskolor))
 
-	reportHeaderStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color(reportHeaderColor))
+	recordsHeaderStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color(recordsHeaderColor))
 
-	reportFooterStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color(reportFooterColor))
+	recordsFooterStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color(recordsFooterColor))
 
-	reportBorderStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color(reportBorderColor))
+	recordsBorderStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color(recordsBorderColor))
 
-	reportDateRangeStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color(reportDateRangeColor))
+	recordsDateRangeStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color(recordsDateRangeColor))
 
-	reportHelpStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color(reportHelpColor))
+	recordsHelpStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color(recordsHelpColor))
 
 	helpTitleStyle = baseStyle.
 			Bold(true).
@@ -126,4 +127,7 @@ var (
 	}
 
 	emptyStyle = lipgloss.NewStyle()
+
+	WarningStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(warningColor))
 )

@@ -1,12 +1,15 @@
 package cmd
 
 import (
+	"bufio"
 	"database/sql"
 	"errors"
 	"fmt"
 	"io/fs"
+	"math/rand"
 	"os"
 	"os/user"
+	"strings"
 
 	"github.com/dhth/hours/internal/ui"
 	"github.com/spf13/cobra"
@@ -24,11 +27,63 @@ var (
 	recordsInteractive bool
 	recordsOutputPlain bool
 	activeTemplate     string
+	genNumDays         uint8
+	genNumTasks        uint8
 )
 
 func die(msg string, args ...any) {
 	fmt.Fprintf(os.Stderr, msg+"\n", args...)
 	os.Exit(1)
+}
+
+func setupDB() {
+
+	if dbPath == "" {
+		die("dbpath cannot be empty")
+	}
+
+	dbPathFull := expandTilde(dbPath)
+
+	var err error
+
+	_, err = os.Stat(dbPathFull)
+	if errors.Is(err, fs.ErrNotExist) {
+		db, err = getDB(dbPathFull)
+
+		if err != nil {
+			die(`Couldn't create hours' local database. This is a fatal error;
+let %s know about this via %s.
+
+Error: %s`,
+				author,
+				repoIssuesUrl,
+				err)
+		}
+
+		err = initDB(db)
+		if err != nil {
+			die(`Couldn't create hours' local database. This is a fatal error;
+let %s know about this via %s.
+
+Error: %s`,
+				author,
+				repoIssuesUrl,
+				err)
+		}
+		upgradeDB(db, 1)
+	} else {
+		db, err = getDB(dbPathFull)
+		if err != nil {
+			die(`Couldn't open hours' local database. This is a fatal error;
+let %s know about this via %s.
+
+Error: %s`,
+				author,
+				repoIssuesUrl,
+				err)
+		}
+		upgradeDBIfNeeded(db)
+	}
 }
 
 var rootCmd = &cobra.Command{
@@ -40,55 +95,81 @@ You can use "hours" to track time on your tasks, or view logs, reports, and
 summary statistics for your tracked time.
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if dbPath == "" {
-			die("dbpath cannot be empty")
+		if cmd.CalledAs() == "gen" {
+			return
+		}
+		setupDB()
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		ui.RenderUI(db)
+	},
+}
+
+var generateCmd = &cobra.Command{
+	Use:   "gen",
+	Short: "Generate dummy log entries",
+	Long: `Generate dummy log entries.
+This is intended for new users of 'hours' so they can get a sense of its
+capabilities without actually tracking any time. It's recommended to always use
+this with a --dbpath/-d flag that points to a throwaway database.
+`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if genNumDays > 30 {
+			die("Maximum value for number of days is 30")
+		}
+		if genNumTasks > 20 {
+			die("Maximum value for number of days is 20")
 		}
 
 		dbPathFull := expandTilde(dbPath)
 
-		var err error
+		_, statErr := os.Stat(dbPathFull)
+		if statErr == nil {
+			die(`A file already exists at %s. Either delete it, or use a different path.
 
-		_, err = os.Stat(dbPathFull)
-		if errors.Is(err, fs.ErrNotExist) {
-			db, err = getDB(dbPathFull)
-
-			if err != nil {
-				die(`Couldn't create hours' local database. This is a fatal error;
-let %s know about this via %s.
-
-Error: %s`,
-					author,
-					repoIssuesUrl,
-					err)
-			}
-
-			err = initDB(db)
-			if err != nil {
-				die(`Couldn't create hours' local database. This is a fatal error;
-let %s know about this via %s.
-
-Error: %s`,
-					author,
-					repoIssuesUrl,
-					err)
-			}
-			upgradeDB(db, 1)
-		} else {
-			db, err = getDB(dbPathFull)
-			if err != nil {
-				die(`Couldn't open hours' local database. This is a fatal error;
-let %s know about this via %s.
-
-Error: %s`,
-					author,
-					repoIssuesUrl,
-					err)
-			}
-			upgradeDBIfNeeded(db)
+Tip: 'gen' should always be used on a throwaway database file.`, dbPathFull)
 		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		ui.RenderUI(db)
+
+		fmt.Print(ui.WarningStyle.Render(`
+WARNING: You shouldn't run 'gen' on hours' actively used database as it'll
+create dummy entries in it. You can run it out on a throwaway database by
+passing a path for it via --dbpath/-d (use it for all further invocations of
+'hours' as well).
+`))
+		fmt.Print(`
+The 'gen' subcommand is intended for new users of 'hours' so they can get a
+sense of its capabilities without actually tracking any time.
+
+---
+
+`)
+		confirm := getConfirmation()
+		if !confirm {
+			fmt.Printf("\nIncorrect code; exiting\n")
+			os.Exit(1)
+		}
+
+		setupDB()
+		genErr := ui.GenerateData(db, genNumDays, genNumTasks)
+		if genErr != nil {
+			die(`Something went wrong generating dummy data.
+let %s know about this via %s.
+
+Error: %s`, author, repoIssuesUrl, genErr)
+		}
+		fmt.Printf(`
+Successfully generated dummy data in the database file: %s
+
+If this is not the default database file path, use --dbpath/-d with 'hours' when
+you want to access the dummy data.
+
+Go ahead and try the following!
+
+hours --dbpath=%s
+hours --dbpath=%s report week -i
+hours --dbpath=%s log today -i
+hours --dbpath=%s stats today -i
+`, dbPath, dbPath, dbPath, dbPath, dbPath)
 	},
 }
 
@@ -167,7 +248,6 @@ Accepts an argument, which can be one of the following:
   yest:      show stats for yesterday
   3d:        show stats for the last 3 days (default)
   week:      show stats for the current week
-  month:     show stats for the current month
   date:      show stats for a specific date (eg. "2024/06/08")
   range:     show stats for a specific date range (eg. "2024/06/08...2024/06/12")
   all:       show stats for all log entries
@@ -210,6 +290,9 @@ Error: %s`, author, repoIssuesUrl, err)
 	defaultDBPath := fmt.Sprintf("%s/hours.db", currentUser.HomeDir)
 	rootCmd.PersistentFlags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 
+	generateCmd.Flags().Uint8Var(&genNumDays, "num-days", 30, "number of days to generate fake data for")
+	generateCmd.Flags().Uint8Var(&genNumTasks, "num-tasks", 10, "number of tasks to generate fake data for")
+
 	reportCmd.Flags().BoolVarP(&reportAgg, "agg", "a", false, "whether to aggregate data by task for each day in report")
 	reportCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view report interactively")
 	reportCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output report without any formatting")
@@ -223,6 +306,7 @@ Error: %s`, author, repoIssuesUrl, err)
 	activeCmd.Flags().StringVarP(&activeTemplate, "template", "t", ui.ActiveTaskPlaceholder,
 		fmt.Sprintf("string template to use for outputting active task; use \"%s\" as placeholder for the task", ui.ActiveTaskPlaceholder))
 
+	rootCmd.AddCommand(generateCmd)
 	rootCmd.AddCommand(reportCmd)
 	rootCmd.AddCommand(logCmd)
 	rootCmd.AddCommand(statsCmd)
@@ -234,6 +318,32 @@ Error: %s`, author, repoIssuesUrl, err)
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
-		die("Something went wrong: %s\n", err)
+		die("Something went wrong: %s", err)
 	}
+}
+
+func getRandomChars(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyz"
+
+	var code string
+	for i := 0; i < length; i++ {
+		code += string(charset[rand.Intn(len(charset))])
+	}
+	return code
+}
+
+func getConfirmation() bool {
+
+	code := getRandomChars(2)
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Printf("Type %s to proceed: ", code)
+
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		die("Something went wrong reading input: %s", err)
+	}
+	response = strings.TrimSpace(response)
+
+	return response == code
 }

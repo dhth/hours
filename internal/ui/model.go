@@ -130,7 +130,6 @@ type recordsModel struct {
 	quitting bool
 	busy     bool
 	err      error
-	message  string
 }
 
 func (m recordsModel) Init() tea.Cmd {

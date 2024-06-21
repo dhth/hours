@@ -64,8 +64,8 @@ func getReportStyles(plain bool) reportStyles {
 		}
 	}
 	return reportStyles{
-		reportHeaderStyle,
-		reportFooterStyle,
-		reportBorderStyle,
+		recordsHeaderStyle,
+		recordsFooterStyle,
+		recordsBorderStyle,
 	}
 }

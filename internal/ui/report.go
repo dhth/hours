@@ -130,16 +130,16 @@ func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, er
 					RightPadTrim(timeSpentStr, reportTimeCharsBudget, false),
 				)
 			} else {
-				reportStyle, ok := styleCache[tr.taskSummary]
+				rowStyle, ok := styleCache[tr.taskSummary]
 
 				if !ok {
-					reportStyle = getDynamicStyle(tr.taskSummary)
-					styleCache[tr.taskSummary] = reportStyle
+					rowStyle = getDynamicStyle(tr.taskSummary)
+					styleCache[tr.taskSummary] = rowStyle
 				}
 
 				row[colIndex] = fmt.Sprintf("%s  %s",
-					reportStyle.Render(RightPadTrim(tr.taskSummary, summaryBudget, false)),
-					reportStyle.Render(RightPadTrim(timeSpentStr, reportTimeCharsBudget, false)),
+					rowStyle.Render(RightPadTrim(tr.taskSummary, summaryBudget, false)),
+					rowStyle.Render(RightPadTrim(timeSpentStr, reportTimeCharsBudget, false)),
 				)
 			}
 			totalSecsPerDay[colIndex] += tr.secsSpent
@@ -263,15 +263,15 @@ func getReportAgg(db *sql.DB, start time.Time, numDays int, plain bool) (string,
 					RightPadTrim(timeSpentStr, reportTimeCharsBudget, false),
 				)
 			} else {
-				reportStyle, ok := styleCache[tr.taskSummary]
+				rowStyle, ok := styleCache[tr.taskSummary]
 				if !ok {
-					reportStyle = getDynamicStyle(tr.taskSummary)
-					styleCache[tr.taskSummary] = reportStyle
+					rowStyle = getDynamicStyle(tr.taskSummary)
+					styleCache[tr.taskSummary] = rowStyle
 				}
 
 				row[colIndex] = fmt.Sprintf("%s  %s",
-					reportStyle.Render(RightPadTrim(tr.taskSummary, summaryBudget, false)),
-					reportStyle.Render(RightPadTrim(timeSpentStr, reportTimeCharsBudget, false)),
+					rowStyle.Render(RightPadTrim(tr.taskSummary, summaryBudget, false)),
+					rowStyle.Render(RightPadTrim(timeSpentStr, reportTimeCharsBudget, false)),
 				)
 			}
 			totalSecsPerDay[colIndex] += tr.secsSpent

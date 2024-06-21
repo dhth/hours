@@ -191,20 +191,20 @@ func (m recordsModel) View() string {
 			m.start.Format(dateFormat))
 	}
 
-	helpStr := fmt.Sprintf(`
+	helpStr := `
  go backwards:      h or <-
  go forwards:       l or ->
  go to today:       ctrl+t
 
  press ctrl+c/q to quit
-`)
+`
 
 	if m.plain {
 		help = helpStr
 		dateRange = dateRangeStr
 	} else {
-		help = reportHelpStyle.Render(helpStr)
-		dateRange = reportDateRangeStyle.Render(dateRangeStr)
+		help = recordsHelpStyle.Render(helpStr)
+		dateRange = recordsDateRangeStyle.Render(dateRangeStr)
 	}
 
 	return fmt.Sprintf("%s%s%s", m.report, dateRange, help)

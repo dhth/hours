@@ -36,6 +36,9 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string, inte
 	}
 
 	log, err := renderTaskLog(db, ts.start, ts.end, 100, plain)
+	if err != nil {
+		fmt.Printf("Something went wrong generating the log: %s\n", err)
+	}
 
 	if interactive {
 		p := tea.NewProgram(initialRecordsModel(reportLogs, db, ts.start, ts.end, plain, period, ts.numDays, log))
@@ -91,16 +94,16 @@ func renderTaskLog(db *sql.DB, start, end time.Time, limit int, plain bool) (str
 				RightPadTrim(timeSpentStr, logTimeCharsBudget, false),
 			}
 		} else {
-			reportStyle, ok := styleCache[entry.taskSummary]
+			rowStyle, ok := styleCache[entry.taskSummary]
 			if !ok {
-				reportStyle = getDynamicStyle(entry.taskSummary)
-				styleCache[entry.taskSummary] = reportStyle
+				rowStyle = getDynamicStyle(entry.taskSummary)
+				styleCache[entry.taskSummary] = rowStyle
 			}
 			data[i] = []string{
-				reportStyle.Render(RightPadTrim(entry.taskSummary, 20, false)),
-				reportStyle.Render(RightPadTrim(entry.comment, 40, false)),
-				reportStyle.Render(fmt.Sprintf("%s  ...  %s", entry.beginTs.Format(timeFormat), entry.endTs.Format(timeFormat))),
-				reportStyle.Render(RightPadTrim(timeSpentStr, logTimeCharsBudget, false)),
+				rowStyle.Render(RightPadTrim(entry.taskSummary, 20, false)),
+				rowStyle.Render(RightPadTrim(entry.comment, 40, false)),
+				rowStyle.Render(fmt.Sprintf("%s  ...  %s", entry.beginTs.Format(timeFormat), entry.endTs.Format(timeFormat))),
+				rowStyle.Render(RightPadTrim(timeSpentStr, logTimeCharsBudget, false)),
 			}
 		}
 	}
