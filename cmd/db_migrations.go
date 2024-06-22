@@ -98,7 +98,9 @@ func runMigration(db *sql.DB, migrateQuery string, version int) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	stmt, err := tx.Prepare(migrateQuery)
 	if err != nil {

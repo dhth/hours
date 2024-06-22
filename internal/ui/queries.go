@@ -33,7 +33,9 @@ func updateActiveTLInDB(db *sql.DB, taskLogId int, taskId int, beginTs, endTs ti
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	stmt, err := tx.Prepare(`
 UPDATE task_log
@@ -86,7 +88,9 @@ func insertManualTLInDB(db *sql.DB, taskId int, beginTs time.Time, endTs time.Ti
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	stmt, err := tx.Prepare(`
 INSERT INTO task_log (task_id, begin_ts, end_ts, secs_spent, comment, active)
@@ -460,7 +464,9 @@ func deleteEntry(db *sql.DB, entry *taskLogEntry) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		_ = tx.Rollback()
+	}()
 
 	stmt, err := tx.Prepare(`
 DELETE from task_log
