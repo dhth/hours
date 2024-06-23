@@ -7,26 +7,27 @@ import (
 )
 
 const (
-	defaultBackgroundColor = "#282828"
-	activeTaskListColor    = "#fe8019"
-	inactiveTaskListColor  = "#928374"
-	taskLogListColor       = "#b8bb26"
-	trackingColor          = "#fabd2f"
-	activeTaskolor         = "#8ec07c"
-	formFieldNameColor     = "#8ec07c"
-	formContextColor       = "#fabd2f"
-	toolNameColor          = "#fe8019"
-	recordsHeaderColor     = "#d85d5d"
-	recordsFooterColor     = "#ef8f62"
-	recordsBorderColor     = "#665c54"
-	initialHelpMsgColor    = "#a58390"
-	recordsDateRangeColor  = "#fabd2f"
-	recordsHelpColor       = "#928374"
-	helpMsgColor           = "#83a598"
-	helpViewTitleColor     = "#83a598"
-	helpHeaderColor        = "#83a598"
-	helpSectionColor       = "#fabd2f"
-	warningColor           = "#fb4934"
+	defaultBackgroundColor   = "#282828"
+	activeTaskListColor      = "#fe8019"
+	inactiveTaskListColor    = "#928374"
+	taskLogListColor         = "#b8bb26"
+	trackingColor            = "#fabd2f"
+	activeTaskColor          = "#8ec07c"
+	activeTaskBeginTimeColor = "#d3869b"
+	formFieldNameColor       = "#8ec07c"
+	formContextColor         = "#fabd2f"
+	toolNameColor            = "#fe8019"
+	recordsHeaderColor       = "#d85d5d"
+	recordsFooterColor       = "#ef8f62"
+	recordsBorderColor       = "#665c54"
+	initialHelpMsgColor      = "#a58390"
+	recordsDateRangeColor    = "#fabd2f"
+	recordsHelpColor         = "#928374"
+	helpMsgColor             = "#83a598"
+	helpViewTitleColor       = "#83a598"
+	helpHeaderColor          = "#83a598"
+	helpSectionColor         = "#fabd2f"
+	warningColor             = "#fb4934"
 )
 
 var (
@@ -70,7 +71,11 @@ var (
 
 	activeTaskSummaryMsgStyle = trackingStyle.
 					PaddingLeft(1).
-					Foreground(lipgloss.Color(activeTaskolor))
+					Foreground(lipgloss.Color(activeTaskColor))
+
+	activeTaskBeginTimeStyle = lipgloss.NewStyle().
+					PaddingLeft(1).
+					Foreground(lipgloss.Color(activeTaskBeginTimeColor))
 
 	recordsHeaderStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color(recordsHeaderColor))

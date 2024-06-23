@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/dustin/go-humanize"
 )
@@ -34,8 +35,19 @@ func (tl *taskLogEntry) updateTitle() {
 func (tl *taskLogEntry) updateDesc() {
 	timeSpentStr := humanizeDuration(tl.secsSpent)
 
-	timeStr := fmt.Sprintf("ended on %s (spent %s)",
-		RightPadTrim(tl.endTs.Format(friendlyTimeFormat), 40, true),
+	var timeStr string
+	var durationMsg string
+	now := time.Now()
+
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	if startOfToday.Sub(tl.endTs) > 0 {
+		durationMsg = humanize.Time(tl.endTs)
+	} else {
+		durationMsg = fmt.Sprintf("%s  ...  %s", tl.beginTs.Format(timeOnlyFormat), tl.endTs.Format(timeOnlyFormat))
+	}
+	timeStr = fmt.Sprintf("%s (%s)",
+		RightPadTrim(durationMsg, 40, true),
 		timeSpentStr)
 
 	tl.desc = fmt.Sprintf("%s %s", RightPadTrim("["+tl.taskSummary+"]", 60, true), timeStr)

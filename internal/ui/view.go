@@ -21,14 +21,18 @@ func (m model) View() string {
 
 	var activeMsg string
 	if m.tasksFetched && m.trackingActive {
-		var taskSummaryMsg string
+		var taskSummaryMsg, taskStartedSinceMsg string
 		task, ok := m.activeTaskMap[m.activeTaskId]
 		if ok {
-			taskSummaryMsg = fmt.Sprintf("(%s)", Trim(task.summary, 50))
+			taskSummaryMsg = Trim(task.summary, 50)
+			if m.activeView != askForCommentView {
+				taskStartedSinceMsg = fmt.Sprintf("(since %s)", m.activeTLBeginTS.Format(timeOnlyFormat))
+			}
 		}
-		activeMsg = fmt.Sprintf("%s%s",
+		activeMsg = fmt.Sprintf("%s%s%s",
 			trackingStyle.Render("tracking:"),
 			activeTaskSummaryMsgStyle.Render(taskSummaryMsg),
+			activeTaskBeginTimeStyle.Render(taskStartedSinceMsg),
 		)
 	}
 

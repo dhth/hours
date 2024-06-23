@@ -90,7 +90,7 @@ func renderTaskLog(db *sql.DB, start, end time.Time, limit int, plain bool) (str
 			data[i] = []string{
 				RightPadTrim(entry.taskSummary, 20, false),
 				RightPadTrim(entry.comment, 40, false),
-				fmt.Sprintf("%s  ...  %s", entry.beginTs.Format(timeFormat), entry.beginTs.Format(timeFormat)),
+				fmt.Sprintf("%s  ...  %s", entry.beginTs.Format(timeFormat), entry.endTs.Format(timeFormat)),
 				RightPadTrim(timeSpentStr, logTimeCharsBudget, false),
 			}
 		} else {

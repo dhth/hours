@@ -12,6 +12,8 @@ import (
 const (
 	ActiveTaskPlaceholder     = "{{task}}"
 	ActiveTaskTimePlaceholder = "{{time}}"
+	activeSecsThreshold       = 60
+	activeSecsThresholdStr    = "<1m"
 )
 
 func ShowActiveTask(db *sql.DB, writer io.Writer, template string) {
@@ -28,7 +30,12 @@ func ShowActiveTask(db *sql.DB, writer io.Writer, template string) {
 
 	now := time.Now()
 	timeSpent := now.Sub(activeTaskDetails.lastLogEntryBeginTs).Seconds()
-	timeSpentStr := humanizeDuration(int(timeSpent))
+	var timeSpentStr string
+	if timeSpent <= activeSecsThreshold {
+		timeSpentStr = activeSecsThresholdStr
+	} else {
+		timeSpentStr = humanizeDuration(int(timeSpent))
+	}
 
 	activeStr := strings.Replace(template, ActiveTaskPlaceholder, activeTaskDetails.taskSummary, 1)
 	activeStr = strings.Replace(activeStr, ActiveTaskTimePlaceholder, timeSpentStr, 1)

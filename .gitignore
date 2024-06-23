@@ -5,3 +5,4 @@ hours
 debug.log
 .quickrun
 justfile
+.cmds
