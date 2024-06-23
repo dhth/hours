@@ -150,6 +150,22 @@ Stats can also be viewed via an interactive interface using the
 
 ![Usage](https://tools.dhruvs.space/images/hours/stats-interactive-1.gif)
 
+### Active Task
+
+`hours` can show you the task being actively tracked using the `active`
+subcommand. This subcommand supports the following placeholders using the
+`--template`/`-t` flag:
+
+    {{task}}:  for the task summary
+    {{time}}:  for the time spent so far on the active log entry
+
+Tip: This can be used to display the active task in tmux's (or similar terminal
+multiplexers) status line using:
+
+```
+set -g status-right "#(hours active -t ' {{task}} ({{time}}) ')".
+```
+
 ### Generate Dummy Data
 
 You can have `hours` generate dummy data for you, so you can play around with
