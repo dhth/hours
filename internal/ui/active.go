@@ -6,10 +6,12 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 )
 
 const (
-	ActiveTaskPlaceholder = "{{task}}"
+	ActiveTaskPlaceholder     = "{{task}}"
+	ActiveTaskTimePlaceholder = "{{time}}"
 )
 
 func ShowActiveTask(db *sql.DB, writer io.Writer, template string) {
@@ -24,6 +26,11 @@ func ShowActiveTask(db *sql.DB, writer io.Writer, template string) {
 		return
 	}
 
+	now := time.Now()
+	timeSpent := now.Sub(activeTaskDetails.lastLogEntryBeginTs).Seconds()
+	timeSpentStr := humanizeDuration(int(timeSpent))
+
 	activeStr := strings.Replace(template, ActiveTaskPlaceholder, activeTaskDetails.taskSummary, 1)
+	activeStr = strings.Replace(activeStr, ActiveTaskTimePlaceholder, timeSpentStr, 1)
 	fmt.Fprint(writer, activeStr)
 }

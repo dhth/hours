@@ -193,7 +193,7 @@ Accepts an argument, which can be one of the following:
 
 Note: If a task log continues past midnight in your local timezone, it
 will be reported on the day it ends.
-    `,
+`,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var period string
@@ -223,7 +223,7 @@ Accepts an argument, which can be one of the following:
 
 Note: If a task log continues past midnight in your local timezone, it'll
 appear in the log for the day it ends.
-    `,
+`,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var period string
@@ -254,7 +254,7 @@ Accepts an argument, which can be one of the following:
 
 Note: If a task log continues past midnight in your local timezone, it'll
 be considered in the stats for the day it ends.
-    `,
+`,
 	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var period string
@@ -271,6 +271,16 @@ be considered in the stats for the day it ends.
 var activeCmd = &cobra.Command{
 	Use:   "active",
 	Short: "Show the task being actively tracked by \"hours\"",
+	Long: `Show the task being actively tracked by "hours".
+
+You can pass in a template using the --template/-t flag, which supports the
+following placeholders:
+
+  {{task}}:  for the task summary
+  {{time}}:  for the time spent so far on the active log entry
+
+eg. hours active -t ' {{task}} ({{time}}) '
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ui.ShowActiveTask(db, os.Stdout, activeTemplate)
 	},
@@ -303,8 +313,7 @@ Error: %s`, author, repoIssuesUrl, err)
 	statsCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output stats without any formatting")
 	statsCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view stats interactively")
 
-	activeCmd.Flags().StringVarP(&activeTemplate, "template", "t", ui.ActiveTaskPlaceholder,
-		fmt.Sprintf("string template to use for outputting active task; use \"%s\" as placeholder for the task", ui.ActiveTaskPlaceholder))
+	activeCmd.Flags().StringVarP(&activeTemplate, "template", "t", ui.ActiveTaskPlaceholder, "string template to use for outputting active task")
 
 	rootCmd.AddCommand(generateCmd)
 	rootCmd.AddCommand(reportCmd)
