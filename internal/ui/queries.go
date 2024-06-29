@@ -27,6 +27,22 @@ func insertNewTLInDB(db *sql.DB, taskId int, beginTs time.Time) error {
 	return nil
 }
 
+func deleteActiveTLInDB(db *sql.DB) error {
+
+	stmt, err := db.Prepare(`
+DELETE FROM task_log
+WHERE active=true;
+`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec()
+
+	return err
+}
+
 func updateActiveTLInDB(db *sql.DB, taskLogId int, taskId int, beginTs, endTs time.Time, secsSpent int, comment string) error {
 
 	tx, err := db.Begin()

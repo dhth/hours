@@ -26,10 +26,11 @@ var (
   (scroll line by line with j/k/arrow keys or by half a page with <c-d>/<c-u>)
 
   "hours" has 5 panes:
-    - Tasks List View                      Shows your tasks
-    - Task Management View                 Allows you to create/update tasks
-    - Task Log List View                   Shows your task log entries
-    - Inactive Tasks List View             Shows inactive tasks
+    - Tasks List View                       Shows active tasks
+    - Task Management View                  Shows a form to create/update tasks
+    - Task Log List View                    Shows your task log entries
+    - Inactive Tasks List View              Shows inactive tasks
+    - Task Log Entry View                   Shows a form to save a task log entry (after you're done tracking time)
     - Help View (this one)
 `),
 		helpHeaderStyle.Render("Keyboard Shortcuts"),
@@ -54,10 +55,9 @@ var (
 		helpSectionStyle.Render(`
     a                                       Add a task
     u                                       Update task details
-    s                                       Toggle recording time on the currently selected task,
-                                                will open up a form to record a comment on the
-                                                second "s" keypress
+    s                                       Start/stop recording time on a task; stopping will open up the "Task Log Entry View"
     <ctrl+s>                                Add a manual task log entry
+    <ctrl+x>                                Discard currently active recording
     <ctrl+t>                                Go to currently tracked item
     <ctrl+d>                                Deactivate task
 `),
@@ -71,7 +71,11 @@ var (
 `),
 		helpHeaderStyle.Render("Task Log Entry View"),
 		helpSectionStyle.Render(`
-    enter                                   Save task log entry
+    enter                                   Save entered details for the task log
+    k                                       Move timestamp backwards by one minute
+    j                                       Move timestamp forwards by one minute
+    K                                       Move timestamp backwards by five minutes
+    J                                       Move timestamp forwards by five minutes
 `),
 	)
 )

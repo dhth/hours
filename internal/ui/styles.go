@@ -15,6 +15,7 @@ const (
 	activeTaskColor          = "#8ec07c"
 	activeTaskBeginTimeColor = "#d3869b"
 	formFieldNameColor       = "#8ec07c"
+	formHelpColor            = "#928374"
 	formContextColor         = "#fabd2f"
 	toolNameColor            = "#fe8019"
 	recordsHeaderColor       = "#d85d5d"
@@ -63,6 +64,9 @@ var (
 
 	formFieldNameStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color(formFieldNameColor))
+
+	formHelpStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(formHelpColor))
 
 	trackingStyle = lipgloss.NewStyle().
 			PaddingLeft(2).

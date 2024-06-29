@@ -49,10 +49,10 @@ const (
 	summaryField taskInputField = iota
 )
 
-type trackingFocussedField uint
+type timeTrackingFormField uint
 
 const (
-	entryBeginTS trackingFocussedField = iota
+	entryBeginTS timeTrackingFormField = iota
 	entryEndTS
 	entryComment
 )
@@ -76,6 +76,7 @@ const (
 const (
 	timeFormat         = "2006/01/02 15:04"
 	timeOnlyFormat     = "15:04"
+	dayFormat          = "Monday"
 	friendlyTimeFormat = "Mon, 15:04"
 	dateFormat         = "2006/01/02"
 )
@@ -93,7 +94,7 @@ type model struct {
 	tasksFetched           bool
 	taskLogList            list.Model
 	trackingInputs         []textinput.Model
-	trackingFocussedField  trackingFocussedField
+	trackingFocussedField  timeTrackingFormField
 	taskInputs             []textinput.Model
 	taskMgmtContext        taskMgmtContext
 	taskInputFocussedField taskInputField

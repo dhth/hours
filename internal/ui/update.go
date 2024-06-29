@@ -2,10 +2,11 @@ package ui
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"time"
 )
 
 const useHighPerformanceRenderer = false
@@ -181,6 +182,26 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.trackingInputs[m.trackingFocussedField].Focus()
 			}
+		case "k":
+			err := m.shiftTime(shiftBackward, shiftMinute)
+			if err != nil {
+				return m, tea.Batch(cmds...)
+			}
+		case "j":
+			err := m.shiftTime(shiftForward, shiftMinute)
+			if err != nil {
+				return m, tea.Batch(cmds...)
+			}
+		case "K":
+			err := m.shiftTime(shiftBackward, shiftFiveMinutes)
+			if err != nil {
+				return m, tea.Batch(cmds...)
+			}
+		case "J":
+			err := m.shiftTime(shiftForward, shiftFiveMinutes)
+			if err != nil {
+				return m, tea.Batch(cmds...)
+			}
 		}
 	}
 
@@ -330,6 +351,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.message = msg
 					m.messages = append(m.messages, msg)
 				}
+			}
+		case "ctrl+x":
+			if m.activeView == activeTaskListView && m.trackingActive {
+				cmds = append(cmds, deleteActiveTaskLog(m.db))
 			}
 		case "s":
 			switch m.activeView {
@@ -579,6 +604,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			cmds = append(cmds, fetchTaskLogEntries(m.db))
 		}
+	case activeTaskLogDeletedMsg:
+		if msg.err != nil {
+			m.message = fmt.Sprintf("Error deleting active log entry: %s", msg.err)
+		} else {
+			activeTask, ok := m.activeTaskMap[m.activeTaskId]
+			if ok {
+				activeTask.trackingActive = false
+				activeTask.updateTitle()
+			}
+			m.lastChange = updateChange
+			m.trackingActive = false
+			m.activeTaskId = -1
+		}
 	case taskActiveStatusUpdated:
 		if msg.err != nil {
 			message := "error updating task's active status: " + msg.err.Error()
@@ -697,4 +735,20 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	return m, tea.Batch(cmds...)
+}
+
+func (m model) shiftTime(direction timeShiftDirection, duration timeShiftDuration) error {
+	if m.activeView == askForCommentView || m.activeView == manualTasklogEntryView {
+		if m.trackingFocussedField == entryBeginTS || m.trackingFocussedField == entryEndTS {
+			ts, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[m.trackingFocussedField].Value(), time.Local)
+			if err != nil {
+				return err
+			}
+
+			newTs := getShiftedTime(ts, direction, duration)
+
+			m.trackingInputs[m.trackingFocussedField].SetValue(newTs.Format(timeFormat))
+		}
+	}
+	return nil
 }

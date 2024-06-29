@@ -37,15 +37,20 @@ func (tl *taskLogEntry) updateDesc() {
 
 	var timeStr string
 	var durationMsg string
-	now := time.Now()
 
-	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	endTSRelative := getTSRelative(tl.endTs, time.Now())
 
-	if startOfToday.Sub(tl.endTs) > 0 {
-		durationMsg = humanize.Time(tl.endTs)
-	} else {
+	switch endTSRelative {
+	case tsFromToday:
 		durationMsg = fmt.Sprintf("%s  ...  %s", tl.beginTs.Format(timeOnlyFormat), tl.endTs.Format(timeOnlyFormat))
+	case tsFromYesterday:
+		durationMsg = "Yesterday"
+	case tsFromThisWeek:
+		durationMsg = tl.endTs.Format(dayFormat)
+	default:
+		durationMsg = humanize.Time(tl.endTs)
 	}
+
 	timeStr = fmt.Sprintf("%s (%s)",
 		RightPadTrim(durationMsg, 40, true),
 		timeSpentStr)
