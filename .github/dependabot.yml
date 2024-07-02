@@ -5,6 +5,8 @@ updates:
     schedule:
       interval: "daily"
       time: "16:00"
+    reviewers:
+      - "dhth"
     labels:
       - "dependencies"
     commit-message:
@@ -15,6 +17,8 @@ updates:
     schedule:
       interval: "daily"
       time: "16:00"
+    reviewers:
+      - "dhth"
     labels:
       - "dependencies"
     commit-message:
