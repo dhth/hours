@@ -10,9 +10,9 @@ import (
 func insertNewTLInDB(db *sql.DB, taskId int, beginTs time.Time) error {
 
 	stmt, err := db.Prepare(`
-    INSERT INTO task_log (task_id, begin_ts, active)
-    VALUES (?, ?, ?);
-    `)
+INSERT INTO task_log (task_id, begin_ts, active)
+VALUES (?, ?, ?);
+`)
 
 	if err != nil {
 		return err
@@ -20,6 +20,26 @@ func insertNewTLInDB(db *sql.DB, taskId int, beginTs time.Time) error {
 	defer stmt.Close()
 
 	_, err = stmt.Exec(taskId, beginTs.UTC(), true)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func updateTLBeginTSInDB(db *sql.DB, beginTs time.Time) error {
+
+	stmt, err := db.Prepare(`
+UPDATE task_log SET begin_ts=?
+WHERE active is true;
+`)
+
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(beginTs.UTC(), true)
 	if err != nil {
 		return err
 	}

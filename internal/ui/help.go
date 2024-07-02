@@ -25,12 +25,12 @@ var (
 		helpSectionStyle.Render(`
   (scroll line by line with j/k/arrow keys or by half a page with <c-d>/<c-u>)
 
-  "hours" has 5 panes:
+  "hours" has 6 views:
     - Tasks List View                       Shows active tasks
     - Task Management View                  Shows a form to create/update tasks
     - Task Log List View                    Shows your task log entries
     - Inactive Tasks List View              Shows inactive tasks
-    - Task Log Entry View                   Shows a form to save a task log entry (after you're done tracking time)
+    - Task Log Entry View                   Shows a form to save/update a task log entry
     - Help View (this one)
 `),
 		helpHeaderStyle.Render("Keyboard Shortcuts"),
@@ -56,7 +56,7 @@ var (
     a                                       Add a task
     u                                       Update task details
     s                                       Start/stop recording time on a task; stopping will open up the "Task Log Entry View"
-    <ctrl+s>                                Add a manual task log entry
+    <ctrl+s>                                Edit the currently active task log/Add a new manual task log entry
     <ctrl+x>                                Discard currently active recording
     <ctrl+t>                                Go to currently tracked item
     <ctrl+d>                                Deactivate task

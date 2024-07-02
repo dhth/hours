@@ -106,6 +106,29 @@ func (m model) View() string {
 		for i := 0; i < m.terminalHeight-22; i++ {
 			content += "\n"
 		}
+	case editStartTsView:
+		formHeadingText := "Update task log entry"
+
+		content = fmt.Sprintf(
+			`
+    %s
+
+    %s
+
+    %s    %s
+
+
+    %s
+`,
+			formContextStyle.Render(formHeadingText),
+			formFieldNameStyle.Render("Begin Time (format: 2006/01/02 15:04)"),
+			m.trackingInputs[entryBeginTS].View(),
+			formHelpStyle.Render("(k/j/K/J moves time, when correct)"),
+			formContextStyle.Render("Press enter to submit"),
+		)
+		for i := 0; i < m.terminalHeight-12; i++ {
+			content += "\n"
+		}
 	case manualTasklogEntryView:
 		var formHeadingText string
 		switch m.tasklogSaveType {

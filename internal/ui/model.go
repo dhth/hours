@@ -30,6 +30,7 @@ const (
 	activeTaskListView stateView = iota
 	taskLogView
 	inactiveTaskListView
+	editStartTsView
 	askForCommentView
 	manualTasklogEntryView
 	taskInputView
