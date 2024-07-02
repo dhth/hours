@@ -68,7 +68,7 @@ func (m model) View() string {
 			content += "\n"
 		}
 	case askForCommentView:
-		formHeadingText := "Saving task entry. Enter the following details:"
+		formHeadingText := "Saving task log entry. Enter the following details."
 
 		content = fmt.Sprintf(
 			`
@@ -78,9 +78,11 @@ func (m model) View() string {
 
     %s
 
-    %s
+    %s    %s
 
     %s
+
+    %s    %s
 
     %s
 
@@ -90,24 +92,27 @@ func (m model) View() string {
     %s
 `,
 			formContextStyle.Render(formHeadingText),
-			formFieldNameStyle.Render("Begin Time  (format: 2006/01/02 15:04)"),
+			formHelpStyle.Render("Use tab/shift-tab to move between sections; esc to go back."),
+			formFieldNameStyle.Render("Begin Time (format: 2006/01/02 15:04)"),
 			m.trackingInputs[entryBeginTS].View(),
-			formFieldNameStyle.Render("End Time  (format: 2006/01/02 15:04)"),
+			formHelpStyle.Render("(k/j/K/J moves time, when correct)"),
+			formFieldNameStyle.Render("End Time (format: 2006/01/02 15:04)"),
 			m.trackingInputs[entryEndTS].View(),
+			formHelpStyle.Render("(k/j/K/J moves time, when correct)"),
 			formFieldNameStyle.Render(RightPadTrim("Comment:", 16, true)),
 			m.trackingInputs[entryComment].View(),
 			formContextStyle.Render("Press enter to submit"),
 		)
-		for i := 0; i < m.terminalHeight-20; i++ {
+		for i := 0; i < m.terminalHeight-22; i++ {
 			content += "\n"
 		}
 	case manualTasklogEntryView:
 		var formHeadingText string
 		switch m.tasklogSaveType {
 		case tasklogInsert:
-			formHeadingText = "Adding a manual entry. Enter the following details:"
+			formHeadingText = "Adding a manual entry. Enter the following details."
 		case tasklogUpdate:
-			formHeadingText = "Updating task log entry. Enter the following details:"
+			formHeadingText = "Updating task log entry. Enter the following details."
 		}
 
 		content = fmt.Sprintf(
@@ -118,9 +123,11 @@ func (m model) View() string {
 
     %s
 
-    %s
+    %s    %s
 
     %s
+
+    %s    %s
 
     %s
 
@@ -130,15 +137,18 @@ func (m model) View() string {
     %s
 `,
 			formContextStyle.Render(formHeadingText),
-			formFieldNameStyle.Render("Begin Time  (format: 2006/01/02 15:04)"),
+			formHelpStyle.Render("Use tab/shift-tab to move between sections; esc to go back."),
+			formFieldNameStyle.Render("Begin Time (format: 2006/01/02 15:04)"),
 			m.trackingInputs[entryBeginTS].View(),
-			formFieldNameStyle.Render("End Time  (format: 2006/01/02 15:04)"),
+			formHelpStyle.Render("(k/j/K/J moves time, when correct)"),
+			formFieldNameStyle.Render("End Time (format: 2006/01/02 15:04)"),
 			m.trackingInputs[entryEndTS].View(),
+			formHelpStyle.Render("(k/j/K/J moves time, when correct)"),
 			formFieldNameStyle.Render(RightPadTrim("Comment:", 16, true)),
 			m.trackingInputs[entryComment].View(),
 			formContextStyle.Render("Press enter to submit"),
 		)
-		for i := 0; i < m.terminalHeight-20; i++ {
+		for i := 0; i < m.terminalHeight-22; i++ {
 			content += "\n"
 		}
 	case helpView:
@@ -155,9 +165,19 @@ func (m model) View() string {
 
 	var helpMsg string
 	if m.showHelpIndicator {
-		if m.activeView == activeTaskListView && len(m.activeTasksList.Items()) == 0 {
-			helpMsg += " " + initialHelpMsgStyle.Render("Press a to add a task")
+		// first time directions
+		if m.activeView == activeTaskListView && len(m.activeTasksList.Items()) <= 1 {
+			if len(m.activeTasksList.Items()) == 0 {
+				helpMsg += " " + initialHelpMsgStyle.Render("Press a to add a task")
+			} else if len(m.taskLogList.Items()) == 0 {
+				if m.trackingActive {
+					helpMsg += " " + initialHelpMsgStyle.Render("Press s to stop tracking time")
+				} else {
+					helpMsg += " " + initialHelpMsgStyle.Render("Press s to start tracking time")
+				}
+			}
 		}
+
 		helpMsg += " " + helpMsgStyle.Render("Press ? for help")
 	}
 

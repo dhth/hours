@@ -107,7 +107,7 @@ summary statistics for your tracked time.
 
 var generateCmd = &cobra.Command{
 	Use:   "gen",
-	Short: "Generate dummy log entries",
+	Short: "Generate dummy log entries (helpful for beginners)",
 	Long: `Generate dummy log entries.
 This is intended for new users of 'hours' so they can get a sense of its
 capabilities without actually tracking any time. It's recommended to always use

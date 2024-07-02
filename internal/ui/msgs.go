@@ -21,6 +21,10 @@ type manualTaskLogInserted struct {
 	err    error
 }
 
+type activeTaskLogDeletedMsg struct {
+	err error
+}
+
 type activeTaskFetchedMsg struct {
 	activeTaskId int
 	beginTs      time.Time

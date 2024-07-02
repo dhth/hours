@@ -212,8 +212,8 @@ Task List View
   a                                       Add a task
   u                                       Update task details
   s                                       Toggle recording time on the currently selected task,
-                                              will open up a form to record a comment on the
-                                              second "s" keypress
+                                              will open up a form to record a task log entry on
+                                              the second "s" keypress
   <ctrl+s>                                Add a manual task log entry
   <ctrl+t>                                Go to currently tracked item
   <ctrl+d>                                Deactivate task
@@ -230,6 +230,10 @@ Inactive Task List View
 Task Log Entry View
 
   enter                                   Save task log entry
+  k                                       Move timestamp backwards by one minute
+  j                                       Move timestamp forwards by one minute
+  K                                       Move timestamp backwards by five minutes
+  J                                       Move timestamp forwards by five minutes
 ```
 
 Acknowledgements

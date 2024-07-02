@@ -120,3 +120,74 @@ func getTimePeriod(period string, now time.Time, fullWeek bool) (timePeriod, err
 		numDays: numDays,
 	}, nil
 }
+
+type timeShiftDirection uint8
+
+const (
+	shiftForward timeShiftDirection = iota
+	shiftBackward
+)
+
+type timeShiftDuration uint8
+
+const (
+	shiftMinute timeShiftDuration = iota
+	shiftFiveMinutes
+	shiftHour
+)
+
+func getShiftedTime(ts time.Time, direction timeShiftDirection, duration timeShiftDuration) time.Time {
+	var d time.Duration
+
+	switch duration {
+	case shiftMinute:
+		d = time.Minute
+	case shiftFiveMinutes:
+		d = time.Minute * 5
+	case shiftHour:
+		d = time.Hour
+	}
+
+	if direction == shiftBackward {
+		d = -1 * d
+	}
+	return ts.Add(d)
+}
+
+type tsRelative uint8
+
+const (
+	tsFromFuture tsRelative = iota
+	tsFromToday
+	tsFromYesterday
+	tsFromThisWeek
+	tsFromBeforeThisWeek
+)
+
+func getTSRelative(ts time.Time, reference time.Time) tsRelative {
+
+	if ts.Sub(reference) > 0 {
+		return tsFromFuture
+	}
+
+	startOfReferenceDay := time.Date(reference.Year(), reference.Month(), reference.Day(), 0, 0, 0, 0, reference.Location())
+
+	if ts.Sub(startOfReferenceDay) > 0 {
+		return tsFromToday
+	}
+
+	startOfYest := startOfReferenceDay.AddDate(0, 0, -1)
+
+	if ts.Sub(startOfYest) > 0 {
+		return tsFromYesterday
+	}
+
+	weekday := reference.Weekday()
+	offset := (7 + weekday - time.Monday) % 7
+	startOfWeek := startOfReferenceDay.AddDate(0, 0, -int(offset))
+
+	if ts.Sub(startOfWeek) > 0 {
+		return tsFromThisWeek
+	}
+	return tsFromBeforeThisWeek
+}

@@ -57,7 +57,7 @@ func InitialModel(db *sql.DB) model {
 	m.activeTasksList.SetShowHelp(false)
 	m.activeTasksList.Styles.Title = m.activeTasksList.Styles.Title.Foreground(lipgloss.Color(defaultBackgroundColor)).Background(lipgloss.Color(activeTaskListColor)).Bold(true)
 
-	m.taskLogList.Title = "Task Log"
+	m.taskLogList.Title = "Task Log (last 50)"
 	m.taskLogList.SetStatusBarItemName("entry", "entries")
 	m.taskLogList.SetFilteringEnabled(false)
 	m.taskLogList.DisableQuitKeybindings()

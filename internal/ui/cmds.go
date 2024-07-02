@@ -112,6 +112,13 @@ func deleteLogEntry(db *sql.DB, entry *taskLogEntry) tea.Cmd {
 	}
 }
 
+func deleteActiveTaskLog(db *sql.DB) tea.Cmd {
+	return func() tea.Msg {
+		err := deleteActiveTLInDB(db)
+		return activeTaskLogDeletedMsg{err}
+	}
+}
+
 func createTask(db *sql.DB, summary string) tea.Cmd {
 	return func() tea.Msg {
 		err := insertTaskInDB(db, summary)
