@@ -15,7 +15,9 @@ func getDB(dbpath string) (*sql.DB, error) {
 func initDB(db *sql.DB) error {
 	// these init queries cannot be changed
 	// once hours is released; only further migrations
-	// can be added, which are run via hours db upgrade
+	// can be added, which are run whenever hours
+    // sees a difference between the values in db_versions
+    // and latestDBVersion
 	_, err := db.Exec(`
 CREATE TABLE IF NOT EXISTS db_versions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
