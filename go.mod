@@ -10,7 +10,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
-	modernc.org/sqlite v1.30.1
+	modernc.org/sqlite v1.30.2
 )
 
 require (
