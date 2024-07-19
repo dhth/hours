@@ -6,6 +6,10 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+const (
+	taskLogEntryViewHeading = "Task Log Entry"
+)
+
 var (
 	listWidth = 140
 )
@@ -53,44 +57,47 @@ func (m model) View() string {
 		}
 		content = fmt.Sprintf(
 			`
-    %s
+  %s
 
-    %s
+  %s
 
 
-    %s
+  %s
 `,
 			formFieldNameStyle.Render(formTitle),
 			m.taskInputs[summaryField].View(),
-			formContextStyle.Render("Press enter to submit"),
+			formHelpStyle.Render("Press enter to submit"),
 		)
 		for i := 0; i < m.terminalHeight-20+10; i++ {
 			content += "\n"
 		}
 	case askForCommentView:
-		formHeadingText := "Saving task log entry. Enter the following details."
+		formHeadingText := "Saving log entry. Enter the following details."
 
 		content = fmt.Sprintf(
 			`
-    %s
+  %s
 
-    %s
+  %s
 
-    %s
+  %s
 
-    %s    %s
+  %s
 
-    %s
+  %s    %s
 
-    %s    %s
+  %s
 
-    %s
+  %s    %s
 
-    %s
+  %s
+
+  %s
 
 
-    %s
+  %s
 `,
+			taskLogEntryHeadingStyle.Render(taskLogEntryViewHeading),
 			formContextStyle.Render(formHeadingText),
 			formHelpStyle.Render("Use tab/shift-tab to move between sections; esc to go back."),
 			formFieldNameStyle.Render("Begin Time (format: 2006/01/02 15:04)"),
@@ -101,64 +108,70 @@ func (m model) View() string {
 			formHelpStyle.Render("(k/j/K/J moves time, when correct)"),
 			formFieldNameStyle.Render(RightPadTrim("Comment:", 16, true)),
 			m.trackingInputs[entryComment].View(),
-			formContextStyle.Render("Press enter to submit"),
+			formHelpStyle.Render("Press enter to submit"),
 		)
-		for i := 0; i < m.terminalHeight-22; i++ {
+		for i := 0; i < m.terminalHeight-24; i++ {
 			content += "\n"
 		}
 	case editStartTsView:
-		formHeadingText := "Update task log entry"
+		formHeadingText := "Updating log entry. Enter the following details."
 
 		content = fmt.Sprintf(
 			`
-    %s
+  %s
 
-    %s
+  %s
 
-    %s    %s
+  %s
+
+  %s    %s
 
 
-    %s
+  %s
 `,
+			taskLogEntryHeadingStyle.Render(taskLogEntryViewHeading),
 			formContextStyle.Render(formHeadingText),
 			formFieldNameStyle.Render("Begin Time (format: 2006/01/02 15:04)"),
 			m.trackingInputs[entryBeginTS].View(),
 			formHelpStyle.Render("(k/j/K/J moves time, when correct)"),
-			formContextStyle.Render("Press enter to submit"),
+			formHelpStyle.Render("Press enter to submit"),
 		)
-		for i := 0; i < m.terminalHeight-12; i++ {
+		for i := 0; i < m.terminalHeight-14; i++ {
 			content += "\n"
 		}
 	case manualTasklogEntryView:
 		var formHeadingText string
 		switch m.tasklogSaveType {
 		case tasklogInsert:
-			formHeadingText = "Adding a manual entry. Enter the following details."
+			formHeadingText = "Adding a manual log entry. Enter the following details."
 		case tasklogUpdate:
-			formHeadingText = "Updating task log entry. Enter the following details."
+			formHeadingText = "Updating log entry. Enter the following details."
 		}
 
 		content = fmt.Sprintf(
 			`
-    %s
+  %s
 
-    %s
+  %s
 
-    %s
+  %s
 
-    %s    %s
+  %s
 
-    %s
+  %s    %s
 
-    %s    %s
+  %s
 
-    %s
+  %s    %s
 
-    %s
+  %s
+
+  %s
 
 
-    %s
+  %s
 `,
+			taskLogEntryHeadingStyle.Render(taskLogEntryViewHeading),
 			formContextStyle.Render(formHeadingText),
 			formHelpStyle.Render("Use tab/shift-tab to move between sections; esc to go back."),
 			formFieldNameStyle.Render("Begin Time (format: 2006/01/02 15:04)"),
@@ -169,22 +182,18 @@ func (m model) View() string {
 			formHelpStyle.Render("(k/j/K/J moves time, when correct)"),
 			formFieldNameStyle.Render(RightPadTrim("Comment:", 16, true)),
 			m.trackingInputs[entryComment].View(),
-			formContextStyle.Render("Press enter to submit"),
+			formHelpStyle.Render("Press enter to submit"),
 		)
-		for i := 0; i < m.terminalHeight-22; i++ {
+		for i := 0; i < m.terminalHeight-24; i++ {
 			content += "\n"
 		}
 	case helpView:
 		if !m.helpVPReady {
 			content = "\n  Initializing..."
 		} else {
-			content = viewPortStyle.Render(fmt.Sprintf("  %s\n\n%s\n", helpTitleStyle.Render("Help"), m.helpVP.View()))
+			content = viewPortStyle.Render(fmt.Sprintf("  %s  %s\n\n%s\n", helpTitleStyle.Render("Help"), helpSectionStyle.Render("(scroll with j/k/↓/↑)"), m.helpVP.View()))
 		}
 	}
-
-	footerStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#282828")).
-		Background(lipgloss.Color("#7c6f64"))
 
 	var helpMsg string
 	if m.showHelpIndicator {
@@ -204,12 +213,11 @@ func (m model) View() string {
 		helpMsg += " " + helpMsgStyle.Render("Press ? for help")
 	}
 
-	footerStr := fmt.Sprintf("%s%s%s",
+	footer = fmt.Sprintf("%s%s%s",
 		toolNameStyle.Render("hours"),
 		helpMsg,
 		activeMsg,
 	)
-	footer = footerStyle.Render(footerStr)
 
 	return lipgloss.JoinVertical(lipgloss.Left,
 		content,

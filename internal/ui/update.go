@@ -9,7 +9,9 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-const useHighPerformanceRenderer = false
+const (
+	viewPortMoveLineCount = 3
+)
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
@@ -456,6 +458,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 				}
 			}
+
+		case "k":
+			if m.activeView != helpView {
+				break
+			}
+			if m.helpVP.AtTop() {
+				break
+			}
+			m.helpVP.LineUp(viewPortMoveLineCount)
+
+		case "j":
+			if m.activeView != helpView {
+				break
+			}
+			if m.helpVP.AtBottom() {
+				break
+			}
+			m.helpVP.LineDown(viewPortMoveLineCount)
+
 		case "?":
 			m.lastView = m.activeView
 			m.activeView = helpView
@@ -476,8 +497,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if !m.helpVPReady {
 			m.helpVP = viewport.New(w-5, m.terminalHeight-7)
-			m.helpVP.HighPerformanceRendering = useHighPerformanceRenderer
 			m.helpVP.SetContent(helpText)
+			m.helpVP.KeyMap.Up.SetEnabled(false)
+			m.helpVP.KeyMap.Down.SetEnabled(false)
 			m.helpVPReady = true
 		} else {
 			m.helpVP.Height = m.terminalHeight - 7

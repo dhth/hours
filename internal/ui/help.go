@@ -3,8 +3,7 @@ package ui
 import "fmt"
 
 var (
-	helpText = fmt.Sprintf(`
-  %s
+	helpText = fmt.Sprintf(`  %s
 %s
   %s
 
@@ -23,12 +22,10 @@ var (
 `,
 		helpHeaderStyle.Render("\"hours\" Reference Manual"),
 		helpSectionStyle.Render(`
-  (scroll line by line with j/k/arrow keys or by half a page with <c-d>/<c-u>)
-
   "hours" has 6 views:
     - Tasks List View                       Shows active tasks
     - Task Management View                  Shows a form to create/update tasks
-    - Task Log List View                    Shows your task log entries
+    - Task Logs List View                   Shows your task logs
     - Inactive Tasks List View              Shows inactive tasks
     - Task Log Entry View                   Shows a form to save/update a task log entry
     - Help View (this one)
@@ -37,8 +34,8 @@ var (
 		helpHeaderStyle.Render("General"),
 		helpSectionStyle.Render(`
     1                                       Switch to Tasks List View
-    2                                       Switch to Task Log List View
-    3                                       Switch to Inactive Task Log List View
+    2                                       Switch to Task Logs List View
+    3                                       Switch to Inactive Tasks List View
     <tab>                                   Go to next view/form entry
     <shift+tab>                             Go to previous view/form entry
       ?                                     Show help view
@@ -61,7 +58,7 @@ var (
     <ctrl+t>                                Go to currently tracked item
     <ctrl+d>                                Deactivate task
 `),
-		helpHeaderStyle.Render("Task Log List View"),
+		helpHeaderStyle.Render("Task Logs List View"),
 		helpSectionStyle.Render(`
     <ctrl+d>                                Delete task log entry
 `),

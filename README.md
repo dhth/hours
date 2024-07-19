@@ -187,7 +187,7 @@ hours gen --dbpath=/var/tmp/throwaway.db
 "hours" has 6 views:
   - Tasks List View                       Shows active tasks
   - Task Management View                  Shows a form to create/update tasks
-  - Task Log List View                    Shows your task log entries
+  - Task Logs List View                   Shows your task logs
   - Inactive Tasks List View              Shows inactive tasks
   - Task Log Entry View                   Shows a form to save/update a task log entry
   - Help View
@@ -197,8 +197,8 @@ Keyboard Shortcuts
 General
 
   1                                       Switch to Tasks List View
-  2                                       Switch to Task Log List View
-  3                                       Switch to Inactive Task Log List View
+  2                                       Switch to Task Logs List View
+  3                                       Switch to Inactive Tasks List View
   <tab>                                   Go to next view/form entry
   <shift+tab>                             Go to previous view/form entry
     ?                                     Show help view
@@ -222,7 +222,7 @@ Task List View
   <ctrl+t>                                Go to currently tracked item
   <ctrl+d>                                Deactivate task
 
-Task Log List View
+Task Logs List View
 
   <ctrl+d>                                Delete task log entry
   <ctrl+r>                                Refresh list
