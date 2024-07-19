@@ -36,6 +36,9 @@ brew install dhth/tap/hours
 go install github.com/dhth/hours@latest
 ```
 
+Or get the binaries directly from a
+[release](https://github.com/dhth/hours/releases).
+
 ⚡️ Usage
 ---
 
@@ -181,20 +184,21 @@ hours gen --dbpath=/var/tmp/throwaway.db
 ---
 
 ```text
-"hours" has 5 panes:
-  - Tasks List View                      Shows your tasks
-  - Task Management View                 Allows you to create/update tasks
-  - Task Log List View                   Shows your task log entries
-  - Inactive Tasks List View             Shows inactive tasks
-  - Help View (this one)
+"hours" has 6 views:
+  - Tasks List View                       Shows active tasks
+  - Task Management View                  Shows a form to create/update tasks
+  - Task Logs List View                   Shows your task logs
+  - Inactive Tasks List View              Shows inactive tasks
+  - Task Log Entry View                   Shows a form to save/update a task log entry
+  - Help View
 
 Keyboard Shortcuts
 
 General
 
   1                                       Switch to Tasks List View
-  2                                       Switch to Task Log List View
-  3                                       Switch to Inactive Task Log List View
+  2                                       Switch to Task Logs List View
+  3                                       Switch to Inactive Tasks List View
   <tab>                                   Go to next view/form entry
   <shift+tab>                             Go to previous view/form entry
     ?                                     Show help view
@@ -214,11 +218,11 @@ Task List View
   s                                       Toggle recording time on the currently selected task,
                                               will open up a form to record a task log entry on
                                               the second "s" keypress
-  <ctrl+s>                                Add a manual task log entry
+  <ctrl+s>                                Edit the currently active task log/Add a new manual task log entry
   <ctrl+t>                                Go to currently tracked item
   <ctrl+d>                                Deactivate task
 
-Task Log List View
+Task Logs List View
 
   <ctrl+d>                                Delete task log entry
   <ctrl+r>                                Refresh list
@@ -239,7 +243,8 @@ Task Log Entry View
 Acknowledgements
 ---
 
-`hours` is built using the TUI framework [bubbletea][1].
+`hours` is built using [bubbletea][1], and is released using [goreleaser][2],
+both of which are amazing tools.
 
 [1]: https://github.com/charmbracelet/bubbletea
-[2]: https://www.youtube.com/watch?v=o244r1nyxac
+[2]: https://github.com/goreleaser/goreleaser

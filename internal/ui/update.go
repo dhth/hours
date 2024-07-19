@@ -9,7 +9,9 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-const useHighPerformanceRenderer = false
+const (
+	viewPortMoveLineCount = 3
+)
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
@@ -46,6 +48,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 					return m, tea.Batch(cmds...)
 				}
+			case editStartTsView:
+				beginTS, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[entryBeginTS].Value(), time.Local)
+				if err != nil {
+					m.message = err.Error()
+					return m, tea.Batch(cmds...)
+				}
+
+				cmds = append(cmds, updateTLBeginTS(m.db, beginTS))
+				m.trackingInputs[entryBeginTS].SetValue("")
+				m.activeView = activeTaskListView
+
+				return m, tea.Batch(cmds...)
 			case askForCommentView:
 				beginTS, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[entryBeginTS].Value(), time.Local)
 				if err != nil {
@@ -126,6 +140,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				for i := range m.taskInputs {
 					m.taskInputs[i].SetValue("")
 				}
+			case editStartTsView:
+				m.taskInputs[entryBeginTS].SetValue("")
+				m.activeView = activeTaskListView
 			case askForCommentView:
 				m.activeView = activeTaskListView
 				m.trackingInputs[entryComment].SetValue("")
@@ -212,6 +229,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, cmd)
 		}
 		return m, tea.Batch(cmds...)
+	case editStartTsView:
+		m.trackingInputs[entryBeginTS], cmd = m.trackingInputs[entryBeginTS].Update(msg)
+		cmds = append(cmds, cmd)
+		return m, tea.Batch(cmds...)
 	case askForCommentView:
 		for i := range m.trackingInputs {
 			m.trackingInputs[i], cmd = m.trackingInputs[i].Update(msg)
@@ -295,27 +316,34 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		case "ctrl+s":
-			if m.activeView == activeTaskListView && !m.trackingActive {
+			if m.activeView == activeTaskListView {
 				_, ok := m.activeTasksList.SelectedItem().(*task)
 				if !ok {
 					message := "Couldn't select a task"
 					m.message = message
 					m.messages = append(m.messages, message)
 				} else {
-					m.activeView = manualTasklogEntryView
-					m.tasklogSaveType = tasklogInsert
-					m.trackingFocussedField = entryBeginTS
-					currentTime := time.Now()
-					dateString := currentTime.Format("2006/01/02")
-					currentTimeStr := currentTime.Format(timeFormat)
+					if m.trackingActive {
+						m.activeView = editStartTsView
+						m.trackingFocussedField = entryBeginTS
+						m.trackingInputs[entryBeginTS].SetValue(m.activeTLBeginTS.Format(timeFormat))
+						m.trackingInputs[m.trackingFocussedField].Focus()
+					} else {
+						m.activeView = manualTasklogEntryView
+						m.tasklogSaveType = tasklogInsert
+						m.trackingFocussedField = entryBeginTS
+						currentTime := time.Now()
+						dateString := currentTime.Format("2006/01/02")
+						currentTimeStr := currentTime.Format(timeFormat)
 
-					m.trackingInputs[entryBeginTS].SetValue(dateString + " ")
-					m.trackingInputs[entryEndTS].SetValue(currentTimeStr)
+						m.trackingInputs[entryBeginTS].SetValue(dateString + " ")
+						m.trackingInputs[entryEndTS].SetValue(currentTimeStr)
 
-					for i := range m.trackingInputs {
-						m.trackingInputs[i].Blur()
+						for i := range m.trackingInputs {
+							m.trackingInputs[i].Blur()
+						}
+						m.trackingInputs[m.trackingFocussedField].Focus()
 					}
-					m.trackingInputs[m.trackingFocussedField].Focus()
 				}
 			}
 		case "ctrl+d":
@@ -430,6 +458,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 				}
 			}
+
+		case "k":
+			if m.activeView != helpView {
+				break
+			}
+			if m.helpVP.AtTop() {
+				break
+			}
+			m.helpVP.LineUp(viewPortMoveLineCount)
+
+		case "j":
+			if m.activeView != helpView {
+				break
+			}
+			if m.helpVP.AtBottom() {
+				break
+			}
+			m.helpVP.LineDown(viewPortMoveLineCount)
+
 		case "?":
 			m.lastView = m.activeView
 			m.activeView = helpView
@@ -450,8 +497,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if !m.helpVPReady {
 			m.helpVP = viewport.New(w-5, m.terminalHeight-7)
-			m.helpVP.HighPerformanceRendering = useHighPerformanceRenderer
 			m.helpVP.SetContent(helpText)
+			m.helpVP.KeyMap.Up.SetEnabled(false)
+			m.helpVP.KeyMap.Down.SetEnabled(false)
 			m.helpVPReady = true
 		} else {
 			m.helpVP.Height = m.terminalHeight - 7
@@ -501,6 +549,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.inactiveTasksList.SetItems(inactiveTasks)
 			}
+		}
+	case tlBeginTSUpdatedMsg:
+		if msg.err != nil {
+			message := msg.err.Error()
+			m.message = "Error updating begin time: " + message
+			m.messages = append(m.messages, message)
+		} else {
+			m.activeTLBeginTS = msg.beginTS
 		}
 	case manualTaskLogInserted:
 		if msg.err != nil {
@@ -738,7 +794,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) shiftTime(direction timeShiftDirection, duration timeShiftDuration) error {
-	if m.activeView == askForCommentView || m.activeView == manualTasklogEntryView {
+	if m.activeView == editStartTsView || m.activeView == askForCommentView || m.activeView == manualTasklogEntryView {
 		if m.trackingFocussedField == entryBeginTS || m.trackingFocussedField == entryEndTS {
 			ts, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[m.trackingFocussedField].Value(), time.Local)
 			if err != nil {

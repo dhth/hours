@@ -56,6 +56,13 @@ LIMIT 1
 	}
 }
 
+func updateTLBeginTS(db *sql.DB, beginTS time.Time) tea.Cmd {
+	return func() tea.Msg {
+		err := updateTLBeginTSInDB(db, beginTS)
+		return tlBeginTSUpdatedMsg{beginTS, err}
+	}
+}
+
 func insertManualEntry(db *sql.DB, taskId int, beginTS time.Time, endTS time.Time, comment string) tea.Cmd {
 	return func() tea.Msg {
 		err := insertManualTLInDB(db, taskId, beginTS, endTS, comment)

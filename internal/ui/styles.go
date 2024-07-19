@@ -10,6 +10,7 @@ const (
 	defaultBackgroundColor   = "#282828"
 	activeTaskListColor      = "#fe8019"
 	inactiveTaskListColor    = "#928374"
+	taskLogEntryColor        = "#fabd2f"
 	taskLogListColor         = "#b8bb26"
 	trackingColor            = "#fabd2f"
 	activeTaskColor          = "#8ec07c"
@@ -27,7 +28,7 @@ const (
 	helpMsgColor             = "#83a598"
 	helpViewTitleColor       = "#83a598"
 	helpHeaderColor          = "#83a598"
-	helpSectionColor         = "#fabd2f"
+	helpSectionColor         = "#bdae93"
 	warningColor             = "#fb4934"
 )
 
@@ -45,11 +46,17 @@ var (
 	initialHelpMsgStyle = helpMsgStyle.
 				Foreground(lipgloss.Color(initialHelpMsgColor))
 
-	baseListStyle = lipgloss.NewStyle().PaddingTop(1).PaddingRight(2).PaddingLeft(1).PaddingBottom(1)
+	baseListStyle = lipgloss.NewStyle().PaddingTop(1).PaddingRight(2).PaddingBottom(1)
+
+	baseHeadingStyle = lipgloss.NewStyle().
+				Bold(true).
+				PaddingLeft(1).
+				PaddingRight(1).
+				Foreground(lipgloss.Color(defaultBackgroundColor))
+
 	viewPortStyle = lipgloss.NewStyle().
 			PaddingTop(1).
 			PaddingRight(2).
-			PaddingLeft(1).
 			PaddingBottom(1)
 
 	listStyle = baseListStyle
@@ -58,6 +65,9 @@ var (
 			Align(lipgloss.Center).
 			Bold(true).
 			Background(lipgloss.Color(toolNameColor))
+
+	taskLogEntryHeadingStyle = baseHeadingStyle.
+					Background(lipgloss.Color(taskLogEntryColor))
 
 	formContextStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color(formContextColor))
