@@ -42,8 +42,8 @@ var (
 `),
 		helpHeaderStyle.Render("General List Controls"),
 		helpSectionStyle.Render(`
-    h/<Up>                                  Move cursor up
-    k/<Down>                                Move cursor down
+    k/<Up>                                  Move cursor up
+    j/<Down>                                Move cursor down
     h<Left>                                 Go to previous page
     l<Right>                                Go to next page
     <ctrl+r>                                Refresh list
