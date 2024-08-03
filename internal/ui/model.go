@@ -26,13 +26,14 @@ const (
 
 type stateView uint
 
+// TODO: editStartTsView, askForCommentView, and tasklogEntryView can be consolidated into one
 const (
 	activeTaskListView stateView = iota
 	taskLogView
 	inactiveTaskListView
 	editStartTsView
 	askForCommentView
-	manualTasklogEntryView
+	tasklogEntryView
 	taskInputView
 	helpView
 )
@@ -58,8 +59,6 @@ const (
 	entryComment
 )
 
-type tasklogSaveType uint
-
 type recordsType uint
 
 const (
@@ -69,9 +68,12 @@ const (
 	reportStats
 )
 
+type tasklogSaveType uint
+
 const (
 	tasklogInsert tasklogSaveType = iota
-	tasklogUpdate
+	tasklogUpdateBeforeCompl
+	tasklogUpdateAfterCompl
 )
 
 const (

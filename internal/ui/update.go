@@ -94,7 +94,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return m, tea.Batch(cmds...)
 
-			case manualTasklogEntryView:
+			case tasklogEntryView:
 				beginTS, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[entryBeginTS].Value(), time.Local)
 				if err != nil {
 					m.message = err.Error()
@@ -120,14 +120,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, tea.Batch(cmds...)
 				}
 
-				task, ok := m.activeTasksList.SelectedItem().(*task)
-				if ok {
-					switch m.tasklogSaveType {
-					case tasklogInsert:
-						cmds = append(cmds, insertManualEntry(m.db, task.id, beginTS, endTS, comment))
-						m.activeView = activeTaskListView
+				switch m.tasklogSaveType {
+				case tasklogInsert:
+					task, ok := m.activeTasksList.SelectedItem().(*task)
+					if !ok {
+						break
 					}
+					cmds = append(cmds, insertManualEntry(m.db, task.id, beginTS, endTS, comment))
+					m.activeView = activeTaskListView
+				case tasklogUpdateAfterCompl:
+					tl, ok := m.taskLogList.SelectedItem().(taskLogEntry)
+					if !ok {
+						break
+					}
+					index := m.taskLogList.Index()
+					cmds = append(cmds, updateTaskLog(m.db, index, tl.taskId, tl.id, beginTS, endTS, comment, tl.secsSpent))
+					m.activeView = taskLogView
 				}
+
 				for i := range m.trackingInputs {
 					m.trackingInputs[i].SetValue("")
 				}
@@ -146,10 +156,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case askForCommentView:
 				m.activeView = activeTaskListView
 				m.trackingInputs[entryComment].SetValue("")
-			case manualTasklogEntryView:
+			case tasklogEntryView:
 				switch m.tasklogSaveType {
-				case tasklogInsert:
+				case tasklogInsert, tasklogUpdateBeforeCompl:
 					m.activeView = activeTaskListView
+				case tasklogUpdateAfterCompl:
+					m.activeView = taskLogView
 				}
 				for i := range m.trackingInputs {
 					m.trackingInputs[i].SetValue("")
@@ -163,7 +175,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.activeView = inactiveTaskListView
 			case inactiveTaskListView:
 				m.activeView = activeTaskListView
-			case askForCommentView, manualTasklogEntryView:
+			case askForCommentView, tasklogEntryView:
 				switch m.trackingFocussedField {
 				case entryBeginTS:
 					m.trackingFocussedField = entryEndTS
@@ -185,7 +197,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.activeView = inactiveTaskListView
 			case inactiveTaskListView:
 				m.activeView = taskLogView
-			case askForCommentView, manualTasklogEntryView:
+			case askForCommentView, tasklogEntryView:
 				switch m.trackingFocussedField {
 				case entryBeginTS:
 					m.trackingFocussedField = entryComment
@@ -239,7 +251,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, cmd)
 		}
 		return m, tea.Batch(cmds...)
-	case manualTasklogEntryView:
+	case tasklogEntryView:
 		for i := range m.trackingInputs {
 			m.trackingInputs[i], cmd = m.trackingInputs[i].Update(msg)
 			cmds = append(cmds, cmd)
@@ -329,11 +341,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.trackingInputs[entryBeginTS].SetValue(m.activeTLBeginTS.Format(timeFormat))
 						m.trackingInputs[m.trackingFocussedField].Focus()
 					} else {
-						m.activeView = manualTasklogEntryView
+						m.activeView = tasklogEntryView
 						m.tasklogSaveType = tasklogInsert
 						m.trackingFocussedField = entryBeginTS
 						currentTime := time.Now()
-						dateString := currentTime.Format("2006/01/02")
+						dateString := currentTime.Format(dateFormat)
 						currentTimeStr := currentTime.Format(timeFormat)
 
 						m.trackingInputs[entryBeginTS].SetValue(dateString + " ")
@@ -457,6 +469,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.message = "Couldn't select a task"
 					}
 				}
+			case taskLogView:
+				tl, ok := m.taskLogList.SelectedItem().(taskLogEntry)
+				if !ok {
+					break
+				}
+				m.activeView = tasklogEntryView
+				m.tasklogSaveType = tasklogUpdateAfterCompl
+				m.trackingFocussedField = entryBeginTS
+
+				m.trackingInputs[entryBeginTS].SetValue(tl.beginTs.Format(timeFormat))
+				m.trackingInputs[entryEndTS].SetValue(tl.endTs.Format(timeFormat))
+				m.trackingInputs[entryComment].SetValue(tl.comment)
+
+				for i := range m.trackingInputs {
+					m.trackingInputs[i].Blur()
+				}
+				m.trackingInputs[m.trackingFocussedField].Focus()
 			}
 
 		case "k":
@@ -574,6 +603,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			cmds = append(cmds, fetchTaskLogEntries(m.db))
 		}
+
+	case taskLogUpdatedPostComplMsg:
+		if msg.err != nil {
+			m.message = fmt.Sprintf("Error updating task log: %s", msg.err.Error())
+		} else {
+			cmds = append(cmds, fetchTaskLogEntries(m.db))
+		}
+
 	case taskLogEntriesFetchedMsg:
 		if msg.err != nil {
 			message := msg.err.Error()
@@ -582,7 +619,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			var items []list.Item
 			for _, e := range msg.entries {
-				e.updateTitle()
 				e.updateDesc()
 				items = append(items, e)
 			}
@@ -794,7 +830,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) shiftTime(direction timeShiftDirection, duration timeShiftDuration) error {
-	if m.activeView == editStartTsView || m.activeView == askForCommentView || m.activeView == manualTasklogEntryView {
+	if m.activeView == editStartTsView || m.activeView == askForCommentView || m.activeView == tasklogEntryView {
 		if m.trackingFocussedField == entryBeginTS || m.trackingFocussedField == entryEndTS {
 			ts, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[m.trackingFocussedField].Value(), time.Local)
 			if err != nil {

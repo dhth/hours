@@ -70,6 +70,15 @@ func insertManualEntry(db *sql.DB, taskId int, beginTS time.Time, endTS time.Tim
 	}
 }
 
+func updateTaskLog(db *sql.DB, listIndex int, taskId, taskLogId int, beginTS time.Time, endTS time.Time, comment string, originalSecsSpent int) tea.Cmd {
+	return func() tea.Msg {
+		secsSpent := int(endTS.Sub(beginTS).Seconds())
+		secsDifference := secsSpent - originalSecsSpent
+		err := updateTLInDB(db, taskId, taskLogId, beginTS, endTS, comment, secsDifference)
+		return taskLogUpdatedPostComplMsg{err}
+	}
+}
+
 func fetchActiveTask(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
 		activeTaskDetails, err := fetchActiveTaskFromDB(db)

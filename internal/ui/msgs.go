@@ -21,6 +21,10 @@ type manualTaskLogInserted struct {
 	err    error
 }
 
+type taskLogUpdatedPostComplMsg struct {
+	err error
+}
+
 type tlBeginTSUpdatedMsg struct {
 	beginTS time.Time
 	err     error
