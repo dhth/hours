@@ -21,14 +21,15 @@ const (
 )
 
 var (
-	dbPath             string
-	db                 *sql.DB
-	reportAgg          bool
-	recordsInteractive bool
-	recordsOutputPlain bool
-	activeTemplate     string
-	genNumDays         uint8
-	genNumTasks        uint8
+	dbPath              string
+	db                  *sql.DB
+	reportAgg           bool
+	recordsInteractive  bool
+	recordsOutputPlain  bool
+	activeTemplate      string
+	genNumDays          uint8
+	genNumTasks         uint8
+	genSkipConfirmation bool
 )
 
 func die(msg string, args ...any) {
@@ -37,7 +38,6 @@ func die(msg string, args ...any) {
 }
 
 func setupDB() {
-
 	if dbPath == "" {
 		die("dbpath cannot be empty")
 	}
@@ -49,7 +49,6 @@ func setupDB() {
 	_, err = os.Stat(dbPathFull)
 	if errors.Is(err, fs.ErrNotExist) {
 		db, err = getDB(dbPathFull)
-
 		if err != nil {
 			die(`Couldn't create hours' local database. This is a fatal error;
 let %s know about this via %s.
@@ -130,23 +129,25 @@ this with a --dbpath/-d flag that points to a throwaway database.
 Tip: 'gen' should always be used on a throwaway database file.`, dbPathFull)
 		}
 
-		fmt.Print(ui.WarningStyle.Render(`
+		if !genSkipConfirmation {
+			fmt.Print(ui.WarningStyle.Render(`
 WARNING: You shouldn't run 'gen' on hours' actively used database as it'll
 create dummy entries in it. You can run it out on a throwaway database by
 passing a path for it via --dbpath/-d (use it for all further invocations of
 'hours' as well).
 `))
-		fmt.Print(`
+			fmt.Print(`
 The 'gen' subcommand is intended for new users of 'hours' so they can get a
 sense of its capabilities without actually tracking any time.
 
 ---
 
 `)
-		confirm := getConfirmation()
-		if !confirm {
-			fmt.Printf("\nIncorrect code; exiting\n")
-			os.Exit(1)
+			confirm := getConfirmation()
+			if !confirm {
+				fmt.Printf("\nIncorrect code; exiting\n")
+				os.Exit(1)
+			}
 		}
 
 		setupDB()
@@ -288,7 +289,6 @@ eg. hours active -t ' {{task}} ({{time}}) '
 
 func init() {
 	currentUser, err := user.Current()
-
 	if err != nil {
 		die(`Couldn't get your home directory. This is a fatal error;
 use --dbpath to specify database path manually
@@ -302,6 +302,7 @@ Error: %s`, author, repoIssuesUrl, err)
 
 	generateCmd.Flags().Uint8Var(&genNumDays, "num-days", 30, "number of days to generate fake data for")
 	generateCmd.Flags().Uint8Var(&genNumTasks, "num-tasks", 10, "number of tasks to generate fake data for")
+	generateCmd.Flags().BoolVarP(&genSkipConfirmation, "yes", "y", false, "to skip confirmation")
 
 	reportCmd.Flags().BoolVarP(&reportAgg, "agg", "a", false, "whether to aggregate data by task for each day in report")
 	reportCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view report interactively")
@@ -342,7 +343,6 @@ func getRandomChars(length int) string {
 }
 
 func getConfirmation() bool {
-
 	code := getRandomChars(2)
 	reader := bufio.NewReader(os.Stdin)
 
