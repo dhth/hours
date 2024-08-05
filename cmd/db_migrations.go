@@ -30,7 +30,7 @@ func getMigrations() map[int]string {
 
 func fetchLatestDBVersion(db *sql.DB) (dbVersionInfo, error) {
 	row := db.QueryRow(`
-SELEC id, version, created_at
+SELECT id, version, created_at
 FROM db_versions
 ORDER BY created_at DESC
 LIMIT 1;
