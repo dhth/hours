@@ -34,7 +34,7 @@ jobs:
         cp hours_prev /var/tmp
     - name: Run last version
       run: |
-        /var/tmp/hours_main --dbpath=/var/tmp/throwaway.db log today -p
+        /var/tmp/hours_prev --dbpath=/var/tmp/throwaway.db log today -p
     - name: Run current version
       run: |
         /var/tmp/hours_head --dbpath=/var/tmp/throwaway.db log today -p
