@@ -24,7 +24,6 @@ type taskLogEntry struct {
 	endTs       time.Time
 	secsSpent   int
 	comment     string
-	title       string
 	desc        string
 }
 
@@ -54,7 +53,7 @@ func (t task) FilterValue() string {
 }
 
 func (e taskLogEntry) Title() string {
-	return e.title
+	return e.comment
 }
 
 func (e taskLogEntry) Description() string {

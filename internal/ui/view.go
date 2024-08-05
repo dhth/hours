@@ -139,12 +139,12 @@ func (m model) View() string {
 		for i := 0; i < m.terminalHeight-14; i++ {
 			content += "\n"
 		}
-	case manualTasklogEntryView:
+	case tasklogEntryView:
 		var formHeadingText string
 		switch m.tasklogSaveType {
 		case tasklogInsert:
 			formHeadingText = "Adding a manual log entry. Enter the following details."
-		case tasklogUpdate:
+		case tasklogUpdateBeforeCompl, tasklogUpdateAfterCompl:
 			formHeadingText = "Updating log entry. Enter the following details."
 		}
 
