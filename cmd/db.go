@@ -19,7 +19,7 @@ func initDB(db *sql.DB) error {
 	// sees a difference between the values in db_versions
 	// and latestDBVersion
 	_, err := db.Exec(`
-CREATE TABLE IF NOT EXISTS db_versions (
+CREAT TABLE IF NOT EXISTS db_versions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     version INTEGER NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
