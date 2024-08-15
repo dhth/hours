@@ -16,17 +16,15 @@ env:
 jobs:
   check-back-compat:
     name: build
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
         go-version: ${{ env.GO_VERSION }}
-    - name: build head
-      run: |
-        go build -o hours_head
-        cp hours_head /var/tmp
     - uses: actions/checkout@v4
       with:
         ref: main
@@ -34,9 +32,18 @@ jobs:
       run: |
         go build -o hours_main
         cp hours_main /var/tmp
+        rm hours_main
+    - uses: actions/checkout@v4
+    - name: build head
+      run: |
+        go build -o hours_head
+        cp hours_head /var/tmp
+        rm hours_head
     - name: Run last version
       run: |
-        /var/tmp/hours_main --dbpath=/var/tmp/throwaway.db log today -p
+        /var/tmp/hours_main --dbpath=/var/tmp/throwaway-1.db report 3d -p
+        /var/tmp/hours_main --dbpath=/var/tmp/throwaway-2.db gen -y
     - name: Run current version
       run: |
-        /var/tmp/hours_head --dbpath=/var/tmp/throwaway.db log today -p
+        /var/tmp/hours_head --dbpath=/var/tmp/throwaway-1.db report 3d -p
+        /var/tmp/hours_head --dbpath=/var/tmp/throwaway-2.db report 3d -p
