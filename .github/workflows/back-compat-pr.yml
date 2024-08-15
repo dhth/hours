@@ -32,7 +32,7 @@ jobs:
       run: |
         go build -o hours_main
         cp hours_main /var/tmp
-        rm hours_head
+        rm hours_main
     - uses: actions/checkout@v4
     - name: build head
       run: |
