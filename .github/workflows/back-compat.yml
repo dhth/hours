@@ -13,28 +13,35 @@ env:
 jobs:
   check-back-compat:
     name: build
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 2
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
         go-version: ${{ env.GO_VERSION }}
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+    - run: git checkout HEAD~1
+    - name: build last commit
+      run: |
+        go build -o hours_prev
+        cp hours_prev /var/tmp
+        rm hours_prev
+    - run: git checkout main
     - name: build head
       run: |
         go build -o hours_head
         cp hours_head /var/tmp
         rm hours_head
-    - run: git checkout HEAD~1
-    - name: build main
-      run: |
-        go build -o hours_prev
-        cp hours_prev /var/tmp
     - name: Run last version
       run: |
-        /var/tmp/hours_prev --dbpath=/var/tmp/throwaway.db log today -p
+        /var/tmp/hours_prev --dbpath=/var/tmp/throwaway-1.db log today -p
+        /var/tmp/hours_prev --dbpath=/var/tmp/throwaway-2.db gen -y
     - name: Run current version
       run: |
-        /var/tmp/hours_head --dbpath=/var/tmp/throwaway.db log today -p
+        /var/tmp/hours_head --dbpath=/var/tmp/throwaway-1.db log today -p
+        /var/tmp/hours_head --dbpath=/var/tmp/throwaway-2.db log today -p
