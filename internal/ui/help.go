@@ -60,6 +60,7 @@ var (
 `),
 		helpHeaderStyle.Render("Task Logs List View"),
 		helpSectionStyle.Render(`
+    u                                       Update task log
     <ctrl+d>                                Delete task log entry
 `),
 		helpHeaderStyle.Render("Inactive Task List View"),

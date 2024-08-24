@@ -166,6 +166,62 @@ WHERE id = ?;
 	return nil
 }
 
+func updateTLInDB(db *sql.DB, taskId, taskLogId int, beginTS, endTS time.Time, comment string, secsDifference int) error {
+
+	secsSpent := int(endTS.Sub(beginTS).Seconds())
+
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = tx.Rollback()
+	}()
+
+	stmt, err := tx.Prepare(`
+UPDATE task_log
+SET begin_ts = ?,
+    end_ts = ?,
+    secs_spent = ?,
+    comment = ?
+WHERE id = ?;
+`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(beginTS.UTC(), endTS.UTC(), secsSpent, comment, taskLogId)
+	if err != nil {
+		return err
+	}
+
+	if secsDifference != 0 {
+		tStmt, err := tx.Prepare(`
+UPDATE task
+SET secs_spent = secs_spent+?,
+    updated_at = ?
+WHERE id = ?;
+    `)
+		if err != nil {
+			return err
+		}
+		defer tStmt.Close()
+
+		_, err = tStmt.Exec(secsDifference, time.Now().UTC(), taskId)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func fetchActiveTaskFromDB(db *sql.DB) (activeTaskDetails, error) {
 
 	row := db.QueryRow(`
