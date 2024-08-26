@@ -140,7 +140,7 @@ var (
 		h.Write([]byte(str))
 		hash := h.Sum32()
 
-		color := taskColors[int(hash)%len(taskColors)]
+		color := taskColors[hash%uint32(len(taskColors))]
 		return lipgloss.NewStyle().
 			Foreground(lipgloss.Color(color))
 	}
