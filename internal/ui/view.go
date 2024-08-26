@@ -12,7 +12,7 @@ const (
 
 var listWidth = 140
 
-func (m model) View() string {
+func (m Model) View() string {
 	var content string
 	var footer string
 
@@ -24,7 +24,7 @@ func (m model) View() string {
 	var activeMsg string
 	if m.tasksFetched && m.trackingActive {
 		var taskSummaryMsg, taskStartedSinceMsg string
-		task, ok := m.activeTaskMap[m.activeTaskId]
+		task, ok := m.activeTaskMap[m.activeTaskID]
 		if ok {
 			taskSummaryMsg = Trim(task.summary, 50)
 			if m.activeView != askForCommentView {

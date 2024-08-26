@@ -23,7 +23,7 @@ func ShowActiveTask(db *sql.DB, writer io.Writer, template string) {
 		os.Exit(1)
 	}
 
-	if activeTaskDetails.taskId == -1 {
+	if activeTaskDetails.taskID == -1 {
 		return
 	}
 

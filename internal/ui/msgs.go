@@ -5,7 +5,7 @@ import "time"
 type HideHelpMsg struct{}
 
 type trackingToggledMsg struct {
-	taskId    int
+	taskID    int
 	finished  bool
 	secsSpent int
 	err       error
@@ -17,7 +17,7 @@ type taskRepUpdatedMsg struct {
 }
 
 type manualTaskLogInserted struct {
-	taskId int
+	taskID int
 	err    error
 }
 
@@ -31,7 +31,7 @@ type activeTaskLogDeletedMsg struct {
 }
 
 type activeTaskFetchedMsg struct {
-	activeTaskId int
+	activeTaskID int
 	beginTs      time.Time
 	noneActive   bool
 	err          error

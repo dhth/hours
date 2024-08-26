@@ -82,7 +82,7 @@ const (
 	dateFormat         = "2006/01/02"
 )
 
-type model struct {
+type Model struct {
 	activeView             stateView
 	lastView               stateView
 	db                     *sql.DB
@@ -103,7 +103,7 @@ type model struct {
 	helpVPReady            bool
 	lastChange             dBChange
 	changesLocked          bool
-	activeTaskId           int
+	activeTaskID           int
 	tasklogSaveType        tasklogSaveType
 	message                string
 	messages               []string
@@ -112,7 +112,7 @@ type model struct {
 	trackingActive         bool
 }
 
-func (m model) Init() tea.Cmd {
+func (m Model) Init() tea.Cmd {
 	return tea.Batch(
 		hideHelp(time.Minute*1),
 		fetchTasks(m.db, true),

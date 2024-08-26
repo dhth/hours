@@ -1,12 +1,21 @@
-package cmd
+package persistence
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"time"
 )
 
 const (
 	latestDBVersion = 1 // only upgrade this after adding a migration in getMigrations
+	timeFormat      = "2006/01/02 15:04"
+)
+
+var (
+	ErrDBDowngraded          = errors.New("database downgraded")
+	ErrDBMigrationFailed     = errors.New("database migration failed")
+	ErrCouldntFetchDBVersion = errors.New("couldn't fetch version")
 )
 
 type dbVersionInfo struct {
@@ -22,7 +31,7 @@ func getMigrations() map[int]string {
 
 	// migrations[2] = `
 	// ALTER TABLE task
-	//     ADD COLUMN a_col INTEGER NOT NULL DEFAULT 1;
+	// ADD COLUMN new_col TEXT;
 	// `
 
 	return migrations
@@ -46,51 +55,40 @@ LIMIT 1;
 	return dbVersion, err
 }
 
-func upgradeDBIfNeeded(db *sql.DB) {
-	latestVersionInDB, versionErr := fetchLatestDBVersion(db)
-	if versionErr != nil {
-		die(`Couldn't get hours' latest database version. This is a fatal error; let %s
-know about this via %s.
-
-Error: %s`,
-			author,
-			repoIssuesUrl,
-			versionErr)
+func UpgradeDBIfNeeded(db *sql.DB) error {
+	latestVersionInDB, err := fetchLatestDBVersion(db)
+	if err != nil {
+		return fmt.Errorf("%w: %s", ErrCouldntFetchDBVersion, err.Error())
 	}
 
 	if latestVersionInDB.version > latestDBVersion {
-		die(`Looks like you downgraded hours. You should either delete hours'
-database file (you will lose data by doing that), or upgrade hours to
-the latest version.`)
+		return fmt.Errorf("%w; debug info: version=%d, created at=%q)",
+			ErrDBDowngraded,
+			latestVersionInDB.version,
+			latestVersionInDB.createdAt.Format(timeFormat),
+		)
 	}
 
 	if latestVersionInDB.version < latestDBVersion {
-		upgradeDB(db, latestVersionInDB.version)
+		err = UpgradeDB(db, latestVersionInDB.version)
+		if err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
-func upgradeDB(db *sql.DB, currentVersion int) {
+func UpgradeDB(db *sql.DB, currentVersion int) error {
 	migrations := getMigrations()
 	for i := currentVersion + 1; i <= latestDBVersion; i++ {
 		migrateQuery := migrations[i]
 		migrateErr := runMigration(db, migrateQuery, i)
 		if migrateErr != nil {
-			die(`Something went wrong migrating hours' database to version %d. This is not
-supposed to happen. You can try running hours by passing it a custom database
-file path (using --dbpath; this will create a new database) to see if that fixes
-things. If that works, you can either delete the previous database, or keep
-using this new database (both are not ideal).
-
-If you can, let %s know about this error via
-%s.
-Sorry for breaking the upgrade step!
-
----
-
-Error: %s
-`, i, author, repoIssuesUrl, migrateErr)
+			return fmt.Errorf("%w (version %d): %v", ErrDBMigrationFailed, i, migrateErr.Error())
 		}
 	}
+	return nil
 }
 
 func runMigration(db *sql.DB, migrateQuery string, version int) error {

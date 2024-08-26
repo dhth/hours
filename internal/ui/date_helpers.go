@@ -8,11 +8,12 @@ import (
 
 const (
 	timePeriodDaysUpperBound = 7
+	timePeriodWeek           = "week"
 )
 
 var (
-	timePeriodNotValidErr = fmt.Errorf("time period is not valid; accepted values: day, yest, week, 3d, date (eg. %s), or date range (eg. %s...%s)", dateFormat, dateFormat, dateFormat)
-	timePeriodTooLargeErr = fmt.Errorf("time period is too large; maximum number of days allowed (both inclusive): %d", timePeriodDaysUpperBound)
+	errTimePeriodNotValid = fmt.Errorf("time period is not valid; accepted values: day, yest, week, 3d, date (eg. %s), or date range (eg. %s...%s)", dateFormat, dateFormat, dateFormat)
+	errTimePeriodTooLarge = fmt.Errorf("time period is too large; maximum number of days allowed (both inclusive): %d", timePeriodDaysUpperBound)
 )
 
 type timePeriod struct {
@@ -75,7 +76,7 @@ func getTimePeriod(period string, now time.Time, fullWeek bool) (timePeriod, err
 		end = start.AddDate(0, 0, 3)
 		numDays = 3
 
-	case "week":
+	case timePeriodWeek:
 		weekday := now.Weekday()
 		offset := (7 + weekday - time.Monday) % 7
 		startOfWeek := now.AddDate(0, 0, -int(offset))
@@ -95,10 +96,10 @@ func getTimePeriod(period string, now time.Time, fullWeek bool) (timePeriod, err
 			var ok bool
 			ts, ok = parseDateDuration(period)
 			if !ok {
-				return ts, timePeriodNotValidErr
+				return ts, errTimePeriodNotValid
 			}
 			if ts.numDays > timePeriodDaysUpperBound {
-				return ts, timePeriodTooLargeErr
+				return ts, errTimePeriodTooLarge
 			}
 
 			start = ts.start
@@ -107,7 +108,7 @@ func getTimePeriod(period string, now time.Time, fullWeek bool) (timePeriod, err
 		} else {
 			start, err = time.ParseInLocation(string(dateFormat), period, time.Local)
 			if err != nil {
-				return timePeriod{}, timePeriodNotValidErr
+				return timePeriod{}, errTimePeriodNotValid
 			}
 			end = start.AddDate(0, 0, 1)
 			numDays = 1

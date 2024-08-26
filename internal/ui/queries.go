@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func insertNewTLInDB(db *sql.DB, taskId int, beginTs time.Time) error {
+func insertNewTLInDB(db *sql.DB, taskID int, beginTs time.Time) error {
 	stmt, err := db.Prepare(`
 INSERT INTO task_log (task_id, begin_ts, active)
 VALUES (?, ?, ?);
@@ -17,7 +17,7 @@ VALUES (?, ?, ?);
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(taskId, beginTs.UTC(), true)
+	_, err = stmt.Exec(taskID, beginTs.UTC(), true)
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ WHERE active=true;
 	return err
 }
 
-func updateActiveTLInDB(db *sql.DB, taskLogId int, taskId int, beginTs, endTs time.Time, secsSpent int, comment string) error {
+func updateActiveTLInDB(db *sql.DB, taskLogID int, taskID int, beginTs, endTs time.Time, secsSpent int, comment string) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ AND active = 1;
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(beginTs.UTC(), endTs.UTC(), secsSpent, comment, taskLogId)
+	_, err = stmt.Exec(beginTs.UTC(), endTs.UTC(), secsSpent, comment, taskLogID)
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ WHERE id = ?;
 	}
 	defer tStmt.Close()
 
-	_, err = tStmt.Exec(secsSpent, time.Now().UTC(), taskId)
+	_, err = tStmt.Exec(secsSpent, time.Now().UTC(), taskID)
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ WHERE id = ?;
 	return nil
 }
 
-func insertManualTLInDB(db *sql.DB, taskId int, beginTs time.Time, endTs time.Time, comment string) error {
+func insertManualTLInDB(db *sql.DB, taskID int, beginTs time.Time, endTs time.Time, comment string) error {
 	secsSpent := int(endTs.Sub(beginTs).Seconds())
 	tx, err := db.Begin()
 	if err != nil {
@@ -130,7 +130,7 @@ VALUES (?, ?, ?, ?, ?, ?);
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(taskId, beginTs.UTC(), endTs.UTC(), secsSpent, comment, false)
+	_, err = stmt.Exec(taskID, beginTs.UTC(), endTs.UTC(), secsSpent, comment, false)
 	if err != nil {
 		return err
 	}
@@ -146,7 +146,7 @@ WHERE id = ?;
 	}
 	defer tStmt.Close()
 
-	_, err = tStmt.Exec(secsSpent, time.Now().UTC(), taskId)
+	_, err = tStmt.Exec(secsSpent, time.Now().UTC(), taskID)
 	if err != nil {
 		return err
 	}
@@ -168,12 +168,12 @@ WHERE tl.active=true;
 
 	var activeTaskDetails activeTaskDetails
 	err := row.Scan(
-		&activeTaskDetails.taskId,
+		&activeTaskDetails.taskID,
 		&activeTaskDetails.taskSummary,
 		&activeTaskDetails.lastLogEntryBeginTs,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
-		activeTaskDetails.taskId = -1
+		activeTaskDetails.taskID = -1
 		return activeTaskDetails, nil
 	} else if err != nil {
 		return activeTaskDetails, err
@@ -287,6 +287,9 @@ LIMIT ?;
 		tasks = append(tasks, entry)
 
 	}
+	if rows.Err() != nil {
+		return nil, err
+	}
 	return tasks, nil
 }
 
@@ -316,7 +319,7 @@ LIMIT ?;
 	for rows.Next() {
 		var entry taskLogEntry
 		err = rows.Scan(&entry.id,
-			&entry.taskId,
+			&entry.taskID,
 			&entry.taskSummary,
 			&entry.beginTs,
 			&entry.endTs,
@@ -330,6 +333,9 @@ LIMIT ?;
 		entry.endTs = entry.endTs.Local()
 		logEntries = append(logEntries, entry)
 
+	}
+	if rows.Err() != nil {
+		return nil, err
 	}
 	return logEntries, nil
 }
@@ -353,7 +359,7 @@ ORDER by tl.begin_ts ASC LIMIT ?;
 	for rows.Next() {
 		var entry taskLogEntry
 		err = rows.Scan(&entry.id,
-			&entry.taskId,
+			&entry.taskID,
 			&entry.taskSummary,
 			&entry.beginTs,
 			&entry.endTs,
@@ -367,6 +373,9 @@ ORDER by tl.begin_ts ASC LIMIT ?;
 		entry.endTs = entry.endTs.Local()
 		logEntries = append(logEntries, entry)
 
+	}
+	if rows.Err() != nil {
+		return nil, err
 	}
 	return logEntries, nil
 }
@@ -390,7 +399,7 @@ limit ?;
 	for rows.Next() {
 		var entry taskReportEntry
 		err = rows.Scan(
-			&entry.taskId,
+			&entry.taskID,
 			&entry.taskSummary,
 			&entry.numEntries,
 			&entry.secsSpent,
@@ -400,6 +409,9 @@ limit ?;
 		}
 		tLE = append(tLE, entry)
 
+	}
+	if rows.Err() != nil {
+		return nil, err
 	}
 	return tLE, nil
 }
@@ -424,7 +436,7 @@ LIMIT ?;
 	for rows.Next() {
 		var entry taskReportEntry
 		err = rows.Scan(
-			&entry.taskId,
+			&entry.taskID,
 			&entry.taskSummary,
 			&entry.numEntries,
 			&entry.secsSpent,
@@ -434,6 +446,9 @@ LIMIT ?;
 		}
 		tLE = append(tLE, entry)
 
+	}
+	if rows.Err() != nil {
+		return nil, err
 	}
 	return tLE, nil
 }
@@ -458,7 +473,7 @@ LIMIT ?;
 	for rows.Next() {
 		var entry taskReportEntry
 		err = rows.Scan(
-			&entry.taskId,
+			&entry.taskID,
 			&entry.taskSummary,
 			&entry.numEntries,
 			&entry.secsSpent,
@@ -468,6 +483,9 @@ LIMIT ?;
 		}
 		tLE = append(tLE, entry)
 
+	}
+	if rows.Err() != nil {
+		return nil, err
 	}
 	return tLE, nil
 }
@@ -508,7 +526,7 @@ WHERE id = ?;
 	}
 	defer tStmt.Close()
 
-	_, err = tStmt.Exec(secsSpent, time.Now().UTC(), entry.taskId)
+	_, err = tStmt.Exec(secsSpent, time.Now().UTC(), entry.taskID)
 	if err != nil {
 		return err
 	}

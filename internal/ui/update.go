@@ -11,9 +11,11 @@ import (
 
 const (
 	viewPortMoveLineCount = 3
+	couldntSelectATaskMsg = "Couldn't select a task"
+	changesLockedMsg      = "Changes locked momentarily"
 )
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 	m.message = ""
@@ -85,7 +87,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, tea.Batch(cmds...)
 				}
 
-				cmds = append(cmds, toggleTracking(m.db, m.activeTaskId, m.activeTLBeginTS, m.activeTLEndTS, m.trackingInputs[entryComment].Value()))
+				cmds = append(cmds, toggleTracking(m.db, m.activeTaskID, m.activeTLBeginTS, m.activeTLEndTS, m.trackingInputs[entryComment].Value()))
 				m.activeView = activeTaskListView
 
 				for i := range m.trackingInputs {
@@ -305,7 +307,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if m.activeTasksList.IsFiltered() {
 						m.activeTasksList.ResetFilter()
 					}
-					activeIndex, ok := m.activeTaskIndexMap[m.activeTaskId]
+					activeIndex, ok := m.activeTaskIndexMap[m.activeTaskID]
 					if ok {
 						m.activeTasksList.Select(activeIndex)
 					}
@@ -317,7 +319,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.activeView == activeTaskListView {
 				_, ok := m.activeTasksList.SelectedItem().(*task)
 				if !ok {
-					message := "Couldn't select a task"
+					message := couldntSelectATaskMsg
 					m.message = message
 					m.messages = append(m.messages, message)
 				} else {
@@ -355,7 +357,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						cmds = append(cmds, updateTaskActiveStatus(m.db, task, false))
 					}
 				} else {
-					msg := "Couldn't select task"
+					msg := couldntSelectATaskMsg
 					m.message = msg
 					m.messages = append(m.messages, msg)
 				}
@@ -373,7 +375,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if ok {
 					cmds = append(cmds, updateTaskActiveStatus(m.db, task, true))
 				} else {
-					msg := "Couldn't select task"
+					msg := couldntSelectATaskMsg
 					m.message = msg
 					m.messages = append(m.messages, msg)
 				}
@@ -387,7 +389,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case activeTaskListView:
 				if m.activeTasksList.FilterState() != list.Filtering {
 					if m.changesLocked {
-						message := "Changes locked momentarily"
+						message := changesLockedMsg
 						m.message = message
 						m.messages = append(m.messages, message)
 					}
@@ -425,7 +427,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case activeTaskListView:
 				if m.activeTasksList.FilterState() != list.Filtering {
 					if m.changesLocked {
-						message := "Changes locked momentarily"
+						message := changesLockedMsg
 						m.message = message
 						m.messages = append(m.messages, message)
 					}
@@ -440,7 +442,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case activeTaskListView:
 				if m.activeTasksList.FilterState() != list.Filtering {
 					if m.changesLocked {
-						message := "Changes locked momentarily"
+						message := changesLockedMsg
 						m.message = message
 						m.messages = append(m.messages, message)
 					}
@@ -565,7 +567,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			for i := range m.trackingInputs {
 				m.trackingInputs[i].SetValue("")
 			}
-			task, ok := m.activeTaskMap[msg.taskId]
+			task, ok := m.activeTaskMap[msg.taskID]
 
 			if ok {
 				cmds = append(cmds, updateTaskRep(m.db, task))
@@ -595,16 +597,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if msg.noneActive {
 				m.lastChange = updateChange
 			} else {
-				m.activeTaskId = msg.activeTaskId
+				m.activeTaskID = msg.activeTaskID
 				m.lastChange = insertChange
 				m.activeTLBeginTS = msg.beginTs
-				activeTask, ok := m.activeTaskMap[m.activeTaskId]
+				activeTask, ok := m.activeTaskMap[m.activeTaskID]
 				if ok {
 					activeTask.trackingActive = true
 					activeTask.updateTitle()
 
 					// go to tracked item on startup
-					activeIndex, ok := m.activeTaskIndexMap[msg.activeTaskId]
+					activeIndex, ok := m.activeTaskIndexMap[msg.activeTaskID]
 					if ok {
 						m.activeTasksList.Select(activeIndex)
 					}
@@ -621,21 +623,21 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			m.changesLocked = false
 
-			task, ok := m.activeTaskMap[msg.taskId]
+			task, ok := m.activeTaskMap[msg.taskID]
 
 			if ok {
 				if msg.finished {
 					m.lastChange = updateChange
 					task.trackingActive = false
 					m.trackingActive = false
-					m.activeTaskId = -1
+					m.activeTaskID = -1
 					cmds = append(cmds, updateTaskRep(m.db, task))
 					cmds = append(cmds, fetchTaskLogEntries(m.db))
 				} else {
 					m.lastChange = insertChange
 					task.trackingActive = true
 					m.trackingActive = true
-					m.activeTaskId = msg.taskId
+					m.activeTaskID = msg.taskID
 				}
 				task.updateTitle()
 			}
@@ -652,7 +654,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.message = message
 			m.messages = append(m.messages, message)
 		} else {
-			task, ok := m.activeTaskMap[msg.entry.taskId]
+			task, ok := m.activeTaskMap[msg.entry.taskID]
 			if ok {
 				cmds = append(cmds, updateTaskRep(m.db, task))
 			}
@@ -662,14 +664,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err != nil {
 			m.message = fmt.Sprintf("Error deleting active log entry: %s", msg.err)
 		} else {
-			activeTask, ok := m.activeTaskMap[m.activeTaskId]
+			activeTask, ok := m.activeTaskMap[m.activeTaskID]
 			if ok {
 				activeTask.trackingActive = false
 				activeTask.updateTitle()
 			}
 			m.lastChange = updateChange
 			m.trackingActive = false
-			m.activeTaskId = -1
+			m.activeTaskID = -1
 		}
 	case taskActiveStatusUpdated:
 		if msg.err != nil {
@@ -716,7 +718,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				var numDays int
 
 				switch m.period {
-				case "week":
+				case timePeriodWeek:
 					weekday := m.start.Weekday()
 					offset := (7 + weekday - time.Monday) % 7
 					startOfPrevWeek := m.start.AddDate(0, 0, -int(offset+7))
@@ -736,7 +738,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				var numDays int
 
 				switch m.period {
-				case "week":
+				case timePeriodWeek:
 					weekday := m.start.Weekday()
 					offset := (7 + weekday - time.Monday) % 7
 					startOfNextWeek := m.start.AddDate(0, 0, 7-int(offset))
@@ -757,7 +759,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				var numDays int
 
 				switch m.period {
-				case "week":
+				case timePeriodWeek:
 					now := time.Now()
 					weekday := now.Weekday()
 					offset := (7 + weekday - time.Monday) % 7
@@ -791,7 +793,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m model) shiftTime(direction timeShiftDirection, duration timeShiftDuration) error {
+func (m Model) shiftTime(direction timeShiftDirection, duration timeShiftDuration) error {
 	if m.activeView == editStartTsView || m.activeView == askForCommentView || m.activeView == manualTasklogEntryView {
 		if m.trackingFocussedField == entryBeginTS || m.trackingFocussedField == entryEndTS {
 			ts, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[m.trackingFocussedField].Value(), time.Local)

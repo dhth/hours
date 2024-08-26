@@ -17,6 +17,7 @@ const (
 	statsLogEntriesLimit   = 10000
 	statsNumDaysUpperBound = 3650
 	statsTimeCharsBudget   = 6
+	periodAll              = "all"
 )
 
 func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string, interactive bool) {
@@ -27,12 +28,12 @@ func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string, intera
 	var stats string
 	var err error
 
-	if interactive && period == "all" {
+	if interactive && period == periodAll {
 		fmt.Print("Interactive mode cannot be used when period='all'\n")
 		os.Exit(1)
 	}
 
-	if period == "all" {
+	if period == periodAll {
 		// TODO: find a better way for this, passing start, end for "all" doesn't make sense
 		stats, err = renderStats(db, period, time.Now(), time.Now(), plain)
 		if err != nil {
@@ -74,7 +75,7 @@ func renderStats(db *sql.DB, period string, start, end time.Time, plain bool) (s
 	var entries []taskReportEntry
 	var err error
 
-	if period == "all" {
+	if period == periodAll {
 		entries, err = fetchStatsFromDB(db, statsLogEntriesLimit)
 	} else {
 		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)

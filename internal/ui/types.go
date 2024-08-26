@@ -18,7 +18,7 @@ type task struct {
 
 type taskLogEntry struct {
 	id          int
-	taskId      int
+	taskID      int
 	taskSummary string
 	beginTs     time.Time
 	endTs       time.Time
@@ -29,13 +29,13 @@ type taskLogEntry struct {
 }
 
 type activeTaskDetails struct {
-	taskId              int
+	taskID              int
 	taskSummary         string
 	lastLogEntryBeginTs time.Time
 }
 
 type taskReportEntry struct {
-	taskId      int
+	taskID      int
 	taskSummary string
 	numEntries  int
 	secsSpent   int

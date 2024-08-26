@@ -1,9 +1,21 @@
 linters:
   enable:
     - errcheck
+    - errname
+    - errorlint
+    - goconst
     - gofumpt
     - gosimple
     - govet
     - ineffassign
+    - nilerr
+    - prealloc
+    - predeclared
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
     - staticcheck
+    - unconvert
     - unused
+    - usestdlibvars
+    - wastedassign

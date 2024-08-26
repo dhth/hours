@@ -2,14 +2,15 @@ package ui
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	_ "modernc.org/sqlite"
+	_ "modernc.org/sqlite" // sqlite driver
 )
 
 func toggleTracking(db *sql.DB,
-	taskId int,
+	taskID int,
 	beginTs time.Time,
 	endTs time.Time,
 	comment string,
@@ -23,11 +24,11 @@ ORDER BY begin_ts DESC
 LIMIT 1
 `)
 		var trackStatus trackingStatus
-		var activeTaskLogId int
-		var activeTaskId int
+		var activeTaskLogID int
+		var activeTaskID int
 
-		err := row.Scan(&activeTaskLogId, &activeTaskId)
-		if err == sql.ErrNoRows {
+		err := row.Scan(&activeTaskLogID, &activeTaskID)
+		if errors.Is(err, sql.ErrNoRows) {
 			trackStatus = trackingInactive
 		} else if err != nil {
 			return trackingToggledMsg{err: err}
@@ -37,20 +38,20 @@ LIMIT 1
 
 		switch trackStatus {
 		case trackingInactive:
-			err = insertNewTLInDB(db, taskId, beginTs)
+			err = insertNewTLInDB(db, taskID, beginTs)
 			if err != nil {
 				return trackingToggledMsg{err: err}
 			} else {
-				return trackingToggledMsg{taskId: taskId}
+				return trackingToggledMsg{taskID: taskID}
 			}
 
 		default:
 			secsSpent := int(endTs.Sub(beginTs).Seconds())
-			err := updateActiveTLInDB(db, activeTaskLogId, activeTaskId, beginTs, endTs, secsSpent, comment)
+			err := updateActiveTLInDB(db, activeTaskLogID, activeTaskID, beginTs, endTs, secsSpent, comment)
 			if err != nil {
 				return trackingToggledMsg{err: err}
 			} else {
-				return trackingToggledMsg{taskId: taskId, finished: true, secsSpent: secsSpent}
+				return trackingToggledMsg{taskID: taskID, finished: true, secsSpent: secsSpent}
 			}
 		}
 	}
@@ -63,10 +64,10 @@ func updateTLBeginTS(db *sql.DB, beginTS time.Time) tea.Cmd {
 	}
 }
 
-func insertManualEntry(db *sql.DB, taskId int, beginTS time.Time, endTS time.Time, comment string) tea.Cmd {
+func insertManualEntry(db *sql.DB, taskID int, beginTS time.Time, endTS time.Time, comment string) tea.Cmd {
 	return func() tea.Msg {
-		err := insertManualTLInDB(db, taskId, beginTS, endTS, comment)
-		return manualTaskLogInserted{taskId, err}
+		err := insertManualTLInDB(db, taskID, beginTS, endTS, comment)
+		return manualTaskLogInserted{taskID, err}
 	}
 }
 
@@ -77,12 +78,12 @@ func fetchActiveTask(db *sql.DB) tea.Cmd {
 			return activeTaskFetchedMsg{err: err}
 		}
 
-		if activeTaskDetails.taskId == -1 {
+		if activeTaskDetails.taskID == -1 {
 			return activeTaskFetchedMsg{noneActive: true}
 		}
 
 		return activeTaskFetchedMsg{
-			activeTaskId: activeTaskDetails.taskId,
+			activeTaskID: activeTaskDetails.taskID,
 			beginTs:      activeTaskDetails.lastLogEntryBeginTs,
 		}
 	}

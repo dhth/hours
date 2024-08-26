@@ -181,17 +181,17 @@ func TestGetTimePeriod(t *testing.T) {
 		{
 			name:   "a faulty date",
 			period: "2024/06-15",
-			err:    timePeriodNotValidErr,
+			err:    errTimePeriodNotValid,
 		},
 		{
 			name:   "a faulty date range",
 			period: "2024/06/15...2024",
-			err:    timePeriodNotValidErr,
+			err:    errTimePeriodNotValid,
 		},
 		{
 			name:   "a date range too large",
 			period: "2024/06/15...2024/06/22",
-			err:    timePeriodTooLargeErr,
+			err:    errTimePeriodTooLarge,
 		},
 	}
 

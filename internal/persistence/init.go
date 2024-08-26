@@ -1,18 +1,11 @@
-package cmd
+package persistence
 
 import (
 	"database/sql"
 	"time"
 )
 
-func getDB(dbpath string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", dbpath)
-	db.SetMaxOpenConns(1)
-	db.SetMaxIdleConns(1)
-	return db, err
-}
-
-func initDB(db *sql.DB) error {
+func InitDB(db *sql.DB) error {
 	// these init queries cannot be changed
 	// once hours is released; only further migrations
 	// can be added, which are run whenever hours

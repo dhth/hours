@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func InitialModel(db *sql.DB) model {
+func InitialModel(db *sql.DB) Model {
 	var activeTaskItems []list.Item
 	var inactiveTaskItems []list.Item
 	var tasklogListItems []list.Item
@@ -40,7 +40,7 @@ func InitialModel(db *sql.DB) model {
 	taskInputs[summaryField].CharLimit = 100
 	taskInputs[entryBeginTS].Width = 60
 
-	m := model{
+	m := Model{
 		db:                 db,
 		activeTasksList:    list.New(activeTaskItems, newItemDelegate(lipgloss.Color(activeTaskListColor)), listWidth, 0),
 		inactiveTasksList:  list.New(inactiveTaskItems, newItemDelegate(lipgloss.Color(inactiveTaskListColor)), listWidth, 0),
