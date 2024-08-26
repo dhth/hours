@@ -10,9 +10,7 @@ const (
 	taskLogEntryViewHeading = "Task Log Entry"
 )
 
-var (
-	listWidth = 140
-)
+var listWidth = 140
 
 func (m model) View() string {
 	var content string

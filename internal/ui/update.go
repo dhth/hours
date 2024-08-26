@@ -69,7 +69,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.activeTLBeginTS = beginTS
 
 				endTS, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[entryEndTS].Value(), time.Local)
-
 				if err != nil {
 					m.message = err.Error()
 					return m, tea.Batch(cmds...)
@@ -102,7 +101,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 
 				endTS, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[entryEndTS].Value(), time.Local)
-
 				if err != nil {
 					m.message = err.Error()
 					return m, tea.Batch(cmds...)

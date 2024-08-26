@@ -28,6 +28,7 @@ func (t *task) updateDesc() {
 
 	t.desc = fmt.Sprintf("%s %s", RightPadTrim(lastUpdated, 60, true), timeSpent)
 }
+
 func (tl *taskLogEntry) updateTitle() {
 	tl.title = Trim(tl.comment, 60)
 }

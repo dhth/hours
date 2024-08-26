@@ -54,7 +54,6 @@ func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string, intera
 		os.Exit(1)
 	}
 	stats, err = renderStats(db, period, ts.start, ts.end, plain)
-
 	if err != nil {
 		fmt.Fprintf(writer, "Something went wrong generating the log: %s\n", err)
 		os.Exit(1)

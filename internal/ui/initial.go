@@ -74,7 +74,6 @@ func InitialModel(db *sql.DB) model {
 }
 
 func initialRecordsModel(typ recordsType, db *sql.DB, start, end time.Time, plain bool, period string, numDays int, initialData string) recordsModel {
-
 	return recordsModel{
 		typ:     typ,
 		db:      db,

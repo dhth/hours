@@ -24,7 +24,6 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string, inte
 	}
 
 	ts, err := getTimePeriod(period, time.Now(), false)
-
 	if err != nil {
 		fmt.Printf("error: %s\n", err)
 		os.Exit(1)
@@ -52,9 +51,7 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string, inte
 }
 
 func renderTaskLog(db *sql.DB, start, end time.Time, limit int, plain bool) (string, error) {
-
 	entries, err := fetchTLEntriesBetweenTSFromDB(db, start, end, limit)
-
 	if err != nil {
 		return "", err
 	}

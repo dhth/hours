@@ -83,26 +83,22 @@ func TestParseDateDuration(t *testing.T) {
 			} else {
 				assert.False(t, ok)
 			}
-
 		})
 	}
 }
 
 func TestGetTimePeriod(t *testing.T) {
 	now, err := time.ParseInLocation(string(timeFormat), "2024/06/20 20:00", time.Local)
-
 	if err != nil {
 		t.Fatalf("error setting up the test: time is not valid: %s", err)
 	}
 
 	nowME, err := time.ParseInLocation(string(timeFormat), "2024/05/31 20:00", time.Local)
-
 	if err != nil {
 		t.Fatalf("error setting up the test: time is not valid: %s", err)
 	}
 
 	nowMB, err := time.ParseInLocation(string(timeFormat), "2024/06/01 20:00", time.Local)
-
 	if err != nil {
 		t.Fatalf("error setting up the test: time is not valid: %s", err)
 	}
@@ -214,10 +210,8 @@ func TestGetTimePeriod(t *testing.T) {
 			} else {
 				assert.Equal(t, tt.err, err)
 			}
-
 		})
 	}
-
 }
 
 func TestGetTSRelative(t *testing.T) {
@@ -266,5 +260,4 @@ func TestGetTSRelative(t *testing.T) {
 			assert.Equal(t, tt.expected, got)
 		})
 	}
-
 }

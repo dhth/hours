@@ -7,7 +7,6 @@ import (
 )
 
 func TestMigrationsAreSetupCorrectly(t *testing.T) {
-
 	migrations := getMigrations()
 	for i := 2; i <= latestDBVersion; i++ {
 		m, ok := migrations[i]

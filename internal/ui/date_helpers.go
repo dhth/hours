@@ -165,7 +165,6 @@ const (
 )
 
 func getTSRelative(ts time.Time, reference time.Time) tsRelative {
-
 	if ts.Sub(reference) > 0 {
 		return tsFromFuture
 	}

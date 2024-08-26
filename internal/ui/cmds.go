@@ -12,9 +12,9 @@ func toggleTracking(db *sql.DB,
 	taskId int,
 	beginTs time.Time,
 	endTs time.Time,
-	comment string) tea.Cmd {
+	comment string,
+) tea.Cmd {
 	return func() tea.Msg {
-
 		row := db.QueryRow(`
 SELECT id, task_id
 FROM task_log
@@ -73,7 +73,6 @@ func insertManualEntry(db *sql.DB, taskId int, beginTS time.Time, endTS time.Tim
 func fetchActiveTask(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
 		activeTaskDetails, err := fetchActiveTaskFromDB(db)
-
 		if err != nil {
 			return activeTaskFetchedMsg{err: err}
 		}

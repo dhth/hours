@@ -8,12 +8,10 @@ import (
 )
 
 func insertNewTLInDB(db *sql.DB, taskId int, beginTs time.Time) error {
-
 	stmt, err := db.Prepare(`
 INSERT INTO task_log (task_id, begin_ts, active)
 VALUES (?, ?, ?);
 `)
-
 	if err != nil {
 		return err
 	}
@@ -28,12 +26,10 @@ VALUES (?, ?, ?);
 }
 
 func updateTLBeginTSInDB(db *sql.DB, beginTs time.Time) error {
-
 	stmt, err := db.Prepare(`
 UPDATE task_log SET begin_ts=?
 WHERE active is true;
 `)
-
 	if err != nil {
 		return err
 	}
@@ -48,7 +44,6 @@ WHERE active is true;
 }
 
 func deleteActiveTLInDB(db *sql.DB) error {
-
 	stmt, err := db.Prepare(`
 DELETE FROM task_log
 WHERE active=true;
@@ -64,7 +59,6 @@ WHERE active=true;
 }
 
 func updateActiveTLInDB(db *sql.DB, taskLogId int, taskId int, beginTs, endTs time.Time, secsSpent int, comment string) error {
-
 	tx, err := db.Begin()
 	if err != nil {
 		return err
@@ -118,7 +112,6 @@ WHERE id = ?;
 }
 
 func insertManualTLInDB(db *sql.DB, taskId int, beginTs time.Time, endTs time.Time, comment string) error {
-
 	secsSpent := int(endTs.Sub(beginTs).Seconds())
 	tx, err := db.Begin()
 	if err != nil {
@@ -167,7 +160,6 @@ WHERE id = ?;
 }
 
 func fetchActiveTaskFromDB(db *sql.DB) (activeTaskDetails, error) {
-
 	row := db.QueryRow(`
 SELECT t.id, t.summary, tl.begin_ts
 FROM task_log tl left join task t on tl.task_id = t.id
@@ -191,7 +183,6 @@ WHERE tl.active=true;
 }
 
 func insertTaskInDB(db *sql.DB, summary string) error {
-
 	stmt, err := db.Prepare(`
 INSERT into task (summary, active, created_at, updated_at)
 VALUES (?, true, ?, ?);
@@ -203,7 +194,6 @@ VALUES (?, true, ?, ?);
 
 	now := time.Now().UTC()
 	_, err = stmt.Exec(summary, now, now)
-
 	if err != nil {
 		return err
 	}
@@ -211,7 +201,6 @@ VALUES (?, true, ?, ?);
 }
 
 func updateTaskInDB(db *sql.DB, id int, summary string) error {
-
 	stmt, err := db.Prepare(`
 UPDATE task
 SET summary = ?,
@@ -224,7 +213,6 @@ WHERE id = ?
 	defer stmt.Close()
 
 	_, err = stmt.Exec(summary, time.Now().UTC(), id)
-
 	if err != nil {
 		return err
 	}
@@ -232,7 +220,6 @@ WHERE id = ?
 }
 
 func updateTaskActiveStatusInDB(db *sql.DB, id int, active bool) error {
-
 	stmt, err := db.Prepare(`
 UPDATE task
 SET active = ?,
@@ -245,7 +232,6 @@ WHERE id = ?
 	defer stmt.Close()
 
 	_, err = stmt.Exec(active, time.Now().UTC(), id)
-
 	if err != nil {
 		return err
 	}
@@ -253,7 +239,6 @@ WHERE id = ?
 }
 
 func updateTaskDataFromDB(db *sql.DB, t *task) error {
-
 	row := db.QueryRow(`
 SELECT secs_spent, updated_at
 FROM task
@@ -271,7 +256,6 @@ WHERE id=?;
 }
 
 func fetchTasksFromDB(db *sql.DB, active bool, limit int) ([]task, error) {
-
 	var tasks []task
 
 	rows, err := db.Query(`
@@ -307,7 +291,6 @@ LIMIT ?;
 }
 
 func fetchTLEntriesFromDB(db *sql.DB, desc bool, limit int) ([]taskLogEntry, error) {
-
 	var logEntries []taskLogEntry
 
 	var order string
@@ -352,7 +335,6 @@ LIMIT ?;
 }
 
 func fetchTLEntriesBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit int) ([]taskLogEntry, error) {
-
 	var logEntries []taskLogEntry
 
 	rows, err := db.Query(`
@@ -390,7 +372,6 @@ ORDER by tl.begin_ts ASC LIMIT ?;
 }
 
 func fetchStatsFromDB(db *sql.DB, limit int) ([]taskReportEntry, error) {
-
 	rows, err := db.Query(`
 SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries, t.secs_spent
 from task_log tl
@@ -424,7 +405,6 @@ limit ?;
 }
 
 func fetchStatsBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit int) ([]taskReportEntry, error) {
-
 	rows, err := db.Query(`
 SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries,  SUM(tl.secs_spent) AS secs_spent
 FROM task_log tl 
@@ -459,7 +439,6 @@ LIMIT ?;
 }
 
 func fetchReportBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit int) ([]taskReportEntry, error) {
-
 	rows, err := db.Query(`
 SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries,  SUM(tl.secs_spent) AS secs_spent
 FROM task_log tl 

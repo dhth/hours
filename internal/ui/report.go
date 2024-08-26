@@ -27,7 +27,6 @@ func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg b
 		fullWeek = true
 	}
 	ts, err := getTimePeriod(period, time.Now(), fullWeek)
-
 	if err != nil {
 		fmt.Printf("error: %s\n", err)
 		os.Exit(1)
@@ -192,7 +191,6 @@ func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, er
 }
 
 func getReportAgg(db *sql.DB, start time.Time, numDays int, plain bool) (string, error) {
-
 	day := start
 	var nextDay time.Time
 
