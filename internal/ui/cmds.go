@@ -6,6 +6,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	pers "github.com/dhth/hours/internal/persistence"
 	"github.com/dhth/hours/internal/types"
 	_ "modernc.org/sqlite" // sqlite driver
 )
@@ -39,7 +40,7 @@ LIMIT 1
 
 		switch trackStatus {
 		case trackingInactive:
-			err = insertNewTLInDB(db, taskID, beginTs)
+			err = pers.InsertNewTL(db, taskID, beginTs)
 			if err != nil {
 				return trackingToggledMsg{err: err}
 			} else {
@@ -48,7 +49,7 @@ LIMIT 1
 
 		default:
 			secsSpent := int(endTs.Sub(beginTs).Seconds())
-			err := updateActiveTLInDB(db, activeTaskLogID, activeTaskID, beginTs, endTs, secsSpent, comment)
+			err := pers.UpdateActiveTL(db, activeTaskLogID, activeTaskID, beginTs, endTs, secsSpent, comment)
 			if err != nil {
 				return trackingToggledMsg{err: err}
 			} else {
@@ -60,21 +61,21 @@ LIMIT 1
 
 func updateTLBeginTS(db *sql.DB, beginTS time.Time) tea.Cmd {
 	return func() tea.Msg {
-		err := updateTLBeginTSInDB(db, beginTS)
+		err := pers.UpdateTLBeginTS(db, beginTS)
 		return tlBeginTSUpdatedMsg{beginTS, err}
 	}
 }
 
 func insertManualEntry(db *sql.DB, taskID int, beginTS time.Time, endTS time.Time, comment string) tea.Cmd {
 	return func() tea.Msg {
-		err := insertManualTLInDB(db, taskID, beginTS, endTS, comment)
+		err := pers.InsertManualTL(db, taskID, beginTS, endTS, comment)
 		return manualTaskLogInserted{taskID, err}
 	}
 }
 
 func fetchActiveTask(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
-		activeTaskDetails, err := fetchActiveTaskFromDB(db)
+		activeTaskDetails, err := pers.FetchActiveTask(db)
 		if err != nil {
 			return activeTaskFetchedMsg{err: err}
 		}
@@ -92,7 +93,7 @@ func fetchActiveTask(db *sql.DB) tea.Cmd {
 
 func updateTaskRep(db *sql.DB, t *types.Task) tea.Cmd {
 	return func() tea.Msg {
-		err := updateTaskDataFromDB(db, t)
+		err := pers.UpdateTaskData(db, t)
 		return taskRepUpdatedMsg{
 			tsk: t,
 			err: err,
@@ -102,7 +103,7 @@ func updateTaskRep(db *sql.DB, t *types.Task) tea.Cmd {
 
 func fetchTaskLogEntries(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
-		entries, err := fetchTLEntriesFromDB(db, true, 50)
+		entries, err := pers.FetchTLEntries(db, true, 50)
 		return taskLogEntriesFetchedMsg{
 			entries: entries,
 			err:     err,
@@ -112,7 +113,7 @@ func fetchTaskLogEntries(db *sql.DB) tea.Cmd {
 
 func deleteLogEntry(db *sql.DB, entry *types.TaskLogEntry) tea.Cmd {
 	return func() tea.Msg {
-		err := deleteEntry(db, entry)
+		err := pers.DeleteEntry(db, entry)
 		return taskLogEntryDeletedMsg{
 			entry: entry,
 			err:   err,
@@ -122,35 +123,35 @@ func deleteLogEntry(db *sql.DB, entry *types.TaskLogEntry) tea.Cmd {
 
 func deleteActiveTaskLog(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
-		err := deleteActiveTLInDB(db)
+		err := pers.DeleteActiveTL(db)
 		return activeTaskLogDeletedMsg{err}
 	}
 }
 
 func createTask(db *sql.DB, summary string) tea.Cmd {
 	return func() tea.Msg {
-		err := insertTaskInDB(db, summary)
+		err := pers.InsertTask(db, summary)
 		return taskCreatedMsg{err}
 	}
 }
 
 func updateTask(db *sql.DB, task *types.Task, summary string) tea.Cmd {
 	return func() tea.Msg {
-		err := updateTaskInDB(db, task.ID, summary)
+		err := pers.UpdateTask(db, task.ID, summary)
 		return taskUpdatedMsg{task, summary, err}
 	}
 }
 
 func updateTaskActiveStatus(db *sql.DB, task *types.Task, active bool) tea.Cmd {
 	return func() tea.Msg {
-		err := updateTaskActiveStatusInDB(db, task.ID, active)
+		err := pers.UpdateTaskActiveStatus(db, task.ID, active)
 		return taskActiveStatusUpdated{task, active, err}
 	}
 }
 
 func fetchTasks(db *sql.DB, active bool) tea.Cmd {
 	return func() tea.Msg {
-		tasks, err := fetchTasksFromDB(db, active, 50)
+		tasks, err := pers.FetchTasks(db, active, 50)
 		return tasksFetched{tasks, active, err}
 	}
 }

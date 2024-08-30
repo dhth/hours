@@ -1,4 +1,4 @@
-package ui
+package persistence
 
 import (
 	"database/sql"
@@ -9,7 +9,7 @@ import (
 	"github.com/dhth/hours/internal/types"
 )
 
-func insertNewTLInDB(db *sql.DB, taskID int, beginTs time.Time) error {
+func InsertNewTL(db *sql.DB, taskID int, beginTs time.Time) error {
 	stmt, err := db.Prepare(`
 INSERT INTO task_log (task_id, begin_ts, active)
 VALUES (?, ?, ?);
@@ -27,7 +27,7 @@ VALUES (?, ?, ?);
 	return nil
 }
 
-func updateTLBeginTSInDB(db *sql.DB, beginTs time.Time) error {
+func UpdateTLBeginTS(db *sql.DB, beginTs time.Time) error {
 	stmt, err := db.Prepare(`
 UPDATE task_log SET begin_ts=?
 WHERE active is true;
@@ -45,7 +45,7 @@ WHERE active is true;
 	return nil
 }
 
-func deleteActiveTLInDB(db *sql.DB) error {
+func DeleteActiveTL(db *sql.DB) error {
 	stmt, err := db.Prepare(`
 DELETE FROM task_log
 WHERE active=true;
@@ -60,7 +60,7 @@ WHERE active=true;
 	return err
 }
 
-func updateActiveTLInDB(db *sql.DB, taskLogID int, taskID int, beginTs, endTs time.Time, secsSpent int, comment string) error {
+func UpdateActiveTL(db *sql.DB, taskLogID int, taskID int, beginTs, endTs time.Time, secsSpent int, comment string) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
@@ -113,7 +113,7 @@ WHERE id = ?;
 	return nil
 }
 
-func insertManualTLInDB(db *sql.DB, taskID int, beginTs time.Time, endTs time.Time, comment string) error {
+func InsertManualTL(db *sql.DB, taskID int, beginTs time.Time, endTs time.Time, comment string) error {
 	secsSpent := int(endTs.Sub(beginTs).Seconds())
 	tx, err := db.Begin()
 	if err != nil {
@@ -161,7 +161,7 @@ WHERE id = ?;
 	return nil
 }
 
-func fetchActiveTaskFromDB(db *sql.DB) (types.ActiveTaskDetails, error) {
+func FetchActiveTask(db *sql.DB) (types.ActiveTaskDetails, error) {
 	row := db.QueryRow(`
 SELECT t.id, t.summary, tl.begin_ts
 FROM task_log tl left join task t on tl.task_id = t.id
@@ -184,7 +184,7 @@ WHERE tl.active=true;
 	return activeTaskDetails, nil
 }
 
-func insertTaskInDB(db *sql.DB, summary string) error {
+func InsertTask(db *sql.DB, summary string) error {
 	stmt, err := db.Prepare(`
 INSERT into task (summary, active, created_at, updated_at)
 VALUES (?, true, ?, ?);
@@ -202,7 +202,7 @@ VALUES (?, true, ?, ?);
 	return nil
 }
 
-func updateTaskInDB(db *sql.DB, id int, summary string) error {
+func UpdateTask(db *sql.DB, id int, summary string) error {
 	stmt, err := db.Prepare(`
 UPDATE task
 SET summary = ?,
@@ -221,7 +221,7 @@ WHERE id = ?
 	return nil
 }
 
-func updateTaskActiveStatusInDB(db *sql.DB, id int, active bool) error {
+func UpdateTaskActiveStatus(db *sql.DB, id int, active bool) error {
 	stmt, err := db.Prepare(`
 UPDATE task
 SET active = ?,
@@ -240,7 +240,7 @@ WHERE id = ?
 	return nil
 }
 
-func updateTaskDataFromDB(db *sql.DB, t *types.Task) error {
+func UpdateTaskData(db *sql.DB, t *types.Task) error {
 	row := db.QueryRow(`
 SELECT secs_spent, updated_at
 FROM task
@@ -257,7 +257,7 @@ WHERE id=?;
 	return nil
 }
 
-func fetchTasksFromDB(db *sql.DB, active bool, limit int) ([]types.Task, error) {
+func FetchTasks(db *sql.DB, active bool, limit int) ([]types.Task, error) {
 	var tasks []types.Task
 
 	rows, err := db.Query(`
@@ -295,7 +295,7 @@ LIMIT ?;
 	return tasks, nil
 }
 
-func fetchTLEntriesFromDB(db *sql.DB, desc bool, limit int) ([]types.TaskLogEntry, error) {
+func FetchTLEntries(db *sql.DB, desc bool, limit int) ([]types.TaskLogEntry, error) {
 	var logEntries []types.TaskLogEntry
 
 	var order string
@@ -342,7 +342,7 @@ LIMIT ?;
 	return logEntries, nil
 }
 
-func fetchTLEntriesBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit int) ([]types.TaskLogEntry, error) {
+func FetchTLEntriesBetweenTS(db *sql.DB, beginTs, endTs time.Time, limit int) ([]types.TaskLogEntry, error) {
 	var logEntries []types.TaskLogEntry
 
 	rows, err := db.Query(`
@@ -382,7 +382,7 @@ ORDER by tl.begin_ts ASC LIMIT ?;
 	return logEntries, nil
 }
 
-func fetchStatsFromDB(db *sql.DB, limit int) ([]types.TaskReportEntry, error) {
+func FetchStats(db *sql.DB, limit int) ([]types.TaskReportEntry, error) {
 	rows, err := db.Query(`
 SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries, t.secs_spent
 from task_log tl
@@ -418,7 +418,7 @@ limit ?;
 	return tLE, nil
 }
 
-func fetchStatsBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit int) ([]types.TaskReportEntry, error) {
+func FetchStatsBetweenTS(db *sql.DB, beginTs, endTs time.Time, limit int) ([]types.TaskReportEntry, error) {
 	rows, err := db.Query(`
 SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries,  SUM(tl.secs_spent) AS secs_spent
 FROM task_log tl 
@@ -455,7 +455,7 @@ LIMIT ?;
 	return tLE, nil
 }
 
-func fetchReportBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit int) ([]types.TaskReportEntry, error) {
+func FetchReportBetweenTS(db *sql.DB, beginTs, endTs time.Time, limit int) ([]types.TaskReportEntry, error) {
 	rows, err := db.Query(`
 SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries,  SUM(tl.secs_spent) AS secs_spent
 FROM task_log tl 
@@ -492,7 +492,7 @@ LIMIT ?;
 	return tLE, nil
 }
 
-func deleteEntry(db *sql.DB, entry *types.TaskLogEntry) error {
+func DeleteEntry(db *sql.DB, entry *types.TaskLogEntry) error {
 	secsSpent := entry.SecsSpent
 
 	tx, err := db.Begin()

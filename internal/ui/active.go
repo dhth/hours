@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	pers "github.com/dhth/hours/internal/persistence"
 	"github.com/dhth/hours/internal/types"
 )
 
@@ -19,7 +20,7 @@ const (
 )
 
 func ShowActiveTask(db *sql.DB, writer io.Writer, template string) {
-	activeTaskDetails, err := fetchActiveTaskFromDB(db)
+	activeTaskDetails, err := pers.FetchActiveTask(db)
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "Something went wrong:\n%s", err)
 		os.Exit(1)

@@ -10,6 +10,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	pers "github.com/dhth/hours/internal/persistence"
 	"github.com/dhth/hours/internal/types"
 	"github.com/dhth/hours/internal/utils"
 	"github.com/olekukonko/tablewriter"
@@ -71,7 +72,7 @@ func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, er
 	noEntriesFound := true
 	for i := 0; i < numDays; i++ {
 		nextDay = day.AddDate(0, 0, 1)
-		taskLogEntries, err := fetchTLEntriesBetweenTSFromDB(db, day, nextDay, 100)
+		taskLogEntries, err := pers.FetchTLEntriesBetweenTS(db, day, nextDay, 100)
 		if err != nil {
 			return "", err
 		}
@@ -204,7 +205,7 @@ func getReportAgg(db *sql.DB, start time.Time, numDays int, plain bool) (string,
 	noEntriesFound := true
 	for i := 0; i < numDays; i++ {
 		nextDay = day.AddDate(0, 0, 1)
-		taskLogEntries, err := fetchReportBetweenTSFromDB(db, day, nextDay, 100)
+		taskLogEntries, err := pers.FetchReportBetweenTS(db, day, nextDay, 100)
 		if err != nil {
 			return "", err
 		}

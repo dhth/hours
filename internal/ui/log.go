@@ -10,6 +10,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	pers "github.com/dhth/hours/internal/persistence"
 	"github.com/dhth/hours/internal/types"
 	"github.com/dhth/hours/internal/utils"
 	"github.com/olekukonko/tablewriter"
@@ -58,7 +59,7 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string, inte
 }
 
 func renderTaskLog(db *sql.DB, start, end time.Time, limit int, plain bool) (string, error) {
-	entries, err := fetchTLEntriesBetweenTSFromDB(db, start, end, limit)
+	entries, err := pers.FetchTLEntriesBetweenTS(db, start, end, limit)
 	if err != nil {
 		return "", err
 	}

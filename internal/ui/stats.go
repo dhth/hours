@@ -10,6 +10,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	pers "github.com/dhth/hours/internal/persistence"
 	"github.com/dhth/hours/internal/types"
 	"github.com/dhth/hours/internal/utils"
 	"github.com/olekukonko/tablewriter"
@@ -77,9 +78,9 @@ func renderStats(db *sql.DB, period string, start, end time.Time, plain bool) (s
 	var err error
 
 	if period == periodAll {
-		entries, err = fetchStatsFromDB(db, statsLogEntriesLimit)
+		entries, err = pers.FetchStats(db, statsLogEntriesLimit)
 	} else {
-		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)
+		entries, err = pers.FetchStatsBetweenTS(db, start, end, statsLogEntriesLimit)
 	}
 
 	if err != nil {
