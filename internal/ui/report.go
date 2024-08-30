@@ -3,33 +3,36 @@ package ui
 import (
 	"bytes"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/dhth/hours/internal/types"
+	"github.com/dhth/hours/internal/utils"
 	"github.com/olekukonko/tablewriter"
 )
+
+var errCouldntGenerateReport = errors.New("couldn't generate report")
 
 const (
 	reportTimeCharsBudget = 6
 )
 
-func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg bool, interactive bool) {
+func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg bool, interactive bool) error {
 	if period == "" {
-		return
+		return nil
 	}
 
 	var fullWeek bool
 	if interactive {
 		fullWeek = true
 	}
-	ts, err := getTimePeriod(period, time.Now(), fullWeek)
+	ts, err := types.GetTimePeriod(period, time.Now(), fullWeek)
 	if err != nil {
-		fmt.Printf("error: %s\n", err)
-		os.Exit(1)
+		return err
 	}
 
 	var report string
@@ -37,24 +40,25 @@ func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg b
 
 	if agg {
 		analyticsType = reportAggRecords
-		report, err = getReportAgg(db, ts.start, ts.numDays, plain)
+		report, err = getReportAgg(db, ts.Start, ts.NumDays, plain)
 	} else {
 		analyticsType = reportRecords
-		report, err = getReport(db, ts.start, ts.numDays, plain)
+		report, err = getReport(db, ts.Start, ts.NumDays, plain)
 	}
 	if err != nil {
-		fmt.Printf("Something went wrong generating the report: %s\n", err)
+		return fmt.Errorf("%w: %s", errCouldntGenerateReport, err.Error())
 	}
 
 	if interactive {
-		p := tea.NewProgram(initialRecordsModel(analyticsType, db, ts.start, ts.end, plain, period, ts.numDays, report))
-		if _, err := p.Run(); err != nil {
-			fmt.Printf("Alas, there has been an error: %v", err)
-			os.Exit(1)
+		p := tea.NewProgram(initialRecordsModel(analyticsType, db, ts.Start, ts.End, plain, period, ts.NumDays, report))
+		_, err := p.Run()
+		if err != nil {
+			return err
 		}
 	} else {
 		fmt.Fprint(writer, report)
 	}
+	return nil
 }
 
 func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, error) {
@@ -62,7 +66,7 @@ func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, er
 	var nextDay time.Time
 
 	var maxEntryForADay int
-	reportData := make(map[int][]taskLogEntry)
+	reportData := make(map[int][]types.TaskLogEntry)
 
 	noEntriesFound := true
 	for i := 0; i < numDays; i++ {
@@ -114,34 +118,34 @@ func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, er
 		for colIndex := 0; colIndex < numDays; colIndex++ {
 			if rowIndex >= len(reportData[colIndex]) {
 				row[colIndex] = fmt.Sprintf("%s  %s",
-					RightPadTrim("", summaryBudget, false),
-					RightPadTrim("", reportTimeCharsBudget, false),
+					utils.RightPadTrim("", summaryBudget, false),
+					utils.RightPadTrim("", reportTimeCharsBudget, false),
 				)
 				continue
 			}
 
 			tr := reportData[colIndex][rowIndex]
-			timeSpentStr := humanizeDuration(tr.secsSpent)
+			timeSpentStr := types.HumanizeDuration(tr.SecsSpent)
 
 			if plain {
 				row[colIndex] = fmt.Sprintf("%s  %s",
-					RightPadTrim(tr.taskSummary, summaryBudget, false),
-					RightPadTrim(timeSpentStr, reportTimeCharsBudget, false),
+					utils.RightPadTrim(tr.TaskSummary, summaryBudget, false),
+					utils.RightPadTrim(timeSpentStr, reportTimeCharsBudget, false),
 				)
 			} else {
-				rowStyle, ok := styleCache[tr.taskSummary]
+				rowStyle, ok := styleCache[tr.TaskSummary]
 
 				if !ok {
-					rowStyle = getDynamicStyle(tr.taskSummary)
-					styleCache[tr.taskSummary] = rowStyle
+					rowStyle = getDynamicStyle(tr.TaskSummary)
+					styleCache[tr.TaskSummary] = rowStyle
 				}
 
 				row[colIndex] = fmt.Sprintf("%s  %s",
-					rowStyle.Render(RightPadTrim(tr.taskSummary, summaryBudget, false)),
-					rowStyle.Render(RightPadTrim(timeSpentStr, reportTimeCharsBudget, false)),
+					rowStyle.Render(utils.RightPadTrim(tr.TaskSummary, summaryBudget, false)),
+					rowStyle.Render(utils.RightPadTrim(timeSpentStr, reportTimeCharsBudget, false)),
 				)
 			}
-			totalSecsPerDay[colIndex] += tr.secsSpent
+			totalSecsPerDay[colIndex] += tr.SecsSpent
 		}
 		data[rowIndex] = row
 	}
@@ -150,7 +154,7 @@ func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, er
 
 	for i, ts := range totalSecsPerDay {
 		if ts != 0 {
-			totalTimePerDay[i] = rs.footerStyle.Render(humanizeDuration(ts))
+			totalTimePerDay[i] = rs.footerStyle.Render(types.HumanizeDuration(ts))
 		} else {
 			totalTimePerDay[i] = " "
 		}
@@ -195,7 +199,7 @@ func getReportAgg(db *sql.DB, start time.Time, numDays int, plain bool) (string,
 	var nextDay time.Time
 
 	var maxEntryForADay int
-	reportData := make(map[int][]taskReportEntry)
+	reportData := make(map[int][]types.TaskReportEntry)
 
 	noEntriesFound := true
 	for i := 0; i < numDays; i++ {
@@ -246,40 +250,40 @@ func getReportAgg(db *sql.DB, start time.Time, numDays int, plain bool) (string,
 		for colIndex := 0; colIndex < numDays; colIndex++ {
 			if rowIndex >= len(reportData[colIndex]) {
 				row[colIndex] = fmt.Sprintf("%s  %s",
-					RightPadTrim("", summaryBudget, false),
-					RightPadTrim("", reportTimeCharsBudget, false),
+					utils.RightPadTrim("", summaryBudget, false),
+					utils.RightPadTrim("", reportTimeCharsBudget, false),
 				)
 				continue
 			}
 
 			tr := reportData[colIndex][rowIndex]
-			timeSpentStr := humanizeDuration(tr.secsSpent)
+			timeSpentStr := types.HumanizeDuration(tr.SecsSpent)
 
 			if plain {
 				row[colIndex] = fmt.Sprintf("%s  %s",
-					RightPadTrim(tr.taskSummary, summaryBudget, false),
-					RightPadTrim(timeSpentStr, reportTimeCharsBudget, false),
+					utils.RightPadTrim(tr.TaskSummary, summaryBudget, false),
+					utils.RightPadTrim(timeSpentStr, reportTimeCharsBudget, false),
 				)
 			} else {
-				rowStyle, ok := styleCache[tr.taskSummary]
+				rowStyle, ok := styleCache[tr.TaskSummary]
 				if !ok {
-					rowStyle = getDynamicStyle(tr.taskSummary)
-					styleCache[tr.taskSummary] = rowStyle
+					rowStyle = getDynamicStyle(tr.TaskSummary)
+					styleCache[tr.TaskSummary] = rowStyle
 				}
 
 				row[colIndex] = fmt.Sprintf("%s  %s",
-					rowStyle.Render(RightPadTrim(tr.taskSummary, summaryBudget, false)),
-					rowStyle.Render(RightPadTrim(timeSpentStr, reportTimeCharsBudget, false)),
+					rowStyle.Render(utils.RightPadTrim(tr.TaskSummary, summaryBudget, false)),
+					rowStyle.Render(utils.RightPadTrim(timeSpentStr, reportTimeCharsBudget, false)),
 				)
 			}
-			totalSecsPerDay[colIndex] += tr.secsSpent
+			totalSecsPerDay[colIndex] += tr.SecsSpent
 		}
 		data[rowIndex] = row
 	}
 	totalTimePerDay := make([]string, numDays)
 	for i, ts := range totalSecsPerDay {
 		if ts != 0 {
-			totalTimePerDay[i] = rs.footerStyle.Render(humanizeDuration(ts))
+			totalTimePerDay[i] = rs.footerStyle.Render(types.HumanizeDuration(ts))
 		} else {
 			totalTimePerDay[i] = " "
 		}

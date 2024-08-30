@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/dhth/hours/internal/types"
 )
 
 const (
@@ -42,7 +43,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						cmds = append(cmds, createTask(m.db, m.taskInputs[summaryField].Value()))
 						m.taskInputs[summaryField].SetValue("")
 					case taskUpdateCxt:
-						selectedTask, ok := m.activeTasksList.SelectedItem().(*task)
+						selectedTask, ok := m.activeTasksList.SelectedItem().(*types.Task)
 						if ok {
 							cmds = append(cmds, updateTask(m.db, selectedTask, m.taskInputs[summaryField].Value()))
 							m.taskInputs[summaryField].SetValue("")
@@ -120,11 +121,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, tea.Batch(cmds...)
 				}
 
-				task, ok := m.activeTasksList.SelectedItem().(*task)
+				task, ok := m.activeTasksList.SelectedItem().(*types.Task)
 				if ok {
 					switch m.tasklogSaveType {
 					case tasklogInsert:
-						cmds = append(cmds, insertManualEntry(m.db, task.id, beginTS, endTS, comment))
+						cmds = append(cmds, insertManualEntry(m.db, task.ID, beginTS, endTS, comment))
 						m.activeView = activeTaskListView
 					}
 				}
@@ -200,22 +201,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.trackingInputs[m.trackingFocussedField].Focus()
 			}
 		case "k":
-			err := m.shiftTime(shiftBackward, shiftMinute)
+			err := m.shiftTime(types.ShiftBackward, types.ShiftMinute)
 			if err != nil {
 				return m, tea.Batch(cmds...)
 			}
 		case "j":
-			err := m.shiftTime(shiftForward, shiftMinute)
+			err := m.shiftTime(types.ShiftForward, types.ShiftMinute)
 			if err != nil {
 				return m, tea.Batch(cmds...)
 			}
 		case "K":
-			err := m.shiftTime(shiftBackward, shiftFiveMinutes)
+			err := m.shiftTime(types.ShiftBackward, types.ShiftFiveMinutes)
 			if err != nil {
 				return m, tea.Batch(cmds...)
 			}
 		case "J":
-			err := m.shiftTime(shiftForward, shiftFiveMinutes)
+			err := m.shiftTime(types.ShiftForward, types.ShiftFiveMinutes)
 			if err != nil {
 				return m, tea.Batch(cmds...)
 			}
@@ -317,7 +318,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "ctrl+s":
 			if m.activeView == activeTaskListView {
-				_, ok := m.activeTasksList.SelectedItem().(*task)
+				_, ok := m.activeTasksList.SelectedItem().(*types.Task)
 				if !ok {
 					message := couldntSelectATaskMsg
 					m.message = message
@@ -349,9 +350,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+d":
 			switch m.activeView {
 			case activeTaskListView:
-				task, ok := m.activeTasksList.SelectedItem().(*task)
+				task, ok := m.activeTasksList.SelectedItem().(*types.Task)
 				if ok {
-					if task.trackingActive {
+					if task.TrackingActive {
 						m.message = "Cannot deactivate a task being tracked; stop tracking and try again."
 					} else {
 						cmds = append(cmds, updateTaskActiveStatus(m.db, task, false))
@@ -362,7 +363,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.messages = append(m.messages, msg)
 				}
 			case taskLogView:
-				entry, ok := m.taskLogList.SelectedItem().(taskLogEntry)
+				entry, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
 				if ok {
 					cmds = append(cmds, deleteLogEntry(m.db, &entry))
 				} else {
@@ -371,7 +372,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.messages = append(m.messages, msg)
 				}
 			case inactiveTaskListView:
-				task, ok := m.inactiveTasksList.SelectedItem().(*task)
+				task, ok := m.inactiveTasksList.SelectedItem().(*types.Task)
 				if ok {
 					cmds = append(cmds, updateTaskActiveStatus(m.db, task, true))
 				} else {
@@ -393,7 +394,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.message = message
 						m.messages = append(m.messages, message)
 					}
-					task, ok := m.activeTasksList.SelectedItem().(*task)
+					task, ok := m.activeTasksList.SelectedItem().(*types.Task)
 					if !ok {
 						message := "Couldn't select a task"
 						m.message = message
@@ -402,7 +403,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						if m.lastChange == updateChange {
 							m.changesLocked = true
 							m.activeTLBeginTS = time.Now()
-							cmds = append(cmds, toggleTracking(m.db, task.id, m.activeTLBeginTS, m.activeTLEndTS, ""))
+							cmds = append(cmds, toggleTracking(m.db, task.ID, m.activeTLBeginTS, m.activeTLEndTS, ""))
 						} else if m.lastChange == insertChange {
 							m.activeView = askForCommentView
 							m.activeTLEndTS = time.Now()
@@ -446,12 +447,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.message = message
 						m.messages = append(m.messages, message)
 					}
-					task, ok := m.activeTasksList.SelectedItem().(*task)
+					task, ok := m.activeTasksList.SelectedItem().(*types.Task)
 					if ok {
 						m.activeView = taskInputView
 						m.taskInputFocussedField = summaryField
 						m.taskInputs[summaryField].Focus()
-						m.taskInputs[summaryField].SetValue(task.summary)
+						m.taskInputs[summaryField].SetValue(task.Summary)
 						m.taskMgmtContext = taskUpdateCxt
 					} else {
 						m.message = "Couldn't select a task"
@@ -516,8 +517,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err != nil {
 			m.message = fmt.Sprintf("Error updating task: %s", msg.err)
 		} else {
-			msg.tsk.summary = msg.summary
-			msg.tsk.updateTitle()
+			msg.tsk.Summary = msg.summary
+			msg.tsk.UpdateTitle()
 		}
 	case tasksFetched:
 		if msg.err != nil {
@@ -526,15 +527,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.messages = append(m.messages, message)
 		} else {
 			if msg.active {
-				m.activeTaskMap = make(map[int]*task)
+				m.activeTaskMap = make(map[int]*types.Task)
 				m.activeTaskIndexMap = make(map[int]int)
 				tasks := make([]list.Item, len(msg.tasks))
 				for i, task := range msg.tasks {
-					task.updateTitle()
-					task.updateDesc()
+					task.UpdateTitle()
+					task.UpdateDesc()
 					tasks[i] = &task
-					m.activeTaskMap[task.id] = &task
-					m.activeTaskIndexMap[task.id] = i
+					m.activeTaskMap[task.ID] = &task
+					m.activeTaskIndexMap[task.ID] = i
 				}
 				m.activeTasksList.SetItems(tasks)
 				m.activeTasksList.Title = "Tasks"
@@ -543,8 +544,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				inactiveTasks := make([]list.Item, len(msg.tasks))
 				for i, inactiveTask := range msg.tasks {
-					inactiveTask.updateTitle()
-					inactiveTask.updateDesc()
+					inactiveTask.UpdateTitle()
+					inactiveTask.UpdateDesc()
 					inactiveTasks[i] = &inactiveTask
 				}
 				m.inactiveTasksList.SetItems(inactiveTasks)
@@ -582,8 +583,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			var items []list.Item
 			for _, e := range msg.entries {
-				e.updateTitle()
-				e.updateDesc()
+				e.UpdateTitle()
+				e.UpdateDesc()
 				items = append(items, e)
 			}
 			m.taskLogList.SetItems(items)
@@ -602,8 +603,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.activeTLBeginTS = msg.beginTs
 				activeTask, ok := m.activeTaskMap[m.activeTaskID]
 				if ok {
-					activeTask.trackingActive = true
-					activeTask.updateTitle()
+					activeTask.TrackingActive = true
+					activeTask.UpdateTitle()
 
 					// go to tracked item on startup
 					activeIndex, ok := m.activeTaskIndexMap[msg.activeTaskID]
@@ -628,25 +629,25 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if ok {
 				if msg.finished {
 					m.lastChange = updateChange
-					task.trackingActive = false
+					task.TrackingActive = false
 					m.trackingActive = false
 					m.activeTaskID = -1
 					cmds = append(cmds, updateTaskRep(m.db, task))
 					cmds = append(cmds, fetchTaskLogEntries(m.db))
 				} else {
 					m.lastChange = insertChange
-					task.trackingActive = true
+					task.TrackingActive = true
 					m.trackingActive = true
 					m.activeTaskID = msg.taskID
 				}
-				task.updateTitle()
+				task.UpdateTitle()
 			}
 		}
 	case taskRepUpdatedMsg:
 		if msg.err != nil {
 			m.message = fmt.Sprintf("Error updating task status: %s", msg.err)
 		} else {
-			msg.tsk.updateDesc()
+			msg.tsk.UpdateDesc()
 		}
 	case taskLogEntryDeletedMsg:
 		if msg.err != nil {
@@ -654,7 +655,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.message = message
 			m.messages = append(m.messages, message)
 		} else {
-			task, ok := m.activeTaskMap[msg.entry.taskID]
+			task, ok := m.activeTaskMap[msg.entry.TaskID]
 			if ok {
 				cmds = append(cmds, updateTaskRep(m.db, task))
 			}
@@ -666,8 +667,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			activeTask, ok := m.activeTaskMap[m.activeTaskID]
 			if ok {
-				activeTask.trackingActive = false
-				activeTask.updateTitle()
+				activeTask.TrackingActive = false
+				activeTask.UpdateTitle()
 			}
 			m.lastChange = updateChange
 			m.trackingActive = false
@@ -718,7 +719,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				var numDays int
 
 				switch m.period {
-				case timePeriodWeek:
+				case types.TimePeriodWeek:
 					weekday := m.start.Weekday()
 					offset := (7 + weekday - time.Monday) % 7
 					startOfPrevWeek := m.start.AddDate(0, 0, -int(offset+7))
@@ -738,7 +739,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				var numDays int
 
 				switch m.period {
-				case timePeriodWeek:
+				case types.TimePeriodWeek:
 					weekday := m.start.Weekday()
 					offset := (7 + weekday - time.Monday) % 7
 					startOfNextWeek := m.start.AddDate(0, 0, 7-int(offset))
@@ -759,7 +760,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				var numDays int
 
 				switch m.period {
-				case timePeriodWeek:
+				case types.TimePeriodWeek:
 					now := time.Now()
 					weekday := now.Weekday()
 					offset := (7 + weekday - time.Monday) % 7
@@ -793,7 +794,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m Model) shiftTime(direction timeShiftDirection, duration timeShiftDuration) error {
+func (m Model) shiftTime(direction types.TimeShiftDirection, duration types.TimeShiftDuration) error {
 	if m.activeView == editStartTsView || m.activeView == askForCommentView || m.activeView == manualTasklogEntryView {
 		if m.trackingFocussedField == entryBeginTS || m.trackingFocussedField == entryEndTS {
 			ts, err := time.ParseInLocation(string(timeFormat), m.trackingInputs[m.trackingFocussedField].Value(), time.Local)
@@ -801,7 +802,7 @@ func (m Model) shiftTime(direction timeShiftDirection, duration timeShiftDuratio
 				return err
 			}
 
-			newTs := getShiftedTime(ts, direction, duration)
+			newTs := types.GetShiftedTime(ts, direction, duration)
 
 			m.trackingInputs[m.trackingFocussedField].SetValue(newTs.Format(timeFormat))
 		}

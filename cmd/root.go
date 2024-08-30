@@ -286,8 +286,7 @@ will be reported on the day it ends.
 				period = args[0]
 			}
 
-			ui.RenderReport(db, os.Stdout, recordsOutputPlain, period, reportAgg, recordsInteractive)
-			return nil
+			return ui.RenderReport(db, os.Stdout, recordsOutputPlain, period, reportAgg, recordsInteractive)
 		},
 	}
 
@@ -317,8 +316,7 @@ appear in the log for the day it ends.
 				period = args[0]
 			}
 
-			ui.RenderTaskLog(db, os.Stdout, recordsOutputPlain, period, recordsInteractive)
-			return nil
+			return ui.RenderTaskLog(db, os.Stdout, recordsOutputPlain, period, recordsInteractive)
 		},
 	}
 
@@ -349,8 +347,7 @@ be considered in the stats for the day it ends.
 				period = args[0]
 			}
 
-			ui.RenderStats(db, os.Stdout, recordsOutputPlain, period, recordsInteractive)
-			return nil
+			return ui.RenderStats(db, os.Stdout, recordsOutputPlain, period, recordsInteractive)
 		},
 	}
 

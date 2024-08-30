@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/dhth/hours/internal/types"
 )
 
 func InitialModel(db *sql.DB) Model {
@@ -44,7 +45,7 @@ func InitialModel(db *sql.DB) Model {
 		db:                 db,
 		activeTasksList:    list.New(activeTaskItems, newItemDelegate(lipgloss.Color(activeTaskListColor)), listWidth, 0),
 		inactiveTasksList:  list.New(inactiveTaskItems, newItemDelegate(lipgloss.Color(inactiveTaskListColor)), listWidth, 0),
-		activeTaskMap:      make(map[int]*task),
+		activeTaskMap:      make(map[int]*types.Task),
 		activeTaskIndexMap: make(map[int]int),
 		taskLogList:        list.New(tasklogListItems, newItemDelegate(lipgloss.Color(taskLogListColor)), listWidth, 0),
 		showHelpIndicator:  true,

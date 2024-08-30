@@ -6,6 +6,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/dhth/hours/internal/types"
 	_ "modernc.org/sqlite" // sqlite driver
 )
 
@@ -78,18 +79,18 @@ func fetchActiveTask(db *sql.DB) tea.Cmd {
 			return activeTaskFetchedMsg{err: err}
 		}
 
-		if activeTaskDetails.taskID == -1 {
+		if activeTaskDetails.TaskID == -1 {
 			return activeTaskFetchedMsg{noneActive: true}
 		}
 
 		return activeTaskFetchedMsg{
-			activeTaskID: activeTaskDetails.taskID,
-			beginTs:      activeTaskDetails.lastLogEntryBeginTs,
+			activeTaskID: activeTaskDetails.TaskID,
+			beginTs:      activeTaskDetails.LastLogEntryBeginTS,
 		}
 	}
 }
 
-func updateTaskRep(db *sql.DB, t *task) tea.Cmd {
+func updateTaskRep(db *sql.DB, t *types.Task) tea.Cmd {
 	return func() tea.Msg {
 		err := updateTaskDataFromDB(db, t)
 		return taskRepUpdatedMsg{
@@ -109,7 +110,7 @@ func fetchTaskLogEntries(db *sql.DB) tea.Cmd {
 	}
 }
 
-func deleteLogEntry(db *sql.DB, entry *taskLogEntry) tea.Cmd {
+func deleteLogEntry(db *sql.DB, entry *types.TaskLogEntry) tea.Cmd {
 	return func() tea.Msg {
 		err := deleteEntry(db, entry)
 		return taskLogEntryDeletedMsg{
@@ -133,16 +134,16 @@ func createTask(db *sql.DB, summary string) tea.Cmd {
 	}
 }
 
-func updateTask(db *sql.DB, task *task, summary string) tea.Cmd {
+func updateTask(db *sql.DB, task *types.Task, summary string) tea.Cmd {
 	return func() tea.Msg {
-		err := updateTaskInDB(db, task.id, summary)
+		err := updateTaskInDB(db, task.ID, summary)
 		return taskUpdatedMsg{task, summary, err}
 	}
 }
 
-func updateTaskActiveStatus(db *sql.DB, task *task, active bool) tea.Cmd {
+func updateTaskActiveStatus(db *sql.DB, task *types.Task, active bool) tea.Cmd {
 	return func() tea.Msg {
-		err := updateTaskActiveStatusInDB(db, task.id, active)
+		err := updateTaskActiveStatusInDB(db, task.ID, active)
 		return taskActiveStatusUpdated{task, active, err}
 	}
 }

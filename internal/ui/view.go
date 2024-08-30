@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/dhth/hours/internal/utils"
 )
 
 const (
@@ -18,7 +19,7 @@ func (m Model) View() string {
 
 	var statusBar string
 	if m.message != "" {
-		statusBar = Trim(m.message, 120)
+		statusBar = utils.Trim(m.message, 120)
 	}
 
 	var activeMsg string
@@ -26,7 +27,7 @@ func (m Model) View() string {
 		var taskSummaryMsg, taskStartedSinceMsg string
 		task, ok := m.activeTaskMap[m.activeTaskID]
 		if ok {
-			taskSummaryMsg = Trim(task.summary, 50)
+			taskSummaryMsg = utils.Trim(task.Summary, 50)
 			if m.activeView != askForCommentView {
 				taskStartedSinceMsg = fmt.Sprintf("(since %s)", m.activeTLBeginTS.Format(timeOnlyFormat))
 			}
@@ -104,7 +105,7 @@ func (m Model) View() string {
 			formFieldNameStyle.Render("End Time (format: 2006/01/02 15:04)"),
 			m.trackingInputs[entryEndTS].View(),
 			formHelpStyle.Render("(k/j/K/J moves time, when correct)"),
-			formFieldNameStyle.Render(RightPadTrim("Comment:", 16, true)),
+			formFieldNameStyle.Render(utils.RightPadTrim("Comment:", 16, true)),
 			m.trackingInputs[entryComment].View(),
 			formHelpStyle.Render("Press enter to submit"),
 		)
@@ -178,7 +179,7 @@ func (m Model) View() string {
 			formFieldNameStyle.Render("End Time (format: 2006/01/02 15:04)"),
 			m.trackingInputs[entryEndTS].View(),
 			formHelpStyle.Render("(k/j/K/J moves time, when correct)"),
-			formFieldNameStyle.Render(RightPadTrim("Comment:", 16, true)),
+			formFieldNameStyle.Render(utils.RightPadTrim("Comment:", 16, true)),
 			m.trackingInputs[entryComment].View(),
 			formHelpStyle.Render("Press enter to submit"),
 		)

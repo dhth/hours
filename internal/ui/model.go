@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/dhth/hours/internal/types"
 )
 
 type trackingStatus uint
@@ -88,7 +89,7 @@ type Model struct {
 	db                     *sql.DB
 	activeTasksList        list.Model
 	inactiveTasksList      list.Model
-	activeTaskMap          map[int]*task
+	activeTaskMap          map[int]*types.Task
 	activeTaskIndexMap     map[int]int
 	activeTLBeginTS        time.Time
 	activeTLEndTS          time.Time

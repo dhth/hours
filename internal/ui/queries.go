@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/dhth/hours/internal/types"
 )
 
 func insertNewTLInDB(db *sql.DB, taskID int, beginTs time.Time) error {
@@ -159,26 +161,26 @@ WHERE id = ?;
 	return nil
 }
 
-func fetchActiveTaskFromDB(db *sql.DB) (activeTaskDetails, error) {
+func fetchActiveTaskFromDB(db *sql.DB) (types.ActiveTaskDetails, error) {
 	row := db.QueryRow(`
 SELECT t.id, t.summary, tl.begin_ts
 FROM task_log tl left join task t on tl.task_id = t.id
 WHERE tl.active=true;
 `)
 
-	var activeTaskDetails activeTaskDetails
+	var activeTaskDetails types.ActiveTaskDetails
 	err := row.Scan(
-		&activeTaskDetails.taskID,
-		&activeTaskDetails.taskSummary,
-		&activeTaskDetails.lastLogEntryBeginTs,
+		&activeTaskDetails.TaskID,
+		&activeTaskDetails.TaskSummary,
+		&activeTaskDetails.LastLogEntryBeginTS,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
-		activeTaskDetails.taskID = -1
+		activeTaskDetails.TaskID = -1
 		return activeTaskDetails, nil
 	} else if err != nil {
 		return activeTaskDetails, err
 	}
-	activeTaskDetails.lastLogEntryBeginTs = activeTaskDetails.lastLogEntryBeginTs.Local()
+	activeTaskDetails.LastLogEntryBeginTS = activeTaskDetails.LastLogEntryBeginTS.Local()
 	return activeTaskDetails, nil
 }
 
@@ -238,16 +240,16 @@ WHERE id = ?
 	return nil
 }
 
-func updateTaskDataFromDB(db *sql.DB, t *task) error {
+func updateTaskDataFromDB(db *sql.DB, t *types.Task) error {
 	row := db.QueryRow(`
 SELECT secs_spent, updated_at
 FROM task
 WHERE id=?;
-    `, t.id)
+    `, t.ID)
 
 	err := row.Scan(
-		&t.secsSpent,
-		&t.updatedAt,
+		&t.SecsSpent,
+		&t.UpdatedAt,
 	)
 	if err != nil {
 		return err
@@ -255,8 +257,8 @@ WHERE id=?;
 	return nil
 }
 
-func fetchTasksFromDB(db *sql.DB, active bool, limit int) ([]task, error) {
-	var tasks []task
+func fetchTasksFromDB(db *sql.DB, active bool, limit int) ([]types.Task, error) {
+	var tasks []types.Task
 
 	rows, err := db.Query(`
 SELECT id, summary, secs_spent, created_at, updated_at, active
@@ -271,19 +273,19 @@ LIMIT ?;
 	defer rows.Close()
 
 	for rows.Next() {
-		var entry task
-		err = rows.Scan(&entry.id,
-			&entry.summary,
-			&entry.secsSpent,
-			&entry.createdAt,
-			&entry.updatedAt,
-			&entry.active,
+		var entry types.Task
+		err = rows.Scan(&entry.ID,
+			&entry.Summary,
+			&entry.SecsSpent,
+			&entry.CreatedAt,
+			&entry.UpdatedAt,
+			&entry.Active,
 		)
 		if err != nil {
 			return nil, err
 		}
-		entry.createdAt = entry.createdAt.Local()
-		entry.updatedAt = entry.updatedAt.Local()
+		entry.CreatedAt = entry.CreatedAt.Local()
+		entry.UpdatedAt = entry.UpdatedAt.Local()
 		tasks = append(tasks, entry)
 
 	}
@@ -293,8 +295,8 @@ LIMIT ?;
 	return tasks, nil
 }
 
-func fetchTLEntriesFromDB(db *sql.DB, desc bool, limit int) ([]taskLogEntry, error) {
-	var logEntries []taskLogEntry
+func fetchTLEntriesFromDB(db *sql.DB, desc bool, limit int) ([]types.TaskLogEntry, error) {
+	var logEntries []types.TaskLogEntry
 
 	var order string
 	if desc {
@@ -317,20 +319,20 @@ LIMIT ?;
 	defer rows.Close()
 
 	for rows.Next() {
-		var entry taskLogEntry
-		err = rows.Scan(&entry.id,
-			&entry.taskID,
-			&entry.taskSummary,
-			&entry.beginTs,
-			&entry.endTs,
-			&entry.secsSpent,
-			&entry.comment,
+		var entry types.TaskLogEntry
+		err = rows.Scan(&entry.ID,
+			&entry.TaskID,
+			&entry.TaskSummary,
+			&entry.BeginTS,
+			&entry.EndTS,
+			&entry.SecsSpent,
+			&entry.Comment,
 		)
 		if err != nil {
 			return nil, err
 		}
-		entry.beginTs = entry.beginTs.Local()
-		entry.endTs = entry.endTs.Local()
+		entry.BeginTS = entry.BeginTS.Local()
+		entry.EndTS = entry.EndTS.Local()
 		logEntries = append(logEntries, entry)
 
 	}
@@ -340,8 +342,8 @@ LIMIT ?;
 	return logEntries, nil
 }
 
-func fetchTLEntriesBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit int) ([]taskLogEntry, error) {
-	var logEntries []taskLogEntry
+func fetchTLEntriesBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit int) ([]types.TaskLogEntry, error) {
+	var logEntries []types.TaskLogEntry
 
 	rows, err := db.Query(`
 SELECT tl.id, tl.task_id, t.summary, tl.begin_ts, tl.end_ts, tl.secs_spent, tl.comment
@@ -357,20 +359,20 @@ ORDER by tl.begin_ts ASC LIMIT ?;
 	defer rows.Close()
 
 	for rows.Next() {
-		var entry taskLogEntry
-		err = rows.Scan(&entry.id,
-			&entry.taskID,
-			&entry.taskSummary,
-			&entry.beginTs,
-			&entry.endTs,
-			&entry.secsSpent,
-			&entry.comment,
+		var entry types.TaskLogEntry
+		err = rows.Scan(&entry.ID,
+			&entry.TaskID,
+			&entry.TaskSummary,
+			&entry.BeginTS,
+			&entry.EndTS,
+			&entry.SecsSpent,
+			&entry.Comment,
 		)
 		if err != nil {
 			return nil, err
 		}
-		entry.beginTs = entry.beginTs.Local()
-		entry.endTs = entry.endTs.Local()
+		entry.BeginTS = entry.BeginTS.Local()
+		entry.EndTS = entry.EndTS.Local()
 		logEntries = append(logEntries, entry)
 
 	}
@@ -380,7 +382,7 @@ ORDER by tl.begin_ts ASC LIMIT ?;
 	return logEntries, nil
 }
 
-func fetchStatsFromDB(db *sql.DB, limit int) ([]taskReportEntry, error) {
+func fetchStatsFromDB(db *sql.DB, limit int) ([]types.TaskReportEntry, error) {
 	rows, err := db.Query(`
 SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries, t.secs_spent
 from task_log tl
@@ -394,15 +396,15 @@ limit ?;
 	}
 	defer rows.Close()
 
-	var tLE []taskReportEntry
+	var tLE []types.TaskReportEntry
 
 	for rows.Next() {
-		var entry taskReportEntry
+		var entry types.TaskReportEntry
 		err = rows.Scan(
-			&entry.taskID,
-			&entry.taskSummary,
-			&entry.numEntries,
-			&entry.secsSpent,
+			&entry.TaskID,
+			&entry.TaskSummary,
+			&entry.NumEntries,
+			&entry.SecsSpent,
 		)
 		if err != nil {
 			return nil, err
@@ -416,7 +418,7 @@ limit ?;
 	return tLE, nil
 }
 
-func fetchStatsBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit int) ([]taskReportEntry, error) {
+func fetchStatsBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit int) ([]types.TaskReportEntry, error) {
 	rows, err := db.Query(`
 SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries,  SUM(tl.secs_spent) AS secs_spent
 FROM task_log tl 
@@ -431,15 +433,15 @@ LIMIT ?;
 	}
 	defer rows.Close()
 
-	var tLE []taskReportEntry
+	var tLE []types.TaskReportEntry
 
 	for rows.Next() {
-		var entry taskReportEntry
+		var entry types.TaskReportEntry
 		err = rows.Scan(
-			&entry.taskID,
-			&entry.taskSummary,
-			&entry.numEntries,
-			&entry.secsSpent,
+			&entry.TaskID,
+			&entry.TaskSummary,
+			&entry.NumEntries,
+			&entry.SecsSpent,
 		)
 		if err != nil {
 			return nil, err
@@ -453,7 +455,7 @@ LIMIT ?;
 	return tLE, nil
 }
 
-func fetchReportBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit int) ([]taskReportEntry, error) {
+func fetchReportBetweenTSFromDB(db *sql.DB, beginTs, endTs time.Time, limit int) ([]types.TaskReportEntry, error) {
 	rows, err := db.Query(`
 SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries,  SUM(tl.secs_spent) AS secs_spent
 FROM task_log tl 
@@ -468,15 +470,15 @@ LIMIT ?;
 	}
 	defer rows.Close()
 
-	var tLE []taskReportEntry
+	var tLE []types.TaskReportEntry
 
 	for rows.Next() {
-		var entry taskReportEntry
+		var entry types.TaskReportEntry
 		err = rows.Scan(
-			&entry.taskID,
-			&entry.taskSummary,
-			&entry.numEntries,
-			&entry.secsSpent,
+			&entry.TaskID,
+			&entry.TaskSummary,
+			&entry.NumEntries,
+			&entry.SecsSpent,
 		)
 		if err != nil {
 			return nil, err
@@ -490,8 +492,8 @@ LIMIT ?;
 	return tLE, nil
 }
 
-func deleteEntry(db *sql.DB, entry *taskLogEntry) error {
-	secsSpent := entry.secsSpent
+func deleteEntry(db *sql.DB, entry *types.TaskLogEntry) error {
+	secsSpent := entry.SecsSpent
 
 	tx, err := db.Begin()
 	if err != nil {
@@ -510,7 +512,7 @@ WHERE ID=?;
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(entry.id)
+	_, err = stmt.Exec(entry.ID)
 	if err != nil {
 		return err
 	}
@@ -526,7 +528,7 @@ WHERE id = ?;
 	}
 	defer tStmt.Close()
 
-	_, err = tStmt.Exec(secsSpent, time.Now().UTC(), entry.taskID)
+	_, err = tStmt.Exec(secsSpent, time.Now().UTC(), entry.TaskID)
 	if err != nil {
 		return err
 	}

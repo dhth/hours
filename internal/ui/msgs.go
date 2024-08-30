@@ -1,6 +1,10 @@
 package ui
 
-import "time"
+import (
+	"time"
+
+	"github.com/dhth/hours/internal/types"
+)
 
 type HideHelpMsg struct{}
 
@@ -12,7 +16,7 @@ type trackingToggledMsg struct {
 }
 
 type taskRepUpdatedMsg struct {
-	tsk *task
+	tsk *types.Task
 	err error
 }
 
@@ -38,7 +42,7 @@ type activeTaskFetchedMsg struct {
 }
 
 type taskLogEntriesFetchedMsg struct {
-	entries []taskLogEntry
+	entries []types.TaskLogEntry
 	err     error
 }
 
@@ -47,24 +51,24 @@ type taskCreatedMsg struct {
 }
 
 type taskUpdatedMsg struct {
-	tsk     *task
+	tsk     *types.Task
 	summary string
 	err     error
 }
 
 type taskActiveStatusUpdated struct {
-	tsk    *task
+	tsk    *types.Task
 	active bool
 	err    error
 }
 
 type taskLogEntryDeletedMsg struct {
-	entry *taskLogEntry
+	entry *types.TaskLogEntry
 	err   error
 }
 
 type tasksFetched struct {
-	tasks  []task
+	tasks  []types.Task
 	active bool
 	err    error
 }
