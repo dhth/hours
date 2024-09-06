@@ -115,7 +115,7 @@ func renderStats(db *sql.DB, period string, start, end time.Time, plain bool) (s
 			data[i] = []string{
 				utils.RightPadTrim(entry.TaskSummary, 20, false),
 				fmt.Sprintf("%d", entry.NumEntries),
-				utils.RightPadTrim("", statsTimeCharsBudget, false),
+				utils.RightPadTrim(timeSpentStr, statsTimeCharsBudget, false),
 			}
 		} else {
 			rowStyle, ok := styleCache[entry.TaskSummary]

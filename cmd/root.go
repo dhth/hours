@@ -215,9 +215,9 @@ this with a --dbpath/-d flag that points to a throwaway database.
 			if !genSkipConfirmation {
 				fmt.Print(ui.WarningStyle.Render(`
 WARNING: You shouldn't run 'gen' on hours' actively used database as it'll
-create dummy entries in it. You can run it out on a throwaway database by
-passing a path for it via --dbpath/-d (use it for all further invocations of
-'hours' as well).
+create dummy entries in it. You can run it on a throwaway database by passing a
+path for it via --dbpath/-d (use it for all further invocations of 'hours' as
+well).
 `))
 				fmt.Print(`
 The 'gen' subcommand is intended for new users of 'hours' so they can get a
