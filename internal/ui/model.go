@@ -136,6 +136,6 @@ type recordsModel struct {
 	err      error
 }
 
-func (m recordsModel) Init() tea.Cmd {
+func (recordsModel) Init() tea.Cmd {
 	return nil
 }

@@ -8,7 +8,6 @@ import (
 	"io/fs"
 	"math/rand"
 	"os"
-	"os/user"
 	"path/filepath"
 	"strings"
 
@@ -18,6 +17,7 @@ import (
 )
 
 const (
+	defaultDBName     = "hours.db"
 	author            = "@dhth"
 	repoIssuesURL     = "https://github.com/dhth/hours/issues"
 	numDaysThreshold  = 30
@@ -44,16 +44,14 @@ func Execute() error {
 	rootCmd, err := NewRootCommand()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-		switch {
-		case errors.Is(err, errCouldntGetHomeDir):
+		if errors.Is(err, errCouldntGetHomeDir) {
 			fmt.Printf("\n%s\n", reportIssueMsg)
 		}
 		return err
 	}
 
 	err = rootCmd.Execute()
-	switch {
-	case errors.Is(err, errCouldntGenerateData):
+	if errors.Is(err, errCouldntGenerateData) {
 		fmt.Printf("\n%s\n", reportIssueMsg)
 	}
 	return err
@@ -101,6 +99,7 @@ func setupDB(dbPathFull string) (*sql.DB, error) {
 
 func NewRootCommand() (*cobra.Command, error) {
 	var (
+		userHomeDir         string
 		dbPath              string
 		dbPathFull          string
 		db                  *sql.DB
@@ -127,7 +126,7 @@ summary statistics for your tracked time.
 				return nil
 			}
 
-			dbPathFull = expandTilde(dbPath)
+			dbPathFull = expandTilde(dbPath, userHomeDir)
 			if filepath.Ext(dbPathFull) != ".db" {
 				return errDBFileExtIncorrect
 			}
@@ -191,8 +190,7 @@ Sorry for breaking the upgrade step!
 			return nil
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			ui.RenderUI(db)
-			return nil
+			return ui.RenderUI(db)
 		},
 	}
 
@@ -365,17 +363,17 @@ following placeholders:
 eg. hours active -t ' {{task}} ({{time}}) '
 `,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			ui.ShowActiveTask(db, os.Stdout, activeTemplate)
-			return nil
+			return ui.ShowActiveTask(db, os.Stdout, activeTemplate)
 		},
 	}
 
-	currentUser, err := user.Current()
+	var err error
+	userHomeDir, err = os.UserHomeDir()
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", errCouldntGetHomeDir, err.Error())
 	}
 
-	defaultDBPath := fmt.Sprintf("%s/hours.db", currentUser.HomeDir)
+	defaultDBPath := filepath.Join(userHomeDir, defaultDBName)
 	rootCmd.PersistentFlags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 
 	generateCmd.Flags().Uint8Var(&genNumDays, "num-days", 30, "number of days to generate fake data for")

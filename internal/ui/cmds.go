@@ -173,9 +173,9 @@ func getRecordsData(analyticsType recordsType, db *sql.DB, period string, start,
 		case reportAggRecords:
 			data, err = getReportAgg(db, start, numDays, plain)
 		case reportLogs:
-			data, err = renderTaskLog(db, start, end, 20, plain)
+			data, err = getTaskLog(db, start, end, 20, plain)
 		case reportStats:
-			data, err = renderStats(db, period, start, end, plain)
+			data, err = getStats(db, period, start, end, plain)
 		}
 
 		return recordsDataFetchedMsg{

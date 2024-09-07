@@ -39,7 +39,7 @@ func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string, intera
 
 	if period == periodAll {
 		// TODO: find a better way for this, passing start, end for "all" doesn't make sense
-		stats, err = renderStats(db, period, time.Now(), time.Now(), plain)
+		stats, err = getStats(db, period, time.Now(), time.Now(), plain)
 		if err != nil {
 			return fmt.Errorf("%w: %s", errCouldntGenerateStats, err.Error())
 		}
@@ -56,7 +56,7 @@ func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string, intera
 		return err
 	}
 
-	stats, err = renderStats(db, period, ts.Start, ts.End, plain)
+	stats, err = getStats(db, period, ts.Start, ts.End, plain)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errCouldntGenerateStats, err.Error())
 	}
@@ -73,7 +73,7 @@ func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string, intera
 	return nil
 }
 
-func renderStats(db *sql.DB, period string, start, end time.Time, plain bool) (string, error) {
+func getStats(db *sql.DB, period string, start, end time.Time, plain bool) (string, error) {
 	var entries []types.TaskReportEntry
 	var err error
 

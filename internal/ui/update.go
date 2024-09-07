@@ -28,10 +28,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, cmd)
 			return m, tea.Batch(cmds...)
 		}
-	}
 
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
 		switch msg.String() {
 		case "enter":
 			switch m.activeView {

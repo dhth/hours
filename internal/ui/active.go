@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"time"
 
@@ -19,15 +18,14 @@ const (
 	activeSecsThresholdStr    = "<1m"
 )
 
-func ShowActiveTask(db *sql.DB, writer io.Writer, template string) {
+func ShowActiveTask(db *sql.DB, writer io.Writer, template string) error {
 	activeTaskDetails, err := pers.FetchActiveTask(db)
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "Something went wrong:\n%s", err)
-		os.Exit(1)
+		return err
 	}
 
 	if activeTaskDetails.TaskID == -1 {
-		return
+		return nil
 	}
 
 	now := time.Now()
@@ -42,4 +40,5 @@ func ShowActiveTask(db *sql.DB, writer io.Writer, template string) {
 	activeStr := strings.Replace(template, ActiveTaskPlaceholder, activeTaskDetails.TaskSummary, 1)
 	activeStr = strings.Replace(activeStr, ActiveTaskTimePlaceholder, timeSpentStr, 1)
 	fmt.Fprint(writer, activeStr)
+	return nil
 }

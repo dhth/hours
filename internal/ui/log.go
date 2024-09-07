@@ -41,7 +41,7 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string, inte
 		return fmt.Errorf("%w (limited to %d day); use non-interactive mode to see logs for a larger time period", errInteractiveModeNotApplicable, interactiveLogDayLimit)
 	}
 
-	log, err := renderTaskLog(db, ts.Start, ts.End, 100, plain)
+	log, err := getTaskLog(db, ts.Start, ts.End, 100, plain)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errCouldntGenerateLogs, err.Error())
 	}
@@ -58,7 +58,7 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string, inte
 	return nil
 }
 
-func renderTaskLog(db *sql.DB, start, end time.Time, limit int, plain bool) (string, error) {
+func getTaskLog(db *sql.DB, start, end time.Time, limit int, plain bool) (string, error) {
 	entries, err := pers.FetchTLEntriesBetweenTS(db, start, end, limit)
 	if err != nil {
 		return "", err
