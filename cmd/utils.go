@@ -6,8 +6,9 @@ import (
 )
 
 func expandTilde(path string, homeDir string) string {
-	if strings.HasPrefix(path, "~/") {
-		return filepath.Join(homeDir, path[2:])
+	pathWithoutTilde, found := strings.CutPrefix(path, "~/")
+	if !found {
+		return path
 	}
-	return path
+	return filepath.Join(homeDir, pathWithoutTilde)
 }

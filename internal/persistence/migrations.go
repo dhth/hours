@@ -7,10 +7,7 @@ import (
 	"time"
 )
 
-const (
-	latestDBVersion = 1 // only upgrade this after adding a migration in getMigrations
-	timeFormat      = "2006/01/02 15:04"
-)
+const latestDBVersion = 1 // only upgrade this after adding a migration in getMigrations
 
 var (
 	ErrDBDowngraded          = errors.New("database downgraded")
@@ -65,7 +62,7 @@ func UpgradeDBIfNeeded(db *sql.DB) error {
 		return fmt.Errorf("%w; debug info: version=%d, created at=%q)",
 			ErrDBDowngraded,
 			latestVersionInDB.version,
-			latestVersionInDB.createdAt.Format(timeFormat),
+			latestVersionInDB.createdAt.Format(time.RFC3339),
 		)
 	}
 

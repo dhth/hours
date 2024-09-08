@@ -12,8 +12,8 @@ import (
 
 const (
 	viewPortMoveLineCount = 3
-	couldntSelectATaskMsg = "Couldn't select a task"
-	changesLockedMsg      = "Changes locked momentarily"
+	msgCouldntSelectATask = "Couldn't select a task"
+	msgChangesLocked      = "Changes locked momentarily"
 )
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -314,7 +314,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.activeView == activeTaskListView {
 				_, ok := m.activeTasksList.SelectedItem().(*types.Task)
 				if !ok {
-					message := couldntSelectATaskMsg
+					message := msgCouldntSelectATask
 					m.message = message
 					m.messages = append(m.messages, message)
 				} else {
@@ -352,7 +352,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						cmds = append(cmds, updateTaskActiveStatus(m.db, task, false))
 					}
 				} else {
-					msg := couldntSelectATaskMsg
+					msg := msgCouldntSelectATask
 					m.message = msg
 					m.messages = append(m.messages, msg)
 				}
@@ -370,7 +370,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if ok {
 					cmds = append(cmds, updateTaskActiveStatus(m.db, task, true))
 				} else {
-					msg := couldntSelectATaskMsg
+					msg := msgCouldntSelectATask
 					m.message = msg
 					m.messages = append(m.messages, msg)
 				}
@@ -383,7 +383,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.activeView == activeTaskListView {
 				if m.activeTasksList.FilterState() != list.Filtering {
 					if m.changesLocked {
-						message := changesLockedMsg
+						message := msgChangesLocked
 						m.message = message
 						m.messages = append(m.messages, message)
 					}
@@ -420,7 +420,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.activeView == activeTaskListView {
 				if m.activeTasksList.FilterState() != list.Filtering {
 					if m.changesLocked {
-						message := changesLockedMsg
+						message := msgChangesLocked
 						m.message = message
 						m.messages = append(m.messages, message)
 					}
@@ -434,7 +434,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.activeView == activeTaskListView {
 				if m.activeTasksList.FilterState() != list.Filtering {
 					if m.changesLocked {
-						message := changesLockedMsg
+						message := msgChangesLocked
 						m.message = message
 						m.messages = append(m.messages, message)
 					}

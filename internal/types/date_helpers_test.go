@@ -75,18 +75,18 @@ func TestParseDateDuration(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := parseDateDuration(tt.input)
 
-			if tt.err == nil {
-				startStr := got.Start.Format(timeFormat)
-				endStr := got.End.Format(timeFormat)
-
-				assert.NoError(t, err)
-				assert.Equal(t, tt.expectedStartStr, startStr)
-				assert.Equal(t, tt.expectedEndStr, endStr)
-				assert.Equal(t, tt.expectedNumDays, got.NumDays)
+			if tt.err != nil {
+				assert.ErrorIs(t, err, tt.err)
 				return
 			}
 
-			assert.ErrorIs(t, err, tt.err)
+			startStr := got.Start.Format(timeFormat)
+			endStr := got.End.Format(timeFormat)
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedStartStr, startStr)
+			assert.Equal(t, tt.expectedEndStr, endStr)
+			assert.Equal(t, tt.expectedNumDays, got.NumDays)
 		})
 	}
 }

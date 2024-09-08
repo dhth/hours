@@ -37,7 +37,7 @@ var (
 	errCouldntReadInput         = errors.New("couldn't read input")
 	errIncorrectCodeEntered     = errors.New("incorrect code entered")
 
-	reportIssueMsg = fmt.Sprintf("This isn't supposed to happen; let %s know about this error via \n%s.", author, repoIssuesURL)
+	msgReportIssue = fmt.Sprintf("This isn't supposed to happen; let %s know about this error via \n%s.", author, repoIssuesURL)
 )
 
 func Execute() error {
@@ -45,14 +45,14 @@ func Execute() error {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		if errors.Is(err, errCouldntGetHomeDir) {
-			fmt.Printf("\n%s\n", reportIssueMsg)
+			fmt.Printf("\n%s\n", msgReportIssue)
 		}
 		return err
 	}
 
 	err = rootCmd.Execute()
 	if errors.Is(err, errCouldntGenerateData) {
-		fmt.Printf("\n%s\n", reportIssueMsg)
+		fmt.Printf("\n%s\n", msgReportIssue)
 	}
 	return err
 }
@@ -138,12 +138,12 @@ summary statistics for your tracked time.
 				fmt.Fprintf(os.Stderr, `Couldn't create omm's local database.
 %s
 
-`, reportIssueMsg)
+`, msgReportIssue)
 			case errors.Is(err, errCouldntInitializeDB):
 				fmt.Fprintf(os.Stderr, `Couldn't initialise omm's local database.
 %s
 
-`, reportIssueMsg)
+`, msgReportIssue)
 				// cleanup
 				cleanupErr := os.Remove(dbPathFull)
 				if cleanupErr != nil {
@@ -156,12 +156,12 @@ Clean up error: %s
 				fmt.Fprintf(os.Stderr, `Couldn't open omm's local database.
 %s
 
-`, reportIssueMsg)
+`, msgReportIssue)
 			case errors.Is(err, pers.ErrCouldntFetchDBVersion):
 				fmt.Fprintf(os.Stderr, `Couldn't get omm's latest database version.
 %s
 
-`, reportIssueMsg)
+`, msgReportIssue)
 			case errors.Is(err, pers.ErrDBDowngraded):
 				fmt.Fprintf(os.Stderr, `Looks like you downgraded omm. You should either delete omm's database file (you
 will lose data by doing that), or upgrade omm to the latest version.
@@ -180,7 +180,7 @@ Sorry for breaking the upgrade step!
 
 ---
 
-`, reportIssueMsg)
+`, msgReportIssue)
 			}
 
 			if err != nil {

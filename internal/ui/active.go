@@ -28,8 +28,7 @@ func ShowActiveTask(db *sql.DB, writer io.Writer, template string) error {
 		return nil
 	}
 
-	now := time.Now()
-	timeSpent := now.Sub(activeTaskDetails.LastLogEntryBeginTS).Seconds()
+	timeSpent := time.Since(activeTaskDetails.LastLogEntryBeginTS).Seconds()
 	var timeSpentStr string
 	if timeSpent <= activeSecsThreshold {
 		timeSpentStr = activeSecsThresholdStr
