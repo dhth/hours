@@ -19,17 +19,18 @@ const (
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
+
 	m.message = ""
 
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	keyMsg, keyMsgOK := msg.(tea.KeyMsg)
+	if keyMsgOK {
 		if m.activeTasksList.FilterState() == list.Filtering {
 			m.activeTasksList, cmd = m.activeTasksList.Update(msg)
 			cmds = append(cmds, cmd)
 			return m, tea.Batch(cmds...)
 		}
 
-		switch msg.String() {
+		switch keyMsg.String() {
 		case "enter":
 			switch m.activeView {
 			case taskInputView:
@@ -119,12 +120,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 
 				task, ok := m.activeTasksList.SelectedItem().(*types.Task)
-				if ok {
-					switch m.tasklogSaveType {
-					case tasklogInsert:
-						cmds = append(cmds, insertManualEntry(m.db, task.ID, beginTS, endTS, comment))
-						m.activeView = activeTaskListView
-					}
+				if ok && m.tasklogSaveType == tasklogInsert {
+					cmds = append(cmds, insertManualEntry(m.db, task.ID, beginTS, endTS, comment))
+					m.activeView = activeTaskListView
 				}
 				for i := range m.trackingInputs {
 					m.trackingInputs[i].SetValue("")
@@ -145,8 +143,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.activeView = activeTaskListView
 				m.trackingInputs[entryComment].SetValue("")
 			case manualTasklogEntryView:
-				switch m.tasklogSaveType {
-				case tasklogInsert:
+				if m.tasklogSaveType == tasklogInsert {
 					m.activeView = activeTaskListView
 				}
 				for i := range m.trackingInputs {
@@ -383,8 +380,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds = append(cmds, deleteActiveTaskLog(m.db))
 			}
 		case "s":
-			switch m.activeView {
-			case activeTaskListView:
+			if m.activeView == activeTaskListView {
 				if m.activeTasksList.FilterState() != list.Filtering {
 					if m.changesLocked {
 						message := changesLockedMsg
@@ -421,8 +417,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		case "a":
-			switch m.activeView {
-			case activeTaskListView:
+			if m.activeView == activeTaskListView {
 				if m.activeTasksList.FilterState() != list.Filtering {
 					if m.changesLocked {
 						message := changesLockedMsg
@@ -436,8 +431,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		case "u":
-			switch m.activeView {
-			case activeTaskListView:
+			if m.activeView == activeTaskListView {
 				if m.activeTasksList.FilterState() != list.Filtering {
 					if m.changesLocked {
 						message := changesLockedMsg
