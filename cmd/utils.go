@@ -1,18 +1,14 @@
 package cmd
 
 import (
-	"os"
-	"os/user"
+	"path/filepath"
 	"strings"
 )
 
-func expandTilde(path string) string {
-	if strings.HasPrefix(path, "~") {
-		usr, err := user.Current()
-		if err != nil {
-			os.Exit(1)
-		}
-		return strings.Replace(path, "~", usr.HomeDir, 1)
+func expandTilde(path string, homeDir string) string {
+	pathWithoutTilde, found := strings.CutPrefix(path, "~/")
+	if !found {
+		return path
 	}
-	return path
+	return filepath.Join(homeDir, pathWithoutTilde)
 }

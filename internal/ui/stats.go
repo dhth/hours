@@ -3,81 +3,84 @@ package ui
 import (
 	"bytes"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	pers "github.com/dhth/hours/internal/persistence"
+	"github.com/dhth/hours/internal/types"
+	"github.com/dhth/hours/internal/utils"
 	"github.com/olekukonko/tablewriter"
 )
+
+var errCouldntGenerateStats = errors.New("couldn't generate stats")
 
 const (
 	statsLogEntriesLimit   = 10000
 	statsNumDaysUpperBound = 3650
 	statsTimeCharsBudget   = 6
+	periodAll              = "all"
 )
 
-func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string, interactive bool) {
+func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string, interactive bool) error {
 	if period == "" {
-		return
+		return nil
 	}
 
 	var stats string
 	var err error
 
-	if interactive && period == "all" {
-		fmt.Print("Interactive mode cannot be used when period='all'\n")
-		os.Exit(1)
+	if interactive && period == periodAll {
+		return fmt.Errorf("%w when period=all", errInteractiveModeNotApplicable)
 	}
 
-	if period == "all" {
+	if period == periodAll {
 		// TODO: find a better way for this, passing start, end for "all" doesn't make sense
-		stats, err = renderStats(db, period, time.Now(), time.Now(), plain)
+		stats, err = getStats(db, period, time.Now(), time.Now(), plain)
 		if err != nil {
-			fmt.Fprintf(writer, "Something went wrong generating the log: %s\n", err)
-			os.Exit(1)
+			return fmt.Errorf("%w: %s", errCouldntGenerateStats, err.Error())
 		}
 		fmt.Fprint(writer, stats)
-		return
+		return nil
 	}
 
 	var fullWeek bool
 	if interactive {
 		fullWeek = true
 	}
-	ts, tsErr := getTimePeriod(period, time.Now(), fullWeek)
-
-	if tsErr != nil {
-		fmt.Printf("error: %s\n", tsErr)
-		os.Exit(1)
-	}
-	stats, err = renderStats(db, period, ts.start, ts.end, plain)
+	ts, err := types.GetTimePeriod(period, time.Now(), fullWeek)
 	if err != nil {
-		fmt.Fprintf(writer, "Something went wrong generating the log: %s\n", err)
-		os.Exit(1)
+		return err
+	}
+
+	stats, err = getStats(db, period, ts.Start, ts.End, plain)
+	if err != nil {
+		return fmt.Errorf("%w: %s", errCouldntGenerateStats, err.Error())
 	}
 
 	if interactive {
-		p := tea.NewProgram(initialRecordsModel(reportStats, db, ts.start, ts.end, plain, period, ts.numDays, stats))
-		if _, err := p.Run(); err != nil {
-			fmt.Printf("Alas, there has been an error: %v", err)
-			os.Exit(1)
+		p := tea.NewProgram(initialRecordsModel(reportStats, db, ts.Start, ts.End, plain, period, ts.NumDays, stats))
+		_, err := p.Run()
+		if err != nil {
+			return err
 		}
 	} else {
 		fmt.Fprint(writer, stats)
 	}
+	return nil
 }
 
-func renderStats(db *sql.DB, period string, start, end time.Time, plain bool) (string, error) {
-	var entries []taskReportEntry
+func getStats(db *sql.DB, period string, start, end time.Time, plain bool) (string, error) {
+	var entries []types.TaskReportEntry
 	var err error
 
-	if period == "all" {
-		entries, err = fetchStatsFromDB(db, statsLogEntriesLimit)
+	if period == periodAll {
+		entries, err = pers.FetchStats(db, statsLogEntriesLimit)
 	} else {
-		entries, err = fetchStatsBetweenTSFromDB(db, start, end, statsLogEntriesLimit)
+		entries, err = pers.FetchStatsBetweenTS(db, start, end, statsLogEntriesLimit)
 	}
 
 	if err != nil {
@@ -94,9 +97,9 @@ func renderStats(db *sql.DB, period string, start, end time.Time, plain bool) (s
 	data := make([][]string, numEntriesInTable)
 	if len(entries) == 0 {
 		data[0] = []string{
-			RightPadTrim("", 20, false),
+			utils.RightPadTrim("", 20, false),
 			"",
-			RightPadTrim("", statsTimeCharsBudget, false),
+			utils.RightPadTrim("", statsTimeCharsBudget, false),
 		}
 	}
 
@@ -106,24 +109,24 @@ func renderStats(db *sql.DB, period string, start, end time.Time, plain bool) (s
 	styleCache := make(map[string]lipgloss.Style)
 
 	for i, entry := range entries {
-		timeSpentStr = humanizeDuration(entry.secsSpent)
+		timeSpentStr = types.HumanizeDuration(entry.SecsSpent)
 
 		if plain {
 			data[i] = []string{
-				RightPadTrim(entry.taskSummary, 20, false),
-				fmt.Sprintf("%d", entry.numEntries),
-				RightPadTrim("", statsTimeCharsBudget, false),
+				utils.RightPadTrim(entry.TaskSummary, 20, false),
+				fmt.Sprintf("%d", entry.NumEntries),
+				utils.RightPadTrim(timeSpentStr, statsTimeCharsBudget, false),
 			}
 		} else {
-			rowStyle, ok := styleCache[entry.taskSummary]
+			rowStyle, ok := styleCache[entry.TaskSummary]
 			if !ok {
-				rowStyle = getDynamicStyle(entry.taskSummary)
-				styleCache[entry.taskSummary] = rowStyle
+				rowStyle = getDynamicStyle(entry.TaskSummary)
+				styleCache[entry.TaskSummary] = rowStyle
 			}
 			data[i] = []string{
-				rowStyle.Render(RightPadTrim(entry.taskSummary, 20, false)),
-				rowStyle.Render(fmt.Sprintf("%d", entry.numEntries)),
-				rowStyle.Render(RightPadTrim(timeSpentStr, statsTimeCharsBudget, false)),
+				rowStyle.Render(utils.RightPadTrim(entry.TaskSummary, 20, false)),
+				rowStyle.Render(fmt.Sprintf("%d", entry.NumEntries)),
+				rowStyle.Render(utils.RightPadTrim(timeSpentStr, statsTimeCharsBudget, false)),
 			}
 		}
 	}

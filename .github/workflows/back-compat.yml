@@ -45,3 +45,5 @@ jobs:
       run: |
         /var/tmp/hours_head --dbpath=/var/tmp/throwaway-1.db report 3d -p
         /var/tmp/hours_head --dbpath=/var/tmp/throwaway-2.db report 3d -p
+        /var/tmp/hours_head --dbpath=/var/tmp/throwaway-2.db log 3d -p
+        /var/tmp/hours_head --dbpath=/var/tmp/throwaway-2.db stats 3d -p

@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/dhth/hours/internal/types"
 )
 
 type trackingStatus uint
@@ -82,13 +83,13 @@ const (
 	dateFormat         = "2006/01/02"
 )
 
-type model struct {
+type Model struct {
 	activeView             stateView
 	lastView               stateView
 	db                     *sql.DB
 	activeTasksList        list.Model
 	inactiveTasksList      list.Model
-	activeTaskMap          map[int]*task
+	activeTaskMap          map[int]*types.Task
 	activeTaskIndexMap     map[int]int
 	activeTLBeginTS        time.Time
 	activeTLEndTS          time.Time
@@ -103,7 +104,7 @@ type model struct {
 	helpVPReady            bool
 	lastChange             dBChange
 	changesLocked          bool
-	activeTaskId           int
+	activeTaskID           int
 	tasklogSaveType        tasklogSaveType
 	message                string
 	messages               []string
@@ -112,7 +113,7 @@ type model struct {
 	trackingActive         bool
 }
 
-func (m model) Init() tea.Cmd {
+func (m Model) Init() tea.Cmd {
 	return tea.Batch(
 		hideHelp(time.Minute*1),
 		fetchTasks(m.db, true),
@@ -135,6 +136,6 @@ type recordsModel struct {
 	err      error
 }
 
-func (m recordsModel) Init() tea.Cmd {
+func (recordsModel) Init() tea.Cmd {
 	return nil
 }

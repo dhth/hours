@@ -30,6 +30,7 @@ const (
 	helpHeaderColor          = "#83a598"
 	helpSectionColor         = "#bdae93"
 	warningColor             = "#fb4934"
+	fallbackTaskColor        = "#ada7ff"
 )
 
 var (
@@ -137,7 +138,12 @@ var (
 
 	getDynamicStyle = func(str string) lipgloss.Style {
 		h := fnv.New32()
-		h.Write([]byte(str))
+		_, err := h.Write([]byte(str))
+		if err != nil {
+			return lipgloss.NewStyle().
+				Foreground(lipgloss.Color(fallbackTaskColor))
+		}
+
 		hash := h.Sum32()
 
 		color := taskColors[hash%uint32(len(taskColors))]

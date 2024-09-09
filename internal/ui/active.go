@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"time"
+
+	pers "github.com/dhth/hours/internal/persistence"
+	"github.com/dhth/hours/internal/types"
 )
 
 const (
@@ -16,27 +18,26 @@ const (
 	activeSecsThresholdStr    = "<1m"
 )
 
-func ShowActiveTask(db *sql.DB, writer io.Writer, template string) {
-	activeTaskDetails, err := fetchActiveTaskFromDB(db)
+func ShowActiveTask(db *sql.DB, writer io.Writer, template string) error {
+	activeTaskDetails, err := pers.FetchActiveTask(db)
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "Something went wrong:\n%s", err)
-		os.Exit(1)
+		return err
 	}
 
-	if activeTaskDetails.taskId == -1 {
-		return
+	if activeTaskDetails.TaskID == -1 {
+		return nil
 	}
 
-	now := time.Now()
-	timeSpent := now.Sub(activeTaskDetails.lastLogEntryBeginTs).Seconds()
+	timeSpent := time.Since(activeTaskDetails.LastLogEntryBeginTS).Seconds()
 	var timeSpentStr string
 	if timeSpent <= activeSecsThreshold {
 		timeSpentStr = activeSecsThresholdStr
 	} else {
-		timeSpentStr = humanizeDuration(int(timeSpent))
+		timeSpentStr = types.HumanizeDuration(int(timeSpent))
 	}
 
-	activeStr := strings.Replace(template, ActiveTaskPlaceholder, activeTaskDetails.taskSummary, 1)
+	activeStr := strings.Replace(template, ActiveTaskPlaceholder, activeTaskDetails.TaskSummary, 1)
 	activeStr = strings.Replace(activeStr, ActiveTaskTimePlaceholder, timeSpentStr, 1)
 	fmt.Fprint(writer, activeStr)
+	return nil
 }

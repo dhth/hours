@@ -2,14 +2,17 @@ package ui
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	_ "modernc.org/sqlite"
+	pers "github.com/dhth/hours/internal/persistence"
+	"github.com/dhth/hours/internal/types"
+	_ "modernc.org/sqlite" // sqlite driver
 )
 
 func toggleTracking(db *sql.DB,
-	taskId int,
+	taskID int,
 	beginTs time.Time,
 	endTs time.Time,
 	comment string,
@@ -23,11 +26,11 @@ ORDER BY begin_ts DESC
 LIMIT 1
 `)
 		var trackStatus trackingStatus
-		var activeTaskLogId int
-		var activeTaskId int
+		var activeTaskLogID int
+		var activeTaskID int
 
-		err := row.Scan(&activeTaskLogId, &activeTaskId)
-		if err == sql.ErrNoRows {
+		err := row.Scan(&activeTaskLogID, &activeTaskID)
+		if errors.Is(err, sql.ErrNoRows) {
 			trackStatus = trackingInactive
 		} else if err != nil {
 			return trackingToggledMsg{err: err}
@@ -37,20 +40,20 @@ LIMIT 1
 
 		switch trackStatus {
 		case trackingInactive:
-			err = insertNewTLInDB(db, taskId, beginTs)
+			err = pers.InsertNewTL(db, taskID, beginTs)
 			if err != nil {
 				return trackingToggledMsg{err: err}
 			} else {
-				return trackingToggledMsg{taskId: taskId}
+				return trackingToggledMsg{taskID: taskID}
 			}
 
 		default:
 			secsSpent := int(endTs.Sub(beginTs).Seconds())
-			err := updateActiveTLInDB(db, activeTaskLogId, activeTaskId, beginTs, endTs, secsSpent, comment)
+			err := pers.UpdateActiveTL(db, activeTaskLogID, activeTaskID, beginTs, endTs, secsSpent, comment)
 			if err != nil {
 				return trackingToggledMsg{err: err}
 			} else {
-				return trackingToggledMsg{taskId: taskId, finished: true, secsSpent: secsSpent}
+				return trackingToggledMsg{taskID: taskID, finished: true, secsSpent: secsSpent}
 			}
 		}
 	}
@@ -58,39 +61,39 @@ LIMIT 1
 
 func updateTLBeginTS(db *sql.DB, beginTS time.Time) tea.Cmd {
 	return func() tea.Msg {
-		err := updateTLBeginTSInDB(db, beginTS)
+		err := pers.UpdateTLBeginTS(db, beginTS)
 		return tlBeginTSUpdatedMsg{beginTS, err}
 	}
 }
 
-func insertManualEntry(db *sql.DB, taskId int, beginTS time.Time, endTS time.Time, comment string) tea.Cmd {
+func insertManualEntry(db *sql.DB, taskID int, beginTS time.Time, endTS time.Time, comment string) tea.Cmd {
 	return func() tea.Msg {
-		err := insertManualTLInDB(db, taskId, beginTS, endTS, comment)
-		return manualTaskLogInserted{taskId, err}
+		err := pers.InsertManualTL(db, taskID, beginTS, endTS, comment)
+		return manualTaskLogInserted{taskID, err}
 	}
 }
 
 func fetchActiveTask(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
-		activeTaskDetails, err := fetchActiveTaskFromDB(db)
+		activeTaskDetails, err := pers.FetchActiveTask(db)
 		if err != nil {
 			return activeTaskFetchedMsg{err: err}
 		}
 
-		if activeTaskDetails.taskId == -1 {
+		if activeTaskDetails.TaskID == -1 {
 			return activeTaskFetchedMsg{noneActive: true}
 		}
 
 		return activeTaskFetchedMsg{
-			activeTaskId: activeTaskDetails.taskId,
-			beginTs:      activeTaskDetails.lastLogEntryBeginTs,
+			activeTaskID: activeTaskDetails.TaskID,
+			beginTs:      activeTaskDetails.LastLogEntryBeginTS,
 		}
 	}
 }
 
-func updateTaskRep(db *sql.DB, t *task) tea.Cmd {
+func updateTaskRep(db *sql.DB, t *types.Task) tea.Cmd {
 	return func() tea.Msg {
-		err := updateTaskDataFromDB(db, t)
+		err := pers.UpdateTaskData(db, t)
 		return taskRepUpdatedMsg{
 			tsk: t,
 			err: err,
@@ -100,7 +103,7 @@ func updateTaskRep(db *sql.DB, t *task) tea.Cmd {
 
 func fetchTaskLogEntries(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
-		entries, err := fetchTLEntriesFromDB(db, true, 50)
+		entries, err := pers.FetchTLEntries(db, true, 50)
 		return taskLogEntriesFetchedMsg{
 			entries: entries,
 			err:     err,
@@ -108,9 +111,9 @@ func fetchTaskLogEntries(db *sql.DB) tea.Cmd {
 	}
 }
 
-func deleteLogEntry(db *sql.DB, entry *taskLogEntry) tea.Cmd {
+func deleteLogEntry(db *sql.DB, entry *types.TaskLogEntry) tea.Cmd {
 	return func() tea.Msg {
-		err := deleteEntry(db, entry)
+		err := pers.DeleteEntry(db, entry)
 		return taskLogEntryDeletedMsg{
 			entry: entry,
 			err:   err,
@@ -120,35 +123,35 @@ func deleteLogEntry(db *sql.DB, entry *taskLogEntry) tea.Cmd {
 
 func deleteActiveTaskLog(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
-		err := deleteActiveTLInDB(db)
+		err := pers.DeleteActiveTL(db)
 		return activeTaskLogDeletedMsg{err}
 	}
 }
 
 func createTask(db *sql.DB, summary string) tea.Cmd {
 	return func() tea.Msg {
-		err := insertTaskInDB(db, summary)
+		err := pers.InsertTask(db, summary)
 		return taskCreatedMsg{err}
 	}
 }
 
-func updateTask(db *sql.DB, task *task, summary string) tea.Cmd {
+func updateTask(db *sql.DB, task *types.Task, summary string) tea.Cmd {
 	return func() tea.Msg {
-		err := updateTaskInDB(db, task.id, summary)
+		err := pers.UpdateTask(db, task.ID, summary)
 		return taskUpdatedMsg{task, summary, err}
 	}
 }
 
-func updateTaskActiveStatus(db *sql.DB, task *task, active bool) tea.Cmd {
+func updateTaskActiveStatus(db *sql.DB, task *types.Task, active bool) tea.Cmd {
 	return func() tea.Msg {
-		err := updateTaskActiveStatusInDB(db, task.id, active)
+		err := pers.UpdateTaskActiveStatus(db, task.ID, active)
 		return taskActiveStatusUpdated{task, active, err}
 	}
 }
 
 func fetchTasks(db *sql.DB, active bool) tea.Cmd {
 	return func() tea.Msg {
-		tasks, err := fetchTasksFromDB(db, active, 50)
+		tasks, err := pers.FetchTasks(db, active, 50)
 		return tasksFetched{tasks, active, err}
 	}
 }
@@ -170,9 +173,9 @@ func getRecordsData(analyticsType recordsType, db *sql.DB, period string, start,
 		case reportAggRecords:
 			data, err = getReportAgg(db, start, numDays, plain)
 		case reportLogs:
-			data, err = renderTaskLog(db, start, end, 20, plain)
+			data, err = getTaskLog(db, start, end, 20, plain)
 		case reportStats:
-			data, err = renderStats(db, period, start, end, plain)
+			data, err = getStats(db, period, start, end, plain)
 		}
 
 		return recordsDataFetchedMsg{

@@ -1,7 +1,14 @@
 package main
 
-import "github.com/dhth/hours/cmd"
+import (
+	"os"
+
+	"github.com/dhth/hours/cmd"
+)
 
 func main() {
-	cmd.Execute()
+	err := cmd.Execute()
+	if err != nil {
+		os.Exit(1)
+	}
 }

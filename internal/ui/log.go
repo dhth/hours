@@ -3,55 +3,63 @@ package ui
 import (
 	"bytes"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	pers "github.com/dhth/hours/internal/persistence"
+	"github.com/dhth/hours/internal/types"
+	"github.com/dhth/hours/internal/utils"
 	"github.com/olekukonko/tablewriter"
 )
 
 const (
-	logNumDaysUpperBound = 7
-	logTimeCharsBudget   = 6
+	logNumDaysUpperBound   = 7
+	logTimeCharsBudget     = 6
+	interactiveLogDayLimit = 1
 )
 
-func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string, interactive bool) {
+var (
+	errInteractiveModeNotApplicable = errors.New("interactive mode is not applicable")
+	errCouldntGenerateLogs          = errors.New("couldn't generate logs")
+)
+
+func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string, interactive bool) error {
 	if period == "" {
-		return
+		return nil
 	}
 
-	ts, err := getTimePeriod(period, time.Now(), false)
+	ts, err := types.GetTimePeriod(period, time.Now(), false)
 	if err != nil {
-		fmt.Printf("error: %s\n", err)
-		os.Exit(1)
+		return err
 	}
 
-	if interactive && ts.numDays > 1 {
-		fmt.Print("Interactive mode for logs is limited to a day; use non-interactive mode to see logs for a larger time period\n")
-		os.Exit(1)
+	if interactive && ts.NumDays > interactiveLogDayLimit {
+		return fmt.Errorf("%w (limited to %d day); use non-interactive mode to see logs for a larger time period", errInteractiveModeNotApplicable, interactiveLogDayLimit)
 	}
 
-	log, err := renderTaskLog(db, ts.start, ts.end, 100, plain)
+	log, err := getTaskLog(db, ts.Start, ts.End, 100, plain)
 	if err != nil {
-		fmt.Printf("Something went wrong generating the log: %s\n", err)
+		return fmt.Errorf("%w: %s", errCouldntGenerateLogs, err.Error())
 	}
 
 	if interactive {
-		p := tea.NewProgram(initialRecordsModel(reportLogs, db, ts.start, ts.end, plain, period, ts.numDays, log))
-		if _, err := p.Run(); err != nil {
-			fmt.Printf("Alas, there has been an error: %v", err)
-			os.Exit(1)
+		p := tea.NewProgram(initialRecordsModel(reportLogs, db, ts.Start, ts.End, plain, period, ts.NumDays, log))
+		_, err := p.Run()
+		if err != nil {
+			return err
 		}
 	} else {
 		fmt.Fprint(writer, log)
 	}
+	return nil
 }
 
-func renderTaskLog(db *sql.DB, start, end time.Time, limit int, plain bool) (string, error) {
-	entries, err := fetchTLEntriesBetweenTSFromDB(db, start, end, limit)
+func getTaskLog(db *sql.DB, start, end time.Time, limit int, plain bool) (string, error) {
+	entries, err := pers.FetchTLEntriesBetweenTS(db, start, end, limit)
 	if err != nil {
 		return "", err
 	}
@@ -68,10 +76,10 @@ func renderTaskLog(db *sql.DB, start, end time.Time, limit int, plain bool) (str
 
 	if len(entries) == 0 {
 		data[0] = []string{
-			RightPadTrim("", 20, false),
-			RightPadTrim("", 40, false),
-			RightPadTrim("", 39, false),
-			RightPadTrim("", logTimeCharsBudget, false),
+			utils.RightPadTrim("", 20, false),
+			utils.RightPadTrim("", 40, false),
+			utils.RightPadTrim("", 39, false),
+			utils.RightPadTrim("", logTimeCharsBudget, false),
 		}
 	}
 
@@ -81,26 +89,26 @@ func renderTaskLog(db *sql.DB, start, end time.Time, limit int, plain bool) (str
 	styleCache := make(map[string]lipgloss.Style)
 
 	for i, entry := range entries {
-		timeSpentStr = humanizeDuration(entry.secsSpent)
+		timeSpentStr = types.HumanizeDuration(entry.SecsSpent)
 
 		if plain {
 			data[i] = []string{
-				RightPadTrim(entry.taskSummary, 20, false),
-				RightPadTrim(entry.comment, 40, false),
-				fmt.Sprintf("%s  ...  %s", entry.beginTs.Format(timeFormat), entry.endTs.Format(timeFormat)),
-				RightPadTrim(timeSpentStr, logTimeCharsBudget, false),
+				utils.RightPadTrim(entry.TaskSummary, 20, false),
+				utils.RightPadTrim(entry.Comment, 40, false),
+				fmt.Sprintf("%s  ...  %s", entry.BeginTS.Format(timeFormat), entry.EndTS.Format(timeFormat)),
+				utils.RightPadTrim(timeSpentStr, logTimeCharsBudget, false),
 			}
 		} else {
-			rowStyle, ok := styleCache[entry.taskSummary]
+			rowStyle, ok := styleCache[entry.TaskSummary]
 			if !ok {
-				rowStyle = getDynamicStyle(entry.taskSummary)
-				styleCache[entry.taskSummary] = rowStyle
+				rowStyle = getDynamicStyle(entry.TaskSummary)
+				styleCache[entry.TaskSummary] = rowStyle
 			}
 			data[i] = []string{
-				rowStyle.Render(RightPadTrim(entry.taskSummary, 20, false)),
-				rowStyle.Render(RightPadTrim(entry.comment, 40, false)),
-				rowStyle.Render(fmt.Sprintf("%s  ...  %s", entry.beginTs.Format(timeFormat), entry.endTs.Format(timeFormat))),
-				rowStyle.Render(RightPadTrim(timeSpentStr, logTimeCharsBudget, false)),
+				rowStyle.Render(utils.RightPadTrim(entry.TaskSummary, 20, false)),
+				rowStyle.Render(utils.RightPadTrim(entry.Comment, 40, false)),
+				rowStyle.Render(fmt.Sprintf("%s  ...  %s", entry.BeginTS.Format(timeFormat), entry.EndTS.Format(timeFormat))),
+				rowStyle.Render(utils.RightPadTrim(timeSpentStr, logTimeCharsBudget, false)),
 			}
 		}
 	}

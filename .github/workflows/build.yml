@@ -38,3 +38,5 @@ jobs:
         ./hours --dbpath=/var/tmp/throwaway-1.db report 3d -p
         ./hours --dbpath=/var/tmp/throwaway-2.db gen -y
         ./hours --dbpath=/var/tmp/throwaway-2.db report 3d -p
+        ./hours --dbpath=/var/tmp/throwaway-2.db log 3d -p
+        ./hours --dbpath=/var/tmp/throwaway-2.db stats 3d -p

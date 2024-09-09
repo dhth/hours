@@ -7,9 +7,10 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/dhth/hours/internal/types"
 )
 
-func InitialModel(db *sql.DB) model {
+func InitialModel(db *sql.DB) Model {
 	var activeTaskItems []list.Item
 	var inactiveTaskItems []list.Item
 	var tasklogListItems []list.Item
@@ -40,11 +41,11 @@ func InitialModel(db *sql.DB) model {
 	taskInputs[summaryField].CharLimit = 100
 	taskInputs[entryBeginTS].Width = 60
 
-	m := model{
+	m := Model{
 		db:                 db,
 		activeTasksList:    list.New(activeTaskItems, newItemDelegate(lipgloss.Color(activeTaskListColor)), listWidth, 0),
 		inactiveTasksList:  list.New(inactiveTaskItems, newItemDelegate(lipgloss.Color(inactiveTaskListColor)), listWidth, 0),
-		activeTaskMap:      make(map[int]*task),
+		activeTaskMap:      make(map[int]*types.Task),
 		activeTaskIndexMap: make(map[int]int),
 		taskLogList:        list.New(tasklogListItems, newItemDelegate(lipgloss.Color(taskLogListColor)), listWidth, 0),
 		showHelpIndicator:  true,

@@ -1,4 +1,4 @@
-package ui
+package types
 
 import (
 	"testing"
@@ -14,7 +14,7 @@ func TestParseDateDuration(t *testing.T) {
 		expectedStartStr string
 		expectedEndStr   string
 		expectedNumDays  int
-		ok               bool
+		err              error
 	}{
 		// success
 		{
@@ -23,7 +23,6 @@ func TestParseDateDuration(t *testing.T) {
 			expectedStartStr: "2024/06/10 00:00",
 			expectedEndStr:   "2024/06/11 00:00",
 			expectedNumDays:  2,
-			ok:               true,
 		},
 		{
 			name:             "a range of 2 days",
@@ -31,7 +30,6 @@ func TestParseDateDuration(t *testing.T) {
 			expectedStartStr: "2024/06/29 00:00",
 			expectedEndStr:   "2024/07/01 00:00",
 			expectedNumDays:  3,
-			ok:               true,
 		},
 		{
 			name:             "a range of 1 year",
@@ -39,50 +37,56 @@ func TestParseDateDuration(t *testing.T) {
 			expectedStartStr: "2024/06/29 00:00",
 			expectedEndStr:   "2025/06/29 00:00",
 			expectedNumDays:  366,
-			ok:               true,
 		},
 		// failures
 		{
 			name:  "empty string",
 			input: "",
+			err:   errDateRangeIncorrect,
 		},
 		{
 			name:  "only one date",
 			input: "2024/06/10",
+			err:   errDateRangeIncorrect,
 		},
 		{
 			name:  "badly formatted start date",
 			input: "2024/0610...2024/06/10",
+			err:   errStartDateIncorrect,
 		},
 		{
 			name:  "badly formatted end date",
 			input: "2024/06/10...2024/0610",
+			err:   errEndDateIncorrect,
 		},
 		{
 			name:  "a range of 0 days",
 			input: "2024/06/10...2024/06/10",
+			err:   errEndDateIsNotAfterStartDate,
 		},
 		{
 			name:  "end date before start date",
 			input: "2024/06/10...2024/06/08",
+			err:   errEndDateIsNotAfterStartDate,
 		},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			got, ok := parseDateDuration(tt.input)
+			got, err := parseDateDuration(tt.input)
 
-			if tt.ok {
-				startStr := got.start.Format(timeFormat)
-				endStr := got.end.Format(timeFormat)
-
-				assert.True(t, ok)
-				assert.Equal(t, tt.expectedStartStr, startStr)
-				assert.Equal(t, tt.expectedEndStr, endStr)
-				assert.Equal(t, tt.expectedNumDays, got.numDays)
-			} else {
-				assert.False(t, ok)
+			if tt.err != nil {
+				assert.ErrorIs(t, err, tt.err)
+				return
 			}
+
+			startStr := got.Start.Format(timeFormat)
+			endStr := got.End.Format(timeFormat)
+
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedStartStr, startStr)
+			assert.Equal(t, tt.expectedEndStr, endStr)
+			assert.Equal(t, tt.expectedNumDays, got.NumDays)
 		})
 	}
 }
@@ -181,35 +185,35 @@ func TestGetTimePeriod(t *testing.T) {
 		{
 			name:   "a faulty date",
 			period: "2024/06-15",
-			err:    timePeriodNotValidErr,
+			err:    errTimePeriodNotValid,
 		},
 		{
 			name:   "a faulty date range",
 			period: "2024/06/15...2024",
-			err:    timePeriodNotValidErr,
+			err:    errTimePeriodNotValid,
 		},
 		{
 			name:   "a date range too large",
 			period: "2024/06/15...2024/06/22",
-			err:    timePeriodTooLargeErr,
+			err:    errTimePeriodTooLarge,
 		},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getTimePeriod(tt.period, tt.now, tt.fullWeek)
+			got, err := GetTimePeriod(tt.period, tt.now, tt.fullWeek)
 
-			startStr := got.start.Format(timeFormat)
-			endStr := got.end.Format(timeFormat)
+			startStr := got.Start.Format(timeFormat)
+			endStr := got.End.Format(timeFormat)
 
 			if tt.err == nil {
 				assert.Equal(t, tt.expectedStartStr, startStr)
 				assert.Equal(t, tt.expectedEndStr, endStr)
-				assert.Equal(t, tt.expectedNumDays, got.numDays)
-				assert.Nil(t, err)
-			} else {
-				assert.Equal(t, tt.err, err)
+				assert.Equal(t, tt.expectedNumDays, got.NumDays)
+				assert.NoError(t, err)
+				return
 			}
+			assert.ErrorIs(t, err, tt.err)
 		})
 	}
 }
