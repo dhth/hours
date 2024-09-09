@@ -40,7 +40,7 @@ LIMIT 1
 
 		switch trackStatus {
 		case trackingInactive:
-			err = pers.InsertNewTL(db, taskID, beginTs)
+			_, err = pers.InsertNewTL(db, taskID, beginTs)
 			if err != nil {
 				return trackingToggledMsg{err: err}
 			} else {
@@ -68,7 +68,7 @@ func updateTLBeginTS(db *sql.DB, beginTS time.Time) tea.Cmd {
 
 func insertManualEntry(db *sql.DB, taskID int, beginTS time.Time, endTS time.Time, comment string) tea.Cmd {
 	return func() tea.Msg {
-		err := pers.InsertManualTL(db, taskID, beginTS, endTS, comment)
+		_, err := pers.InsertManualTL(db, taskID, beginTS, endTS, comment)
 		return manualTaskLogInserted{taskID, err}
 	}
 }
@@ -113,7 +113,7 @@ func fetchTaskLogEntries(db *sql.DB) tea.Cmd {
 
 func deleteLogEntry(db *sql.DB, entry *types.TaskLogEntry) tea.Cmd {
 	return func() tea.Msg {
-		err := pers.DeleteEntry(db, entry)
+		err := pers.DeleteTaskLogEntry(db, entry)
 		return taskLogEntryDeletedMsg{
 			entry: entry,
 			err:   err,
@@ -130,7 +130,7 @@ func deleteActiveTaskLog(db *sql.DB) tea.Cmd {
 
 func createTask(db *sql.DB, summary string) tea.Cmd {
 	return func() tea.Msg {
-		err := pers.InsertTask(db, summary)
+		_, err := pers.InsertTask(db, summary)
 		return taskCreatedMsg{err}
 	}
 }

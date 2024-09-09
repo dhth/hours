@@ -9,22 +9,31 @@ import (
 	"github.com/dhth/hours/internal/types"
 )
 
-func InsertNewTL(db *sql.DB, taskID int, beginTs time.Time) error {
-	stmt, err := db.Prepare(`
+var ErrCouldntRollBackTx = errors.New("couldn't roll back transaction")
+
+func InsertNewTL(db *sql.DB, taskID int, beginTs time.Time) (int64, error) {
+	return runInTxAndReturnID(db, func(tx *sql.Tx) (int64, error) {
+		stmt, err := tx.Prepare(`
 INSERT INTO task_log (task_id, begin_ts, active)
 VALUES (?, ?, ?);
 `)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
+		if err != nil {
+			return -1, err
+		}
+		defer stmt.Close()
 
-	_, err = stmt.Exec(taskID, beginTs.UTC(), true)
-	if err != nil {
-		return err
-	}
+		res, err := stmt.Exec(taskID, beginTs.UTC(), true)
+		if err != nil {
+			return -1, err
+		}
 
-	return nil
+		lastID, err := res.LastInsertId()
+		if err != nil {
+			return -1, err
+		}
+
+		return lastID, nil
+	})
 }
 
 func UpdateTLBeginTS(db *sql.DB, beginTs time.Time) error {
@@ -61,15 +70,8 @@ WHERE active=true;
 }
 
 func UpdateActiveTL(db *sql.DB, taskLogID int, taskID int, beginTs, endTs time.Time, secsSpent int, comment string) error {
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = tx.Rollback()
-	}()
-
-	stmt, err := tx.Prepare(`
+	return runInTx(db, func(tx *sql.Tx) error {
+		stmt, err := tx.Prepare(`
 UPDATE task_log
 SET active = 0,
     begin_ts = ?,
@@ -79,86 +81,74 @@ SET active = 0,
 WHERE id = ?
 AND active = 1;
 `)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
 
-	_, err = stmt.Exec(beginTs.UTC(), endTs.UTC(), secsSpent, comment, taskLogID)
-	if err != nil {
-		return err
-	}
+		_, err = stmt.Exec(beginTs.UTC(), endTs.UTC(), secsSpent, comment, taskLogID)
+		if err != nil {
+			return err
+		}
 
-	tStmt, err := tx.Prepare(`
+		tStmt, err := tx.Prepare(`
 UPDATE task
 SET secs_spent = secs_spent+?,
     updated_at = ?
 WHERE id = ?;
     `)
-	if err != nil {
-		return err
-	}
-	defer tStmt.Close()
+		if err != nil {
+			return err
+		}
+		defer tStmt.Close()
 
-	_, err = tStmt.Exec(secsSpent, time.Now().UTC(), taskID)
-	if err != nil {
-		return err
-	}
+		_, err = tStmt.Exec(secsSpent, time.Now().UTC(), taskID)
 
-	err = tx.Commit()
-	if err != nil {
 		return err
-	}
-
-	return nil
+	})
 }
 
-func InsertManualTL(db *sql.DB, taskID int, beginTs time.Time, endTs time.Time, comment string) error {
-	secsSpent := int(endTs.Sub(beginTs).Seconds())
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = tx.Rollback()
-	}()
-
-	stmt, err := tx.Prepare(`
+func InsertManualTL(db *sql.DB, taskID int, beginTs time.Time, endTs time.Time, comment string) (int64, error) {
+	return runInTxAndReturnID(db, func(tx *sql.Tx) (int64, error) {
+		stmt, err := tx.Prepare(`
 INSERT INTO task_log (task_id, begin_ts, end_ts, secs_spent, comment, active)
 VALUES (?, ?, ?, ?, ?, ?);
 `)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
+		if err != nil {
+			return -1, err
+		}
+		defer stmt.Close()
 
-	_, err = stmt.Exec(taskID, beginTs.UTC(), endTs.UTC(), secsSpent, comment, false)
-	if err != nil {
-		return err
-	}
+		secsSpent := int(endTs.Sub(beginTs).Seconds())
 
-	tStmt, err := tx.Prepare(`
+		res, err := stmt.Exec(taskID, beginTs.UTC(), endTs.UTC(), secsSpent, comment, false)
+		if err != nil {
+			return -1, err
+		}
+
+		lastID, err := res.LastInsertId()
+		if err != nil {
+			return -1, err
+		}
+
+		tStmt, err := tx.Prepare(`
 UPDATE task
 SET secs_spent = secs_spent+?,
     updated_at = ?
 WHERE id = ?;
     `)
-	if err != nil {
-		return err
-	}
-	defer tStmt.Close()
+		if err != nil {
+			return -1, err
+		}
+		defer tStmt.Close()
 
-	_, err = tStmt.Exec(secsSpent, time.Now().UTC(), taskID)
-	if err != nil {
-		return err
-	}
+		_, err = tStmt.Exec(secsSpent, time.Now().UTC(), taskID)
+		if err != nil {
+			return -1, err
+		}
 
-	err = tx.Commit()
-	if err != nil {
-		return err
-	}
-
-	return nil
+		return lastID, nil
+	})
 }
 
 func FetchActiveTask(db *sql.DB) (types.ActiveTaskDetails, error) {
@@ -184,22 +174,30 @@ WHERE tl.active=true;
 	return activeTaskDetails, nil
 }
 
-func InsertTask(db *sql.DB, summary string) error {
-	stmt, err := db.Prepare(`
+func InsertTask(db *sql.DB, summary string) (int64, error) {
+	return runInTxAndReturnID(db, func(tx *sql.Tx) (int64, error) {
+		stmt, err := tx.Prepare(`
 INSERT into task (summary, active, created_at, updated_at)
 VALUES (?, true, ?, ?);
 `)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
+		if err != nil {
+			return -1, err
+		}
+		defer stmt.Close()
 
-	now := time.Now().UTC()
-	_, err = stmt.Exec(summary, now, now)
-	if err != nil {
-		return err
-	}
-	return nil
+		now := time.Now().UTC()
+		res, err := stmt.Exec(summary, now, now)
+		if err != nil {
+			return -1, err
+		}
+
+		lastID, err := res.LastInsertId()
+		if err != nil {
+			return -1, err
+		}
+
+		return lastID, nil
+	})
 }
 
 func UpdateTask(db *sql.DB, id int, summary string) error {
@@ -492,51 +490,126 @@ LIMIT ?;
 	return tLE, nil
 }
 
-func DeleteEntry(db *sql.DB, entry *types.TaskLogEntry) error {
-	secsSpent := entry.SecsSpent
-
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = tx.Rollback()
-	}()
-
-	stmt, err := tx.Prepare(`
+func DeleteTaskLogEntry(db *sql.DB, entry *types.TaskLogEntry) error {
+	return runInTx(db, func(tx *sql.Tx) error {
+		stmt, err := tx.Prepare(`
 DELETE from task_log
 WHERE ID=?;
 `)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
 
-	_, err = stmt.Exec(entry.ID)
-	if err != nil {
-		return err
-	}
+		_, err = stmt.Exec(entry.ID)
+		if err != nil {
+			return err
+		}
 
-	tStmt, err := tx.Prepare(`
+		tStmt, err := tx.Prepare(`
 UPDATE task
 SET secs_spent = secs_spent-?,
     updated_at = ?
 WHERE id = ?;
     `)
+		if err != nil {
+			return err
+		}
+		defer tStmt.Close()
+
+		_, err = tStmt.Exec(entry.SecsSpent, time.Now().UTC(), entry.TaskID)
+		return err
+	})
+}
+
+func runInTxAndReturnID(db *sql.DB, fn func(tx *sql.Tx) (int64, error)) (int64, error) {
+	tx, err := db.Begin()
+	if err != nil {
+		return -1, err
+	}
+
+	lastID, err := fn(tx)
+	if err == nil {
+		return lastID, tx.Commit()
+	}
+
+	rollbackErr := tx.Rollback()
+	if rollbackErr != nil {
+		return lastID, fmt.Errorf("%w: %w: %s", ErrCouldntRollBackTx, rollbackErr, err.Error())
+	}
+
+	return lastID, err
+}
+
+func runInTx(db *sql.DB, fn func(tx *sql.Tx) error) error {
+	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
-	defer tStmt.Close()
 
-	_, err = tStmt.Exec(secsSpent, time.Now().UTC(), entry.TaskID)
-	if err != nil {
-		return err
+	err = fn(tx)
+	if err == nil {
+		return tx.Commit()
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		return err
+	rollbackErr := tx.Rollback()
+	if rollbackErr != nil {
+		return fmt.Errorf("%w: %w: %s", ErrCouldntRollBackTx, rollbackErr, err.Error())
 	}
 
-	return nil
+	return err
+}
+
+func fetchTaskByID(db *sql.DB, id int) (types.Task, error) {
+	var task types.Task
+	row := db.QueryRow(`
+SELECT id, summary, secs_spent, active, created_at, updated_at
+FROM task
+WHERE id=?;
+    `, id)
+
+	if row.Err() != nil {
+		return task, row.Err()
+	}
+	err := row.Scan(&task.ID,
+		&task.Summary,
+		&task.SecsSpent,
+		&task.Active,
+		&task.CreatedAt,
+		&task.UpdatedAt,
+	)
+	if err != nil {
+		return task, err
+	}
+	task.CreatedAt = task.CreatedAt.Local()
+	task.UpdatedAt = task.UpdatedAt.Local()
+
+	return task, nil
+}
+
+func fetchTaskLogByID(db *sql.DB, id int) (types.TaskLogEntry, error) {
+	var tl types.TaskLogEntry
+	row := db.QueryRow(`
+SELECT id, task_id, begin_ts, end_ts, secs_spent, comment
+FROM task_log
+WHERE id=?;
+    `, id)
+
+	if row.Err() != nil {
+		return tl, row.Err()
+	}
+	err := row.Scan(&tl.ID,
+		&tl.TaskID,
+		&tl.BeginTS,
+		&tl.EndTS,
+		&tl.SecsSpent,
+		&tl.Comment,
+	)
+	if err != nil {
+		return tl, err
+	}
+	tl.BeginTS = tl.BeginTS.Local()
+	tl.EndTS = tl.EndTS.Local()
+
+	return tl, nil
 }
