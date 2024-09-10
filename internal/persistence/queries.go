@@ -554,7 +554,7 @@ func runInTx(db *sql.DB, fn func(tx *sql.Tx) error) error {
 
 	rollbackErr := tx.Rollback()
 	if rollbackErr != nil {
-		return fmt.Errorf("%w: %w: %s", ErrCouldntRollBackTx, rollbackErr, err.Error())
+		return fmt.Errorf("%w: %w: %w", ErrCouldntRollBackTx, rollbackErr, err)
 	}
 
 	return err
