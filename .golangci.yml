@@ -15,6 +15,7 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
+    - testifylint
     - unconvert
     - unused
     - usestdlibvars

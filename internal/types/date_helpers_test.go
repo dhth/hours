@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseDateDuration(t *testing.T) {
@@ -83,7 +84,7 @@ func TestParseDateDuration(t *testing.T) {
 			startStr := got.Start.Format(timeFormat)
 			endStr := got.End.Format(timeFormat)
 
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, tt.expectedStartStr, startStr)
 			assert.Equal(t, tt.expectedEndStr, endStr)
 			assert.Equal(t, tt.expectedNumDays, got.NumDays)
