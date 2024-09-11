@@ -23,11 +23,6 @@ jobs:
           filters: |
             yml:
               - added|modified: '**.yml'
-
-
-
-
-
       - name: Set up Go
         if: steps.changes.outputs.yml == 'true'
         uses: actions/setup-go@v5
