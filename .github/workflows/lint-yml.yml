@@ -14,17 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
-        id: changes
-        with:
-          filters: |
-            yml:
-              - added|modified: '**.yml'
       - name: Get yamlfmt
-        if: steps.changes.outputs.yml == 'true'
         run: |
           LATEST_VERSION=$(curl -s https://api.github.com/repos/google/yamlfmt/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | sed 's/^v//')
           ./.github/scripts/get-yamlfmt.sh "Linux" "x86_64" "$LATEST_VERSION"
       - name: Run yamlfmt
-        if: steps.changes.outputs.yml == 'true'
         run: ./yamlfmt -lint -quiet $(find . -name '*.yml')
