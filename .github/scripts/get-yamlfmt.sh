@@ -16,6 +16,7 @@ curl -sSLO "https://github.com/google/yamlfmt/releases/download/v${VERSION}/yaml
 curl -sSLO "https://github.com/google/yamlfmt/releases/download/v${VERSION}/checksums.txt"
 
 ls -1
+cat checksums.txt
 
 sha256sum --ignore-missing -c checksums.txt
 
