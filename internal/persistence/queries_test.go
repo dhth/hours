@@ -273,6 +273,8 @@ func TestRepository(t *testing.T) {
 }
 
 func cleanupDB(t *testing.T, testDB *sql.DB) {
+	t.Helper()
+
 	var err error
 	for _, tbl := range []string{"task_log", "task"} {
 		_, err = testDB.Exec(fmt.Sprintf("DELETE FROM %s", tbl))
