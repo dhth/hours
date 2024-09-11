@@ -14,6 +14,9 @@ builds:
     goos:
       - linux
       - darwin
+    goarch:
+      - amd64
+      - arm64
 
 signs:
   - cmd: cosign
