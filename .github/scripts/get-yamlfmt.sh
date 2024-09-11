@@ -15,6 +15,8 @@ VERSION="$3"
 curl -sSLO "https://github.com/google/yamlfmt/releases/download/v${VERSION}/yamlfmt_${VERSION}_${OS}_${ARCH}.tar.gz"
 curl -sSLO "https://github.com/google/yamlfmt/releases/download/v${VERSION}/checksums.txt"
 
+ls -1
+
 sha256sum --ignore-missing -c checksums.txt
 
 tar -xzf "yamlfmt_${VERSION}_${OS}_${ARCH}.tar.gz"
