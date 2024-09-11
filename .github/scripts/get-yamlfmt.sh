@@ -12,24 +12,9 @@ OS="$1"
 ARCH="$2"
 VERSION="$3"
 
-cwd=$(pwd)
-
-temp_dir=$(mktemp -d)
-if [ ! -e ${temp_dir} ]; then
-    echo "Failed to create temporary directory."
-    exit 1
-fi
-
-cd $temp_dir
-
 curl -sSLO "https://github.com/google/yamlfmt/releases/download/v${VERSION}/yamlfmt_${VERSION}_${OS}_${ARCH}.tar.gz"
 curl -sSLO "https://github.com/google/yamlfmt/releases/download/v${VERSION}/checksums.txt"
 
 sha256sum --ignore-missing -c checksums.txt
 
-tar -xzf "yamlfmt_${VERSION}_${OS}_${ARCH}.tar.gz" -C ${temp_dir}/
-cd $cwd
-
-cp "${temp_dir}/yamlfmt" .
-
-rm -r ${temp_dir}
+tar -xzf "yamlfmt_${VERSION}_${OS}_${ARCH}.tar.gz"
