@@ -11,8 +11,8 @@ import (
 
 var ErrCouldntRollBackTx = errors.New("couldn't roll back transaction")
 
-func InsertNewTL(db *sql.DB, taskID int, beginTs time.Time) (int64, error) {
-	return runInTxAndReturnID(db, func(tx *sql.Tx) (int64, error) {
+func InsertNewTL(db *sql.DB, taskID int, beginTs time.Time) (int, error) {
+	return runInTxAndReturnID(db, func(tx *sql.Tx) (int, error) {
 		stmt, err := tx.Prepare(`
 INSERT INTO task_log (task_id, begin_ts, active)
 VALUES (?, ?, ?);
@@ -32,7 +32,7 @@ VALUES (?, ?, ?);
 			return -1, err
 		}
 
-		return lastID, nil
+		return int(lastID), nil
 	})
 }
 
@@ -108,8 +108,8 @@ WHERE id = ?;
 	})
 }
 
-func InsertManualTL(db *sql.DB, taskID int, beginTs time.Time, endTs time.Time, comment string) (int64, error) {
-	return runInTxAndReturnID(db, func(tx *sql.Tx) (int64, error) {
+func InsertManualTL(db *sql.DB, taskID int, beginTs time.Time, endTs time.Time, comment string) (int, error) {
+	return runInTxAndReturnID(db, func(tx *sql.Tx) (int, error) {
 		stmt, err := tx.Prepare(`
 INSERT INTO task_log (task_id, begin_ts, end_ts, secs_spent, comment, active)
 VALUES (?, ?, ?, ?, ?, ?);
@@ -147,7 +147,7 @@ WHERE id = ?;
 			return -1, err
 		}
 
-		return lastID, nil
+		return int(lastID), nil
 	})
 }
 
@@ -174,8 +174,8 @@ WHERE tl.active=true;
 	return activeTaskDetails, nil
 }
 
-func InsertTask(db *sql.DB, summary string) (int64, error) {
-	return runInTxAndReturnID(db, func(tx *sql.Tx) (int64, error) {
+func InsertTask(db *sql.DB, summary string) (int, error) {
+	return runInTxAndReturnID(db, func(tx *sql.Tx) (int, error) {
 		stmt, err := tx.Prepare(`
 INSERT into task (summary, active, created_at, updated_at)
 VALUES (?, true, ?, ?);
@@ -196,7 +196,7 @@ VALUES (?, true, ?, ?);
 			return -1, err
 		}
 
-		return lastID, nil
+		return int(lastID), nil
 	})
 }
 
@@ -522,7 +522,7 @@ WHERE id = ?;
 	})
 }
 
-func runInTxAndReturnID(db *sql.DB, fn func(tx *sql.Tx) (int64, error)) (int64, error) {
+func runInTxAndReturnID(db *sql.DB, fn func(tx *sql.Tx) (int, error)) (int, error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return -1, err
