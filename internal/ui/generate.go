@@ -94,7 +94,7 @@ var (
 func GenerateData(db *sql.DB, numDays, numTasks uint8) error {
 	for i := uint8(0); i < numTasks; i++ {
 		summary := tasks[rand.Intn(len(tasks))]
-		err := pers.InsertTask(db, summary)
+		_, err := pers.InsertTask(db, summary)
 		if err != nil {
 			return err
 		}
@@ -104,7 +104,7 @@ func GenerateData(db *sql.DB, numDays, numTasks uint8) error {
 			numMinutes := 30 + rand.Intn(60)
 			endTs := beginTs.Add(time.Minute * time.Duration(numMinutes))
 			comment := fmt.Sprintf("%s %s", verbs[rand.Intn(len(verbs))], nouns[rand.Intn(len(nouns))])
-			err = pers.InsertManualTL(db, int(i+1), beginTs, endTs, comment)
+			_, err = pers.InsertManualTL(db, int(i+1), beginTs, endTs, comment)
 			if err != nil {
 				return err
 			}
