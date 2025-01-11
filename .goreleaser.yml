@@ -20,14 +20,16 @@ builds:
 
 signs:
   - cmd: cosign
-    stdin: "{{ .Env.COSIGN_PASSWORD }}"
+    signature: "${artifact}.sig"
+    certificate: "${artifact}.pem"
     args:
       - "sign-blob"
-      - "--key=cosign.key"
+      - "--oidc-issuer=https://token.actions.githubusercontent.com"
+      - "--output-certificate=${certificate}"
       - "--output-signature=${signature}"
       - "${artifact}"
-      - "--yes" # needed on cosign 2.0.0+
-    artifacts: all
+      - "--yes"
+    artifacts: checksum
 
 brews:
   - name: hours
