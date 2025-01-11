@@ -155,4 +155,5 @@ const (
 	ShiftMinute TimeShiftDuration = iota
 	ShiftFiveMinutes
 	ShiftHour
+	ShiftDay
 )

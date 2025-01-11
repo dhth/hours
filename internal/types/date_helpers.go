@@ -142,6 +142,8 @@ func GetShiftedTime(ts time.Time, direction TimeShiftDirection, duration TimeShi
 		d = time.Minute * 5
 	case ShiftHour:
 		d = time.Hour
+	case ShiftDay:
+		d = time.Hour * 24
 	}
 
 	if direction == ShiftBackward {

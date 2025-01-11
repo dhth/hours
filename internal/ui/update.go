@@ -214,6 +214,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if err != nil {
 				return m, tea.Batch(cmds...)
 			}
+		case "h":
+			err := m.shiftTime(types.ShiftBackward, types.ShiftDay)
+			if err != nil {
+				return m, tea.Batch(cmds...)
+			}
+		case "l":
+			err := m.shiftTime(types.ShiftForward, types.ShiftDay)
+			if err != nil {
+				return m, tea.Batch(cmds...)
+			}
 		}
 	}
 
