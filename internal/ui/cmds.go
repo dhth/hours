@@ -66,10 +66,10 @@ func updateTLBeginTS(db *sql.DB, beginTS time.Time) tea.Cmd {
 	}
 }
 
-func insertManualEntry(db *sql.DB, taskID int, beginTS time.Time, endTS time.Time, comment string) tea.Cmd {
+func insertManualTL(db *sql.DB, taskID int, beginTS time.Time, endTS time.Time, comment string) tea.Cmd {
 	return func() tea.Msg {
 		_, err := pers.InsertManualTL(db, taskID, beginTS, endTS, comment)
-		return manualTaskLogInserted{taskID, err}
+		return manualTLInsertedMsg{taskID, err}
 	}
 }
 
@@ -101,27 +101,27 @@ func updateTaskRep(db *sql.DB, t *types.Task) tea.Cmd {
 	}
 }
 
-func fetchTaskLogEntries(db *sql.DB) tea.Cmd {
+func fetchTLS(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
 		entries, err := pers.FetchTLEntries(db, true, 50)
-		return taskLogEntriesFetchedMsg{
+		return tLsFetchedMsg{
 			entries: entries,
 			err:     err,
 		}
 	}
 }
 
-func deleteLogEntry(db *sql.DB, entry *types.TaskLogEntry) tea.Cmd {
+func deleteTL(db *sql.DB, entry *types.TaskLogEntry) tea.Cmd {
 	return func() tea.Msg {
-		err := pers.DeleteTaskLogEntry(db, entry)
-		return taskLogEntryDeletedMsg{
+		err := pers.DeleteTL(db, entry)
+		return tLDeletedMsg{
 			entry: entry,
 			err:   err,
 		}
 	}
 }
 
-func deleteActiveTaskLog(db *sql.DB) tea.Cmd {
+func deleteActiveTL(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
 		err := pers.DeleteActiveTL(db)
 		return activeTaskLogDeletedMsg{err}
@@ -145,20 +145,20 @@ func updateTask(db *sql.DB, task *types.Task, summary string) tea.Cmd {
 func updateTaskActiveStatus(db *sql.DB, task *types.Task, active bool) tea.Cmd {
 	return func() tea.Msg {
 		err := pers.UpdateTaskActiveStatus(db, task.ID, active)
-		return taskActiveStatusUpdated{task, active, err}
+		return taskActiveStatusUpdatedMsg{task, active, err}
 	}
 }
 
 func fetchTasks(db *sql.DB, active bool) tea.Cmd {
 	return func() tea.Msg {
 		tasks, err := pers.FetchTasks(db, active, 50)
-		return tasksFetched{tasks, active, err}
+		return tasksFetchedMsg{tasks, active, err}
 	}
 }
 
 func hideHelp(interval time.Duration) tea.Cmd {
 	return tea.Tick(interval, func(time.Time) tea.Msg {
-		return HideHelpMsg{}
+		return hideHelpMsg{}
 	})
 }
 
