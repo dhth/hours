@@ -11,6 +11,11 @@ import (
 	"github.com/dhth/hours/internal/types"
 )
 
+const (
+	tlCommentLengthLimit = 255
+	tlDescLengthLimit    = 3000
+)
+
 func InitialModel(db *sql.DB) Model {
 	var activeTaskItems []list.Item
 	var inactiveTaskItems []list.Item
@@ -29,14 +34,14 @@ func InitialModel(db *sql.DB) Model {
 
 	tLInputs[entryComment] = textinput.New()
 	tLInputs[entryComment].Placeholder = "Your comment goes here"
-	tLInputs[entryComment].CharLimit = 255
+	tLInputs[entryComment].CharLimit = tlCommentLengthLimit
 	tLInputs[entryComment].Width = 100
 
 	tLDescriptionInput := textarea.New()
 	tLDescriptionInput.Placeholder = `Task Log Description goes here.
 
 This can be used to record additional details about your work on this task.`
-	tLDescriptionInput.CharLimit = 3000
+	tLDescriptionInput.CharLimit = tlDescLengthLimit
 	tLDescriptionInput.SetWidth(100)
 	tLDescriptionInput.SetHeight(8)
 	tLDescriptionInput.ShowLineNumbers = false
