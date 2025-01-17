@@ -69,7 +69,7 @@ WHERE active=true;
 	return err
 }
 
-func UpdateActiveTL(db *sql.DB, taskLogID int, taskID int, beginTs, endTs time.Time, secsSpent int, comment string) error {
+func UpdateActiveTL(db *sql.DB, taskLogID int, taskID int, beginTs, endTs time.Time, secsSpent int, comment *string) error {
 	return runInTx(db, func(tx *sql.Tx) error {
 		stmt, err := tx.Prepare(`
 UPDATE task_log
@@ -108,7 +108,7 @@ WHERE id = ?;
 	})
 }
 
-func InsertManualTL(db *sql.DB, taskID int, beginTs time.Time, endTs time.Time, comment string) (int, error) {
+func InsertManualTL(db *sql.DB, taskID int, beginTs time.Time, endTs time.Time, comment *string) (int, error) {
 	return runInTxAndReturnID(db, func(tx *sql.Tx) (int, error) {
 		stmt, err := tx.Prepare(`
 INSERT INTO task_log (task_id, begin_ts, end_ts, secs_spent, comment, active)

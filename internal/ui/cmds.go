@@ -15,7 +15,7 @@ func toggleTracking(db *sql.DB,
 	taskID int,
 	beginTs time.Time,
 	endTs time.Time,
-	comment string,
+	comment *string,
 ) tea.Cmd {
 	return func() tea.Msg {
 		row := db.QueryRow(`
@@ -66,7 +66,7 @@ func updateTLBeginTS(db *sql.DB, beginTS time.Time) tea.Cmd {
 	}
 }
 
-func insertManualTL(db *sql.DB, taskID int, beginTS time.Time, endTS time.Time, comment string) tea.Cmd {
+func insertManualTL(db *sql.DB, taskID int, beginTS time.Time, endTS time.Time, comment *string) tea.Cmd {
 	return func() tea.Msg {
 		_, err := pers.InsertManualTL(db, taskID, beginTS, endTS, comment)
 		return manualTLInsertedMsg{taskID, err}

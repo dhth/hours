@@ -39,6 +39,13 @@ func (m Model) View() string {
 		)
 	}
 
+	formHelp := "Use tab/shift-tab to move between sections; esc to go back."
+	formBeginTimeHelp := "Begin Time* (format: 2006/01/02 15:04)"
+	formEndTimeHelp := "End Time* (format: 2006/01/02 15:04)"
+	formTimeShiftHelp := "(k/j/K/J moves time, when correct)"
+	formCommentHelp := "Comment"
+	formSubmitHelp := "Press enter to submit"
+
 	switch m.activeView {
 	case taskListView:
 		content = listStyle.Render(m.activeTasksList.View())
@@ -65,7 +72,7 @@ func (m Model) View() string {
 `,
 			formFieldNameStyle.Render(formTitle),
 			m.taskInputs[summaryField].View(),
-			formHelpStyle.Render("Press enter to submit"),
+			formHelpStyle.Render(formSubmitHelp),
 		)
 		for i := 0; i < m.terminalHeight-20+10; i++ {
 			content += "\n"
@@ -98,16 +105,16 @@ func (m Model) View() string {
 `,
 			taskLogEntryHeadingStyle.Render(taskLogEntryViewHeading),
 			formContextStyle.Render(formHeadingText),
-			formHelpStyle.Render("Use tab/shift-tab to move between sections; esc to go back."),
-			formFieldNameStyle.Render("Begin Time (format: 2006/01/02 15:04)"),
+			formHelpStyle.Render(formHelp),
+			formFieldNameStyle.Render(formBeginTimeHelp),
 			m.trackingInputs[entryBeginTS].View(),
-			formHelpStyle.Render("(k/j/K/J/h/l moves time, when correct)"),
-			formFieldNameStyle.Render("End Time (format: 2006/01/02 15:04)"),
+			formHelpStyle.Render(formTimeShiftHelp),
+			formFieldNameStyle.Render(formEndTimeHelp),
 			m.trackingInputs[entryEndTS].View(),
-			formHelpStyle.Render("(k/j/K/J/h/l moves time, when correct)"),
-			formFieldNameStyle.Render(utils.RightPadTrim("Comment:", 16, true)),
+			formHelpStyle.Render(formTimeShiftHelp),
+			formFieldNameStyle.Render(formCommentHelp),
 			m.trackingInputs[entryComment].View(),
-			formHelpStyle.Render("Press enter to submit"),
+			formHelpStyle.Render(formSubmitHelp),
 		)
 		for i := 0; i < m.terminalHeight-24; i++ {
 			content += "\n"
@@ -130,10 +137,10 @@ func (m Model) View() string {
 `,
 			taskLogEntryHeadingStyle.Render(taskLogEntryViewHeading),
 			formContextStyle.Render(formHeadingText),
-			formFieldNameStyle.Render("Begin Time (format: 2006/01/02 15:04)"),
+			formFieldNameStyle.Render(formBeginTimeHelp),
 			m.trackingInputs[entryBeginTS].View(),
-			formHelpStyle.Render("(k/j/K/J moves time, when correct)"),
-			formHelpStyle.Render("Press enter to submit"),
+			formHelpStyle.Render(formTimeShiftHelp),
+			formHelpStyle.Render(formSubmitHelp),
 		)
 		for i := 0; i < m.terminalHeight-14; i++ {
 			content += "\n"
@@ -172,16 +179,16 @@ func (m Model) View() string {
 `,
 			taskLogEntryHeadingStyle.Render(taskLogEntryViewHeading),
 			formContextStyle.Render(formHeadingText),
-			formHelpStyle.Render("Use tab/shift-tab to move between sections; esc to go back."),
-			formFieldNameStyle.Render("Begin Time (format: 2006/01/02 15:04)"),
+			formHelpStyle.Render(formHelp),
+			formFieldNameStyle.Render(formBeginTimeHelp),
 			m.trackingInputs[entryBeginTS].View(),
-			formHelpStyle.Render("(k/j/K/J moves time, when correct)"),
-			formFieldNameStyle.Render("End Time (format: 2006/01/02 15:04)"),
+			formHelpStyle.Render(formTimeShiftHelp),
+			formFieldNameStyle.Render(formEndTimeHelp),
 			m.trackingInputs[entryEndTS].View(),
-			formHelpStyle.Render("(k/j/K/J moves time, when correct)"),
-			formFieldNameStyle.Render(utils.RightPadTrim("Comment:", 16, true)),
+			formHelpStyle.Render(formTimeShiftHelp),
+			formFieldNameStyle.Render(formCommentHelp),
 			m.trackingInputs[entryComment].View(),
-			formHelpStyle.Render("Press enter to submit"),
+			formHelpStyle.Render(formSubmitHelp),
 		)
 		for i := 0; i < m.terminalHeight-24; i++ {
 			content += "\n"

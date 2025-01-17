@@ -73,12 +73,12 @@ func (m *Model) getCmdToSaveActiveTL() tea.Cmd {
 		return nil
 	}
 
-	if m.trackingInputs[entryComment].Value() == "" {
-		m.message = "Comment cannot be empty"
-		return nil
+	commentValue := m.trackingInputs[entryComment].Value()
+	var comment *string
+	if isCommentValid(commentValue) {
+		comment = &commentValue
 	}
 
-	comment := m.trackingInputs[entryComment].Value()
 	for i := range m.trackingInputs {
 		m.trackingInputs[i].SetValue("")
 	}
@@ -104,11 +104,10 @@ func (m *Model) getCmdToSaveOrUpdateTL() tea.Cmd {
 		return nil
 	}
 
-	comment := m.trackingInputs[entryComment].Value()
-
-	if len(comment) == 0 {
-		m.message = "Comment cannot be empty"
-		return nil
+	commentValue := m.trackingInputs[entryComment].Value()
+	var comment *string
+	if isCommentValid(commentValue) {
+		comment = &commentValue
 	}
 
 	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
@@ -361,7 +360,7 @@ func (m *Model) getCmdToStartTracking() tea.Cmd {
 
 	m.changesLocked = true
 	m.activeTLBeginTS = time.Now()
-	return toggleTracking(m.db, task.ID, m.activeTLBeginTS, m.activeTLEndTS, "")
+	return toggleTracking(m.db, task.ID, m.activeTLBeginTS, m.activeTLEndTS, nil)
 }
 
 func (m *Model) handleRequestToStopTracking() {
