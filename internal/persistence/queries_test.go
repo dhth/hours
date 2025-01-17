@@ -123,6 +123,31 @@ func TestRepository(t *testing.T) {
 		assert.Equal(t, numSecondsBefore+numSeconds, taskAfter.SecsSpent)
 	})
 
+	t.Run("TestInsertManualTL can insert TL with empty comment", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Now()
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+		taskID := 1
+
+		// WHEN
+		numSeconds := 60 * 90
+		endTS := time.Now()
+		beginTS := endTS.Add(time.Second * -1 * time.Duration(numSeconds))
+		tlID, err := InsertManualTL(testDB, taskID, beginTS, endTS, nil)
+
+		// THEN
+		require.NoError(t, err, "failed to insert task log")
+
+		taskLog, err := fetchTLByID(testDB, tlID)
+		require.NoError(t, err, "failed to fetch task log")
+
+		assert.Equal(t, numSeconds, taskLog.SecsSpent)
+		assert.Nil(t, taskLog.Comment)
+	})
+
 	t.Run("TestDeleteTaskLogEntry", func(t *testing.T) {
 		t.Cleanup(func() { cleanupDB(t, testDB) })
 
