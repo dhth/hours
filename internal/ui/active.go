@@ -19,7 +19,7 @@ const (
 )
 
 func ShowActiveTask(db *sql.DB, writer io.Writer, template string) error {
-	activeTaskDetails, err := pers.FetchActiveTask(db)
+	activeTaskDetails, err := pers.FetchActiveTaskDetails(db)
 	if err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func ShowActiveTask(db *sql.DB, writer io.Writer, template string) error {
 		return nil
 	}
 
-	timeSpent := time.Since(activeTaskDetails.LastLogEntryBeginTS).Seconds()
+	timeSpent := time.Since(activeTaskDetails.CurrentLogBeginTS).Seconds()
 	var timeSpentStr string
 	if timeSpent <= activeSecsThreshold {
 		timeSpentStr = activeSecsThresholdStr

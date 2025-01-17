@@ -34,9 +34,10 @@ type TaskLogEntry struct {
 }
 
 type ActiveTaskDetails struct {
-	TaskID              int
-	TaskSummary         string
-	LastLogEntryBeginTS time.Time
+	TaskID            int
+	TaskSummary       string
+	CurrentLogBeginTS time.Time
+	CurrentLogComment *string
 }
 
 type TaskReportEntry struct {

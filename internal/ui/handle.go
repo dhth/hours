@@ -47,10 +47,14 @@ func (m *Model) getCmdToUpdateActiveTL() tea.Cmd {
 		m.message = err.Error()
 		return nil
 	}
+	commentValue := m.trackingInputs[entryComment].Value()
+	var comment *string
+	if isCommentValid(commentValue) {
+		comment = &commentValue
+	}
 
-	m.trackingInputs[entryBeginTS].SetValue("")
 	m.activeView = taskListView
-	return updateTLBeginTS(m.db, beginTS)
+	return updateActiveTL(m.db, beginTS, comment)
 }
 
 func (m *Model) getCmdToSaveActiveTL() tea.Cmd {
@@ -121,6 +125,7 @@ func (m *Model) getCmdToSaveOrUpdateTL() tea.Cmd {
 	for i := range m.trackingInputs {
 		m.trackingInputs[i].SetValue("")
 	}
+	m.activeTLComment = nil
 
 	m.activeView = taskListView
 	return insertManualTL(m.db, task.ID, beginTS, endTS, comment)
@@ -157,6 +162,16 @@ func (m *Model) goForwardInView() {
 		m.activeView = inactiveTaskListView
 	case inactiveTaskListView:
 		m.activeView = taskListView
+	case editActiveTLView:
+		switch m.trackingFocussedField {
+		case entryBeginTS:
+			m.trackingFocussedField = entryComment
+			m.trackingInputs[entryBeginTS].Blur()
+		case entryComment:
+			m.trackingFocussedField = entryBeginTS
+			m.trackingInputs[entryComment].Blur()
+		}
+		m.trackingInputs[m.trackingFocussedField].Focus()
 	case saveActiveTLView, manualTasklogEntryView:
 		switch m.trackingFocussedField {
 		case entryBeginTS:
@@ -181,6 +196,16 @@ func (m *Model) goBackwardInView() {
 		m.activeView = inactiveTaskListView
 	case inactiveTaskListView:
 		m.activeView = taskLogView
+	case editActiveTLView:
+		switch m.trackingFocussedField {
+		case entryBeginTS:
+			m.trackingFocussedField = entryComment
+			m.trackingInputs[entryBeginTS].Blur()
+		case entryComment:
+			m.trackingFocussedField = entryBeginTS
+			m.trackingInputs[entryComment].Blur()
+		}
+		m.trackingInputs[m.trackingFocussedField].Focus()
 	case saveActiveTLView, manualTasklogEntryView:
 		switch m.trackingFocussedField {
 		case entryBeginTS:
@@ -275,7 +300,7 @@ func (m *Model) goToActiveTask() {
 	if m.activeTasksList.IsFiltered() {
 		m.activeTasksList.ResetFilter()
 	}
-	activeIndex, ok := m.activeTaskIndexMap[m.activeTaskID]
+	activeIndex, ok := m.taskIndexMap[m.activeTaskID]
 	if !ok {
 		m.message = genericErrorMsg
 		return
@@ -284,10 +309,17 @@ func (m *Model) goToActiveTask() {
 	m.activeTasksList.Select(activeIndex)
 }
 
-func (m *Model) handleRequestToSaveActiveTL() {
+func (m *Model) handleRequestToEditActiveTL() {
 	m.activeView = editActiveTLView
 	m.trackingFocussedField = entryBeginTS
 	m.trackingInputs[entryBeginTS].SetValue(m.activeTLBeginTS.Format(timeFormat))
+	if m.activeTLComment != nil {
+		m.trackingInputs[entryComment].SetValue(*m.activeTLComment)
+	} else {
+		m.trackingInputs[entryComment].SetValue("")
+	}
+
+	m.trackingInputs[entryComment].Blur()
 	m.trackingInputs[m.trackingFocussedField].Focus()
 }
 
@@ -359,7 +391,7 @@ func (m *Model) getCmdToStartTracking() tea.Cmd {
 	}
 
 	m.changesLocked = true
-	m.activeTLBeginTS = time.Now()
+	m.activeTLBeginTS = time.Now().Truncate(time.Second)
 	return toggleTracking(m.db, task.ID, m.activeTLBeginTS, m.activeTLEndTS, nil)
 }
 
@@ -459,15 +491,15 @@ func (m *Model) handleTasksFetchedMsg(msg tasksFetchedMsg) tea.Cmd {
 	var cmd tea.Cmd
 	switch msg.active {
 	case true:
-		m.activeTaskMap = make(map[int]*types.Task)
-		m.activeTaskIndexMap = make(map[int]int)
+		m.taskMap = make(map[int]*types.Task)
+		m.taskIndexMap = make(map[int]int)
 		tasks := make([]list.Item, len(msg.tasks))
 		for i, task := range msg.tasks {
 			task.UpdateTitle()
 			task.UpdateDesc()
 			tasks[i] = &task
-			m.activeTaskMap[task.ID] = &task
-			m.activeTaskIndexMap[task.ID] = i
+			m.taskMap[task.ID] = &task
+			m.taskIndexMap[task.ID] = i
 		}
 		m.activeTasksList.SetItems(tasks)
 		m.activeTasksList.Title = "Tasks"
@@ -495,7 +527,7 @@ func (m *Model) handleManualTLInsertedMsg(msg manualTLInsertedMsg) []tea.Cmd {
 	for i := range m.trackingInputs {
 		m.trackingInputs[i].SetValue("")
 	}
-	task, ok := m.activeTaskMap[msg.taskID]
+	task, ok := m.taskMap[msg.taskID]
 
 	var cmds []tea.Cmd
 	if ok {
@@ -532,16 +564,17 @@ func (m *Model) handleActiveTaskFetchedMsg(msg activeTaskFetchedMsg) {
 		return
 	}
 
-	m.activeTaskID = msg.activeTaskID
 	m.lastTrackingChange = trackingStarted
-	m.activeTLBeginTS = msg.beginTs
-	activeTask, ok := m.activeTaskMap[m.activeTaskID]
+	m.activeTaskID = msg.activeTask.TaskID
+	m.activeTLBeginTS = msg.activeTask.CurrentLogBeginTS
+	m.activeTLComment = msg.activeTask.CurrentLogComment
+	activeTask, ok := m.taskMap[m.activeTaskID]
 	if ok {
 		activeTask.TrackingActive = true
 		activeTask.UpdateTitle()
 
 		// go to tracked item on startup
-		activeIndex, aOk := m.activeTaskIndexMap[msg.activeTaskID]
+		activeIndex, aOk := m.taskIndexMap[msg.activeTask.TaskID]
 		if aOk {
 			m.activeTasksList.Select(activeIndex)
 		}
@@ -558,7 +591,7 @@ func (m *Model) handleTrackingToggledMsg(msg trackingToggledMsg) []tea.Cmd {
 
 	m.changesLocked = false
 
-	task, ok := m.activeTaskMap[msg.taskID]
+	task, ok := m.taskMap[msg.taskID]
 
 	if !ok {
 		m.message = genericErrorMsg
@@ -570,6 +603,7 @@ func (m *Model) handleTrackingToggledMsg(msg trackingToggledMsg) []tea.Cmd {
 	case true:
 		m.lastTrackingChange = trackingFinished
 		task.TrackingActive = false
+		m.activeTLComment = nil
 		m.trackingActive = false
 		m.activeTaskID = -1
 		cmds = append(cmds, updateTaskRep(m.db, task))
@@ -593,7 +627,7 @@ func (m *Model) handleTLDeleted(msg tLDeletedMsg) []tea.Cmd {
 	}
 
 	var cmds []tea.Cmd
-	task, ok := m.activeTaskMap[msg.entry.TaskID]
+	task, ok := m.taskMap[msg.entry.TaskID]
 	if ok {
 		cmds = append(cmds, updateTaskRep(m.db, task))
 	}
@@ -608,7 +642,7 @@ func (m *Model) handleActiveTLDeletedMsg(msg activeTaskLogDeletedMsg) {
 		return
 	}
 
-	activeTask, ok := m.activeTaskMap[m.activeTaskID]
+	activeTask, ok := m.taskMap[m.activeTaskID]
 	if !ok {
 		m.message = genericErrorMsg
 		return
@@ -618,5 +652,6 @@ func (m *Model) handleActiveTLDeletedMsg(msg activeTaskLogDeletedMsg) {
 	activeTask.UpdateTitle()
 	m.lastTrackingChange = trackingFinished
 	m.trackingActive = false
+	m.activeTLComment = nil
 	m.activeTaskID = -1
 }

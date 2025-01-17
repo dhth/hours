@@ -25,7 +25,7 @@ func (m Model) View() string {
 	var activeMsg string
 	if m.tasksFetched && m.trackingActive {
 		var taskSummaryMsg, taskStartedSinceMsg string
-		task, ok := m.activeTaskMap[m.activeTaskID]
+		task, ok := m.taskMap[m.activeTaskID]
 		if ok {
 			taskSummaryMsg = utils.Trim(task.Summary, 50)
 			if m.activeView != saveActiveTLView {
@@ -132,6 +132,9 @@ func (m Model) View() string {
 
   %s    %s
 
+  %s
+
+  %s
 
   %s
 `,
@@ -140,9 +143,11 @@ func (m Model) View() string {
 			formFieldNameStyle.Render(formBeginTimeHelp),
 			m.trackingInputs[entryBeginTS].View(),
 			formHelpStyle.Render(formTimeShiftHelp),
+			formFieldNameStyle.Render(formCommentHelp),
+			m.trackingInputs[entryComment].View(),
 			formHelpStyle.Render(formSubmitHelp),
 		)
-		for i := 0; i < m.terminalHeight-14; i++ {
+		for i := 0; i < m.terminalHeight-17; i++ {
 			content += "\n"
 		}
 	case manualTasklogEntryView:

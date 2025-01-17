@@ -51,6 +51,43 @@ func TestRepository(t *testing.T) {
 		assert.Zero(t, task.SecsSpent)
 	})
 
+	t.Run("EditActiveTL", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Now().Truncate(time.Second)
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+		taskID := 1
+		numSeconds := 60 * 90
+		endTS := time.Now()
+		beginTS := endTS.Add(time.Second * -1 * time.Duration(numSeconds))
+		_, insertErr := InsertNewTL(testDB, taskID, beginTS)
+		require.NoError(t, insertErr, "failed to insert task log")
+
+		// WHEN
+		updatedBeginTS := endTS.Add(time.Second * -1 * time.Duration(numSeconds))
+		comment := "updated active TL"
+		err = EditActiveTL(testDB, updatedBeginTS, &comment)
+		activeTaskDetails, err := FetchActiveTaskDetails(testDB)
+		require.NoError(t, err, "failed to fetch active task details")
+
+		err = EditActiveTL(testDB, updatedBeginTS, nil)
+		require.NoError(t, err, "failed to update active task log the second time")
+		activeTaskDetailsTwo, err := FetchActiveTaskDetails(testDB)
+		require.NoError(t, err, "failed to fetch active task details the second time")
+
+		// THEN
+		assert.Equal(t, taskID, activeTaskDetails.TaskID)
+		assert.True(t, updatedBeginTS.Equal(activeTaskDetails.CurrentLogBeginTS))
+		require.NotNil(t, activeTaskDetails.CurrentLogComment)
+		assert.Equal(t, comment, *activeTaskDetails.CurrentLogComment)
+
+		assert.Equal(t, taskID, activeTaskDetailsTwo.TaskID)
+		assert.True(t, updatedBeginTS.Equal(activeTaskDetailsTwo.CurrentLogBeginTS))
+		require.Nil(t, activeTaskDetailsTwo.CurrentLogComment)
+	})
+
 	t.Run("TestUpdateActiveTL", func(t *testing.T) {
 		t.Cleanup(func() { cleanupDB(t, testDB) })
 

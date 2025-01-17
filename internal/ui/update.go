@@ -94,8 +94,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, tea.Batch(cmds...)
 	case editActiveTLView:
-		m.trackingInputs[entryBeginTS], cmd = m.trackingInputs[entryBeginTS].Update(msg)
-		cmds = append(cmds, cmd)
+		for i := range m.trackingInputs {
+			m.trackingInputs[i], cmd = m.trackingInputs[i].Update(msg)
+			cmds = append(cmds, cmd)
+		}
 		return m, tea.Batch(cmds...)
 	case saveActiveTLView:
 		for i := range m.trackingInputs {
@@ -142,7 +144,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.activeView == taskListView {
 				switch m.trackingActive {
 				case true:
-					m.handleRequestToSaveActiveTL()
+					m.handleRequestToEditActiveTL()
 				case false:
 					m.handleRequestToCreateManualTL()
 				}
@@ -217,11 +219,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if handleCmd != nil {
 			cmds = append(cmds, handleCmd)
 		}
-	case tlBeginTSUpdatedMsg:
+	case activeTLUpdatedMsg:
 		if msg.err != nil {
 			m.message = msg.err.Error()
 		} else {
 			m.activeTLBeginTS = msg.beginTS
+			m.activeTLComment = msg.comment
 		}
 	case manualTLInsertedMsg:
 		handleCmds := m.handleManualTLInsertedMsg(msg)
