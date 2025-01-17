@@ -42,7 +42,7 @@ func (m Model) View() string {
 	formHelp := "Use tab/shift-tab to move between sections; esc to go back."
 	formBeginTimeHelp := "Begin Time* (format: 2006/01/02 15:04)"
 	formEndTimeHelp := "End Time* (format: 2006/01/02 15:04)"
-	formTimeShiftHelp := "(k/j/K/J moves time, when correct)"
+	formTimeShiftHelp := "(j/k/J/K/h/l moves time)"
 	formCommentHelp := "Comment"
 	formSubmitHelp := "Press enter to submit"
 
