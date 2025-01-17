@@ -490,7 +490,7 @@ LIMIT ?;
 	return tLE, nil
 }
 
-func DeleteTaskLogEntry(db *sql.DB, entry *types.TaskLogEntry) error {
+func DeleteTL(db *sql.DB, entry *types.TaskLogEntry) error {
 	return runInTx(db, func(tx *sql.Tx) error {
 		stmt, err := tx.Prepare(`
 DELETE from task_log
@@ -587,7 +587,7 @@ WHERE id=?;
 	return task, nil
 }
 
-func fetchTaskLogByID(db *sql.DB, id int) (types.TaskLogEntry, error) {
+func fetchTLByID(db *sql.DB, id int) (types.TaskLogEntry, error) {
 	var tl types.TaskLogEntry
 	row := db.QueryRow(`
 SELECT id, task_id, begin_ts, end_ts, secs_spent, comment

@@ -28,7 +28,7 @@ func (m Model) View() string {
 		task, ok := m.activeTaskMap[m.activeTaskID]
 		if ok {
 			taskSummaryMsg = utils.Trim(task.Summary, 50)
-			if m.activeView != askForCommentView {
+			if m.activeView != saveActiveTLView {
 				taskStartedSinceMsg = fmt.Sprintf("(since %s)", m.activeTLBeginTS.Format(timeOnlyFormat))
 			}
 		}
@@ -40,7 +40,7 @@ func (m Model) View() string {
 	}
 
 	switch m.activeView {
-	case activeTaskListView:
+	case taskListView:
 		content = listStyle.Render(m.activeTasksList.View())
 	case taskLogView:
 		content = listStyle.Render(m.taskLogList.View())
@@ -70,7 +70,7 @@ func (m Model) View() string {
 		for i := 0; i < m.terminalHeight-20+10; i++ {
 			content += "\n"
 		}
-	case askForCommentView:
+	case saveActiveTLView:
 		formHeadingText := "Saving log entry. Enter the following details."
 
 		content = fmt.Sprintf(
@@ -112,7 +112,7 @@ func (m Model) View() string {
 		for i := 0; i < m.terminalHeight-24; i++ {
 			content += "\n"
 		}
-	case editStartTsView:
+	case editActiveTLView:
 		formHeadingText := "Updating log entry. Enter the following details."
 
 		content = fmt.Sprintf(
@@ -197,7 +197,7 @@ func (m Model) View() string {
 	var helpMsg string
 	if m.showHelpIndicator {
 		// first time directions
-		if m.activeView == activeTaskListView && len(m.activeTasksList.Items()) <= 1 {
+		if m.activeView == taskListView && len(m.activeTasksList.Items()) <= 1 {
 			if len(m.activeTasksList.Items()) == 0 {
 				helpMsg += " " + initialHelpMsgStyle.Render("Press a to add a task")
 			} else if len(m.taskLogList.Items()) == 0 {

@@ -76,7 +76,7 @@ func TestRepository(t *testing.T) {
 		// THEN
 		require.NoError(t, err, "failed to update task log")
 
-		taskLog, err := fetchTaskLogByID(testDB, tlID)
+		taskLog, err := fetchTLByID(testDB, tlID)
 		require.NoError(t, err, "failed to fetch task log")
 
 		taskAfter, err := fetchTaskByID(testDB, taskID)
@@ -110,7 +110,7 @@ func TestRepository(t *testing.T) {
 		// THEN
 		require.NoError(t, err, "failed to insert task log")
 
-		taskLog, err := fetchTaskLogByID(testDB, tlID)
+		taskLog, err := fetchTLByID(testDB, tlID)
 		require.NoError(t, err, "failed to fetch task log")
 
 		taskAfter, err := fetchTaskByID(testDB, taskID)
@@ -133,11 +133,11 @@ func TestRepository(t *testing.T) {
 		taskBefore, err := fetchTaskByID(testDB, taskID)
 		require.NoError(t, err, "failed to fetch task")
 		numSecondsBefore := taskBefore.SecsSpent
-		taskLog, err := fetchTaskLogByID(testDB, tlID)
+		taskLog, err := fetchTLByID(testDB, tlID)
 		require.NoError(t, err, "failed to fetch task log")
 
 		// WHEN
-		err = DeleteTaskLogEntry(testDB, &taskLog)
+		err = DeleteTL(testDB, &taskLog)
 
 		// THEN
 		require.NoError(t, err, "failed to insert task log")

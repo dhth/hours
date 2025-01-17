@@ -18,21 +18,21 @@ const (
 	trackingActive
 )
 
-type dBChange uint
+type trackingChange uint
 
 const (
-	insertChange dBChange = iota
-	updateChange
+	trackingStarted trackingChange = iota
+	trackingFinished
 )
 
 type stateView uint
 
 const (
-	activeTaskListView stateView = iota
+	taskListView stateView = iota
 	taskLogView
 	inactiveTaskListView
-	editStartTsView
-	askForCommentView
+	editActiveTLView
+	saveActiveTLView
 	manualTasklogEntryView
 	taskInputView
 	helpView
@@ -102,12 +102,11 @@ type Model struct {
 	taskInputFocussedField taskInputField
 	helpVP                 viewport.Model
 	helpVPReady            bool
-	lastChange             dBChange
+	lastTrackingChange     trackingChange
 	changesLocked          bool
 	activeTaskID           int
 	tasklogSaveType        tasklogSaveType
 	message                string
-	messages               []string
 	showHelpIndicator      bool
 	terminalHeight         int
 	trackingActive         bool
@@ -117,7 +116,7 @@ func (m Model) Init() tea.Cmd {
 	return tea.Batch(
 		hideHelp(time.Minute*1),
 		fetchTasks(m.db, true),
-		fetchTaskLogEntries(m.db),
+		fetchTLS(m.db),
 		fetchTasks(m.db, false),
 	)
 }

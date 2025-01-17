@@ -6,7 +6,7 @@ import (
 	"github.com/dhth/hours/internal/types"
 )
 
-type HideHelpMsg struct{}
+type hideHelpMsg struct{}
 
 type trackingToggledMsg struct {
 	taskID    int
@@ -20,7 +20,7 @@ type taskRepUpdatedMsg struct {
 	err error
 }
 
-type manualTaskLogInserted struct {
+type manualTLInsertedMsg struct {
 	taskID int
 	err    error
 }
@@ -41,7 +41,7 @@ type activeTaskFetchedMsg struct {
 	err          error
 }
 
-type taskLogEntriesFetchedMsg struct {
+type tLsFetchedMsg struct {
 	entries []types.TaskLogEntry
 	err     error
 }
@@ -56,18 +56,18 @@ type taskUpdatedMsg struct {
 	err     error
 }
 
-type taskActiveStatusUpdated struct {
+type taskActiveStatusUpdatedMsg struct {
 	tsk    *types.Task
 	active bool
 	err    error
 }
 
-type taskLogEntryDeletedMsg struct {
+type tLDeletedMsg struct {
 	entry *types.TaskLogEntry
 	err   error
 }
 
-type tasksFetched struct {
+type tasksFetchedMsg struct {
 	tasks  []types.Task
 	active bool
 	err    error
