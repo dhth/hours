@@ -67,7 +67,7 @@ var helpText = fmt.Sprintf(`  %s
 `),
 	helpHeaderStyle.Render("Task Log Entry View"),
 	helpSectionStyle.Render(`
-    enter                                   Save entered details for the task log
+    enter/<ctrl+s>                          Save entered details for the task log
     k                                       Move timestamp backwards by one minute
     j                                       Move timestamp forwards by one minute
     K                                       Move timestamp backwards by five minutes

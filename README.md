@@ -233,7 +233,7 @@ Inactive Task List View
 
 Task Log Entry View
 
-  enter                                   Save task log entry
+  enter/<ctrl+s>                          Save task log entry
   k                                       Move timestamp backwards by one minute
   j                                       Move timestamp forwards by one minute
   K                                       Move timestamp backwards by five minutes

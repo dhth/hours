@@ -110,7 +110,7 @@ func GenerateData(db *sql.DB, numDays, numTasks uint8) error {
 			if rand.Float64() < nonEmptyCommentChance {
 				comment = &commentStr
 			}
-			_, err = pers.InsertManualTL(db, int(i+1), beginTs, endTs, comment)
+			_, err = pers.InsertManualTL(db, int(i+1), beginTs, endTs, comment, nil)
 			if err != nil {
 				return err
 			}

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dhth/hours/internal/types"
@@ -15,24 +16,31 @@ func InitialModel(db *sql.DB) Model {
 	var inactiveTaskItems []list.Item
 	var tasklogListItems []list.Item
 
-	trackingInputs := make([]textinput.Model, 3)
-	trackingInputs[entryBeginTS] = textinput.New()
-	trackingInputs[entryBeginTS].Placeholder = "09:30"
-	trackingInputs[entryBeginTS].Focus()
-	trackingInputs[entryBeginTS].CharLimit = len(string(timeFormat))
-	trackingInputs[entryBeginTS].Width = 30
+	tLInputs := make([]textinput.Model, 3)
+	tLInputs[entryBeginTS] = textinput.New()
+	tLInputs[entryBeginTS].Placeholder = "09:30"
+	tLInputs[entryBeginTS].CharLimit = len(timeFormat)
+	tLInputs[entryBeginTS].Width = 30
 
-	trackingInputs[entryEndTS] = textinput.New()
-	trackingInputs[entryEndTS].Placeholder = "12:30pm"
-	trackingInputs[entryEndTS].Focus()
-	trackingInputs[entryEndTS].CharLimit = len(string(timeFormat))
-	trackingInputs[entryEndTS].Width = 30
+	tLInputs[entryEndTS] = textinput.New()
+	tLInputs[entryEndTS].Placeholder = "12:30pm"
+	tLInputs[entryEndTS].CharLimit = len(timeFormat)
+	tLInputs[entryEndTS].Width = 30
 
-	trackingInputs[entryComment] = textinput.New()
-	trackingInputs[entryComment].Placeholder = "Your comment goes here"
-	trackingInputs[entryComment].Focus()
-	trackingInputs[entryComment].CharLimit = 255
-	trackingInputs[entryComment].Width = 80
+	tLInputs[entryComment] = textinput.New()
+	tLInputs[entryComment].Placeholder = "Your comment goes here"
+	tLInputs[entryComment].CharLimit = 255
+	tLInputs[entryComment].Width = 100
+
+	tLDescriptionInput := textarea.New()
+	tLDescriptionInput.Placeholder = `Task Log Description goes here.
+
+This can be used to record additional details about your work on this task.`
+	tLDescriptionInput.CharLimit = 1024
+	tLDescriptionInput.SetWidth(100)
+	tLDescriptionInput.SetHeight(8)
+	tLDescriptionInput.ShowLineNumbers = false
+	tLDescriptionInput.Prompt = "  ┃ "
 
 	taskInputs := make([]textinput.Model, 3)
 	taskInputs[summaryField] = textinput.New()
@@ -49,7 +57,8 @@ func InitialModel(db *sql.DB) Model {
 		taskIndexMap:      make(map[int]int),
 		taskLogList:       list.New(tasklogListItems, newItemDelegate(lipgloss.Color(taskLogListColor)), listWidth, 0),
 		showHelpIndicator: true,
-		trackingInputs:    trackingInputs,
+		tLInputs:          tLInputs,
+		tLDescInput:       tLDescriptionInput,
 		taskInputs:        taskInputs,
 	}
 	m.activeTasksList.Title = "Tasks"

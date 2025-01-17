@@ -9,6 +9,8 @@ import (
 
 const (
 	taskLogEntryViewHeading = "Task Log Entry"
+	minHeightNeeded         = 36
+	minWidthNeeded          = 110
 )
 
 var listWidth = 140
@@ -28,7 +30,7 @@ func (m Model) View() string {
 		task, ok := m.taskMap[m.activeTaskID]
 		if ok {
 			taskSummaryMsg = utils.Trim(task.Summary, 50)
-			if m.activeView != saveActiveTLView {
+			if m.activeView != finishActiveTLView {
 				taskStartedSinceMsg = fmt.Sprintf("(since %s)", m.activeTLBeginTS.Format(timeOnlyFormat))
 			}
 		}
@@ -43,8 +45,17 @@ func (m Model) View() string {
 	formBeginTimeHelp := "Begin Time* (format: 2006/01/02 15:04)"
 	formEndTimeHelp := "End Time* (format: 2006/01/02 15:04)"
 	formTimeShiftHelp := "(j/k/J/K/h/l moves time)"
-	formCommentHelp := "Comment"
-	formSubmitHelp := "Press enter to submit"
+	formCommentHelp := "Comment (optional)"
+	formDescHelp := "Description (optional)"
+	var formSubmitHelp string
+	switch m.activeView {
+	case taskInputView, editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+		if m.trackingFocussedField == entryDesc {
+			formSubmitHelp = "Press <ctrl+s> to submit"
+		} else {
+			formSubmitHelp = "Press <ctrl+s>/<enter> to submit"
+		}
+	}
 
 	switch m.activeView {
 	case taskListView:
@@ -77,7 +88,7 @@ func (m Model) View() string {
 		for i := 0; i < m.terminalHeight-20+10; i++ {
 			content += "\n"
 		}
-	case saveActiveTLView:
+	case finishActiveTLView:
 		formHeadingText := "Saving log entry. Enter the following details."
 
 		content = fmt.Sprintf(
@@ -100,6 +111,9 @@ func (m Model) View() string {
 
   %s
 
+  %s
+
+%s
 
   %s
 `,
@@ -107,16 +121,18 @@ func (m Model) View() string {
 			formContextStyle.Render(formHeadingText),
 			formHelpStyle.Render(formHelp),
 			formFieldNameStyle.Render(formBeginTimeHelp),
-			m.trackingInputs[entryBeginTS].View(),
+			m.tLInputs[entryBeginTS].View(),
 			formHelpStyle.Render(formTimeShiftHelp),
 			formFieldNameStyle.Render(formEndTimeHelp),
-			m.trackingInputs[entryEndTS].View(),
+			m.tLInputs[entryEndTS].View(),
 			formHelpStyle.Render(formTimeShiftHelp),
 			formFieldNameStyle.Render(formCommentHelp),
-			m.trackingInputs[entryComment].View(),
+			m.tLInputs[entryComment].View(),
+			formFieldNameStyle.Render(formDescHelp),
+			m.tLDescInput.View(),
 			formHelpStyle.Render(formSubmitHelp),
 		)
-		for i := 0; i < m.terminalHeight-24; i++ {
+		for i := 0; i < m.terminalHeight-34; i++ {
 			content += "\n"
 		}
 	case editActiveTLView:
@@ -137,17 +153,23 @@ func (m Model) View() string {
   %s
 
   %s
+
+%s
+
+  %s
 `,
 			taskLogEntryHeadingStyle.Render(taskLogEntryViewHeading),
 			formContextStyle.Render(formHeadingText),
 			formFieldNameStyle.Render(formBeginTimeHelp),
-			m.trackingInputs[entryBeginTS].View(),
+			m.tLInputs[entryBeginTS].View(),
 			formHelpStyle.Render(formTimeShiftHelp),
 			formFieldNameStyle.Render(formCommentHelp),
-			m.trackingInputs[entryComment].View(),
+			m.tLInputs[entryComment].View(),
+			formFieldNameStyle.Render(formDescHelp),
+			m.tLDescInput.View(),
 			formHelpStyle.Render(formSubmitHelp),
 		)
-		for i := 0; i < m.terminalHeight-17; i++ {
+		for i := 0; i < m.terminalHeight-28; i++ {
 			content += "\n"
 		}
 	case manualTasklogEntryView:
@@ -179,6 +201,9 @@ func (m Model) View() string {
 
   %s
 
+  %s
+
+%s
 
   %s
 `,
@@ -186,16 +211,18 @@ func (m Model) View() string {
 			formContextStyle.Render(formHeadingText),
 			formHelpStyle.Render(formHelp),
 			formFieldNameStyle.Render(formBeginTimeHelp),
-			m.trackingInputs[entryBeginTS].View(),
+			m.tLInputs[entryBeginTS].View(),
 			formHelpStyle.Render(formTimeShiftHelp),
 			formFieldNameStyle.Render(formEndTimeHelp),
-			m.trackingInputs[entryEndTS].View(),
+			m.tLInputs[entryEndTS].View(),
 			formHelpStyle.Render(formTimeShiftHelp),
 			formFieldNameStyle.Render(formCommentHelp),
-			m.trackingInputs[entryComment].View(),
+			m.tLInputs[entryComment].View(),
+			formFieldNameStyle.Render(formDescHelp),
+			m.tLDescInput.View(),
 			formHelpStyle.Render(formSubmitHelp),
 		)
-		for i := 0; i < m.terminalHeight-24; i++ {
+		for i := 0; i < m.terminalHeight-34; i++ {
 			content += "\n"
 		}
 	case helpView:
@@ -204,6 +231,16 @@ func (m Model) View() string {
 		} else {
 			content = viewPortStyle.Render(fmt.Sprintf("  %s  %s\n\n%s\n", helpTitleStyle.Render("Help"), helpSectionStyle.Render("(scroll with j/k/↓/↑)"), m.helpVP.View()))
 		}
+	case insufficientDimensionsView:
+		return fmt.Sprintf(`
+    Terminal size too small:
+      Width = %d Height = %d
+
+    Minimum dimensions needed:
+      Width = %d Height = %d
+
+    Press (q/<ctrl+c>/<esc> to exit)
+`, m.terminalWidth, m.terminalHeight, minWidthNeeded, minHeightNeeded)
 	}
 
 	var helpMsg string
