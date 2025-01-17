@@ -42,15 +42,15 @@ func InitialModel(db *sql.DB) Model {
 	taskInputs[entryBeginTS].Width = 60
 
 	m := Model{
-		db:                 db,
-		activeTasksList:    list.New(activeTaskItems, newItemDelegate(lipgloss.Color(activeTaskListColor)), listWidth, 0),
-		inactiveTasksList:  list.New(inactiveTaskItems, newItemDelegate(lipgloss.Color(inactiveTaskListColor)), listWidth, 0),
-		activeTaskMap:      make(map[int]*types.Task),
-		activeTaskIndexMap: make(map[int]int),
-		taskLogList:        list.New(tasklogListItems, newItemDelegate(lipgloss.Color(taskLogListColor)), listWidth, 0),
-		showHelpIndicator:  true,
-		trackingInputs:     trackingInputs,
-		taskInputs:         taskInputs,
+		db:                db,
+		activeTasksList:   list.New(activeTaskItems, newItemDelegate(lipgloss.Color(activeTaskListColor)), listWidth, 0),
+		inactiveTasksList: list.New(inactiveTaskItems, newItemDelegate(lipgloss.Color(inactiveTaskListColor)), listWidth, 0),
+		taskMap:           make(map[int]*types.Task),
+		taskIndexMap:      make(map[int]int),
+		taskLogList:       list.New(tasklogListItems, newItemDelegate(lipgloss.Color(taskLogListColor)), listWidth, 0),
+		showHelpIndicator: true,
+		trackingInputs:    trackingInputs,
+		taskInputs:        taskInputs,
 	}
 	m.activeTasksList.Title = "Tasks"
 	m.activeTasksList.SetStatusBarItemName("task", "tasks")

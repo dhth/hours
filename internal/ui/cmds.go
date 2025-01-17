@@ -59,10 +59,10 @@ LIMIT 1
 	}
 }
 
-func updateTLBeginTS(db *sql.DB, beginTS time.Time) tea.Cmd {
+func updateActiveTL(db *sql.DB, beginTS time.Time, comment *string) tea.Cmd {
 	return func() tea.Msg {
-		err := pers.UpdateTLBeginTS(db, beginTS)
-		return tlBeginTSUpdatedMsg{beginTS, err}
+		err := pers.EditActiveTL(db, beginTS, comment)
+		return activeTLUpdatedMsg{beginTS, comment, err}
 	}
 }
 
@@ -75,7 +75,7 @@ func insertManualTL(db *sql.DB, taskID int, beginTS time.Time, endTS time.Time, 
 
 func fetchActiveTask(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
-		activeTaskDetails, err := pers.FetchActiveTask(db)
+		activeTaskDetails, err := pers.FetchActiveTaskDetails(db)
 		if err != nil {
 			return activeTaskFetchedMsg{err: err}
 		}
@@ -85,8 +85,7 @@ func fetchActiveTask(db *sql.DB) tea.Cmd {
 		}
 
 		return activeTaskFetchedMsg{
-			activeTaskID: activeTaskDetails.TaskID,
-			beginTs:      activeTaskDetails.LastLogEntryBeginTS,
+			activeTask: activeTaskDetails,
 		}
 	}
 }

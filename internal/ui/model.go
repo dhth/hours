@@ -89,10 +89,11 @@ type Model struct {
 	db                     *sql.DB
 	activeTasksList        list.Model
 	inactiveTasksList      list.Model
-	activeTaskMap          map[int]*types.Task
-	activeTaskIndexMap     map[int]int
+	taskMap                map[int]*types.Task
+	taskIndexMap           map[int]int
 	activeTLBeginTS        time.Time
 	activeTLEndTS          time.Time
+	activeTLComment        *string
 	tasksFetched           bool
 	taskLogList            list.Model
 	trackingInputs         []textinput.Model

@@ -25,8 +25,9 @@ type manualTLInsertedMsg struct {
 	err    error
 }
 
-type tlBeginTSUpdatedMsg struct {
+type activeTLUpdatedMsg struct {
 	beginTS time.Time
+	comment *string
 	err     error
 }
 
@@ -35,10 +36,9 @@ type activeTaskLogDeletedMsg struct {
 }
 
 type activeTaskFetchedMsg struct {
-	activeTaskID int
-	beginTs      time.Time
-	noneActive   bool
-	err          error
+	activeTask types.ActiveTaskDetails
+	noneActive bool
+	err        error
 }
 
 type tLsFetchedMsg struct {

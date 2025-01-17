@@ -36,9 +36,11 @@ VALUES (?, ?, ?);
 	})
 }
 
-func UpdateTLBeginTS(db *sql.DB, beginTs time.Time) error {
+func EditActiveTL(db *sql.DB, beginTs time.Time, comment *string) error {
 	stmt, err := db.Prepare(`
-UPDATE task_log SET begin_ts=?
+UPDATE task_log
+    SET begin_ts=?,
+    comment = ?
 WHERE active is true;
 `)
 	if err != nil {
@@ -46,12 +48,8 @@ WHERE active is true;
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(beginTs.UTC(), true)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	_, err = stmt.Exec(beginTs.UTC(), comment)
+	return err
 }
 
 func DeleteActiveTL(db *sql.DB) error {
@@ -151,9 +149,9 @@ WHERE id = ?;
 	})
 }
 
-func FetchActiveTask(db *sql.DB) (types.ActiveTaskDetails, error) {
+func FetchActiveTaskDetails(db *sql.DB) (types.ActiveTaskDetails, error) {
 	row := db.QueryRow(`
-SELECT t.id, t.summary, tl.begin_ts
+SELECT t.id, t.summary, tl.begin_ts, tl.comment
 FROM task_log tl left join task t on tl.task_id = t.id
 WHERE tl.active=true;
 `)
@@ -162,7 +160,8 @@ WHERE tl.active=true;
 	err := row.Scan(
 		&activeTaskDetails.TaskID,
 		&activeTaskDetails.TaskSummary,
-		&activeTaskDetails.LastLogEntryBeginTS,
+		&activeTaskDetails.CurrentLogBeginTS,
+		&activeTaskDetails.CurrentLogComment,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		activeTaskDetails.TaskID = -1
@@ -170,7 +169,7 @@ WHERE tl.active=true;
 	} else if err != nil {
 		return activeTaskDetails, err
 	}
-	activeTaskDetails.LastLogEntryBeginTS = activeTaskDetails.LastLogEntryBeginTS.Local()
+	activeTaskDetails.CurrentLogBeginTS = activeTaskDetails.CurrentLogBeginTS.Local()
 	return activeTaskDetails, nil
 }
 
