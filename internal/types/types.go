@@ -28,7 +28,7 @@ type TaskLogEntry struct {
 	BeginTS     time.Time
 	EndTS       time.Time
 	SecsSpent   int
-	Comment     string
+	Comment     *string
 	TLTitle     string
 	TLDesc      string
 }
@@ -69,7 +69,7 @@ func (t *Task) UpdateDesc() {
 }
 
 func (tl *TaskLogEntry) UpdateTitle() {
-	tl.TLTitle = utils.Trim(tl.Comment, 60)
+	tl.TLTitle = utils.Trim(tl.GetComment(), 60)
 }
 
 func (tl *TaskLogEntry) UpdateDesc() {
@@ -98,6 +98,14 @@ func (tl *TaskLogEntry) UpdateDesc() {
 	tl.TLDesc = fmt.Sprintf("%s %s", utils.RightPadTrim("["+tl.TaskSummary+"]", 60, true), timeStr)
 }
 
+func (tl *TaskLogEntry) GetComment() string {
+	if tl.Comment == nil {
+		return "∅"
+	}
+
+	return *tl.Comment
+}
+
 func (t Task) Title() string {
 	return t.TaskTitle
 }
@@ -119,7 +127,7 @@ func (tl TaskLogEntry) Description() string {
 }
 
 func (tl TaskLogEntry) FilterValue() string {
-	return tl.Comment
+	return fmt.Sprintf("%d", tl.ID)
 }
 
 func HumanizeDuration(durationInSecs int) string {

@@ -9,6 +9,8 @@ import (
 	pers "github.com/dhth/hours/internal/persistence"
 )
 
+const nonEmptyCommentChance = 0.8
+
 var (
 	tasks = []string{
 		".net",
@@ -103,7 +105,11 @@ func GenerateData(db *sql.DB, numDays, numTasks uint8) error {
 			beginTs := randomTimestamp(int(numDays))
 			numMinutes := 30 + rand.Intn(60)
 			endTs := beginTs.Add(time.Minute * time.Duration(numMinutes))
-			comment := fmt.Sprintf("%s %s", verbs[rand.Intn(len(verbs))], nouns[rand.Intn(len(nouns))])
+			var comment *string
+			commentStr := fmt.Sprintf("%s %s", verbs[rand.Intn(len(verbs))], nouns[rand.Intn(len(nouns))])
+			if rand.Float64() < nonEmptyCommentChance {
+				comment = &commentStr
+			}
 			_, err = pers.InsertManualTL(db, int(i+1), beginTs, endTs, comment)
 			if err != nil {
 				return err

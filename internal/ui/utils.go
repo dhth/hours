@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -23,4 +25,8 @@ func getReportStyles(plain bool) reportStyles {
 		recordsFooterStyle,
 		recordsBorderStyle,
 	}
+}
+
+func isCommentValid(comment string) bool {
+	return strings.TrimSpace(comment) != ""
 }
