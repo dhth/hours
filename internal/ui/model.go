@@ -31,6 +31,7 @@ type stateView uint
 const (
 	taskListView stateView = iota
 	taskLogView
+	taskLogDetailsView
 	inactiveTaskListView
 	editActiveTLView
 	finishActiveTLView
@@ -109,6 +110,8 @@ type Model struct {
 	taskInputFocussedField         taskInputField
 	helpVP                         viewport.Model
 	helpVPReady                    bool
+	tLDetailsVP                    viewport.Model
+	tLDetailsVPReady               bool
 	lastTrackingChange             trackingChange
 	changesLocked                  bool
 	activeTaskID                   int

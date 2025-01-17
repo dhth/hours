@@ -271,18 +271,17 @@ func (m *Model) goBackwardInView() {
 }
 
 func (m *Model) shiftTime(direction types.TimeShiftDirection, duration types.TimeShiftDuration) error {
-	if m.activeView == editActiveTLView || m.activeView == finishActiveTLView || m.activeView == manualTasklogEntryView {
-		if m.trackingFocussedField == entryBeginTS || m.trackingFocussedField == entryEndTS {
-			ts, err := time.ParseInLocation(timeFormat, m.tLInputs[m.trackingFocussedField].Value(), time.Local)
-			if err != nil {
-				return err
-			}
-
-			newTs := types.GetShiftedTime(ts, direction, duration)
-
-			m.tLInputs[m.trackingFocussedField].SetValue(newTs.Format(timeFormat))
+	if m.trackingFocussedField == entryBeginTS || m.trackingFocussedField == entryEndTS {
+		ts, err := time.ParseInLocation(timeFormat, m.tLInputs[m.trackingFocussedField].Value(), time.Local)
+		if err != nil {
+			return err
 		}
+
+		newTs := types.GetShiftedTime(ts, direction, duration)
+
+		m.tLInputs[m.trackingFocussedField].SetValue(newTs.Format(timeFormat))
 	}
+
 	return nil
 }
 
@@ -303,6 +302,8 @@ func (m *Model) handleRequestToGoBackOrQuit() bool {
 		} else {
 			m.activeView = taskListView
 		}
+	case taskLogDetailsView:
+		m.activeView = taskLogView
 	case inactiveTaskListView:
 		fs := m.inactiveTasksList.FilterState()
 		if fs == list.Filtering || fs == list.FilterApplied {
@@ -500,17 +501,76 @@ func (m *Model) handleRequestToUpdateTask() {
 }
 
 func (m *Model) handleRequestToScrollVPUp() {
-	if m.helpVP.AtTop() {
+	switch m.activeView {
+	case helpView:
+		if m.helpVP.AtTop() {
+			return
+		}
+		m.helpVP.LineUp(viewPortMoveLineCount)
+	case taskLogDetailsView:
+		if m.tLDetailsVP.AtTop() {
+			return
+		}
+		m.tLDetailsVP.LineUp(viewPortMoveLineCount)
+	default:
 		return
 	}
-	m.helpVP.LineUp(viewPortMoveLineCount)
 }
 
 func (m *Model) handleRequestToScrollVPDown() {
-	if m.helpVP.AtBottom() {
+	switch m.activeView {
+	case helpView:
+		if m.helpVP.AtBottom() {
+			return
+		}
+		m.helpVP.LineDown(viewPortMoveLineCount)
+	case taskLogDetailsView:
+		if m.tLDetailsVP.AtBottom() {
+			return
+		}
+		m.tLDetailsVP.LineDown(viewPortMoveLineCount)
+	default:
 		return
 	}
-	m.helpVP.LineDown(viewPortMoveLineCount)
+}
+
+func (m *Model) handleRequestToViewTLDetails() {
+	if len(m.taskLogList.Items()) == 0 {
+		return
+	}
+
+	tl, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
+	if !ok {
+		m.message = genericErrorMsg
+		return
+	}
+
+	var taskDetails string
+	task, tOk := m.taskMap[tl.TaskID]
+	if tOk {
+		taskDetails = task.Summary
+	}
+
+	timeSpentStr := types.HumanizeDuration(tl.SecsSpent)
+
+	details := fmt.Sprintf(`Task: %s
+
+%s
+
+%s → %s (%s)
+
+---
+
+%s
+`, taskDetails,
+		tl.GetComment(),
+		tl.BeginTS.Format(timeFormat),
+		tl.EndTS.Format(timeFormat),
+		timeSpentStr,
+		tl.GetDescription())
+
+	m.tLDetailsVP.SetContent(details)
+	m.activeView = taskLogDetailsView
 }
 
 func (m *Model) handleWindowResizing(msg tea.WindowSizeMsg) {
@@ -549,6 +609,16 @@ func (m *Model) handleWindowResizing(msg tea.WindowSizeMsg) {
 	} else {
 		m.helpVP.Height = m.terminalHeight - 7
 		m.helpVP.Width = w - 5
+	}
+
+	if !m.tLDetailsVPReady {
+		m.tLDetailsVP = viewport.New(w-5, m.terminalHeight-6)
+		m.tLDetailsVP.KeyMap.Up.SetEnabled(false)
+		m.tLDetailsVP.KeyMap.Down.SetEnabled(false)
+		m.tLDetailsVPReady = true
+	} else {
+		m.tLDetailsVP.Height = m.terminalHeight - 6
+		m.tLDetailsVP.Width = w - 5
 	}
 }
 

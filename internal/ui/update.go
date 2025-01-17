@@ -78,34 +78,58 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "shift+tab":
 			m.goBackwardInView()
 		case "k":
-			err := m.shiftTime(types.ShiftBackward, types.ShiftMinute)
-			if err != nil {
-				return m, tea.Batch(cmds...)
+			switch m.activeView {
+			case editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+				err := m.shiftTime(types.ShiftBackward, types.ShiftMinute)
+				if err != nil {
+					return m, tea.Batch(cmds...)
+				}
 			}
 		case "j":
-			err := m.shiftTime(types.ShiftForward, types.ShiftMinute)
-			if err != nil {
-				return m, tea.Batch(cmds...)
+			switch m.activeView {
+			case editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+				err := m.shiftTime(types.ShiftForward, types.ShiftMinute)
+				if err != nil {
+					return m, tea.Batch(cmds...)
+				}
 			}
 		case "K":
-			err := m.shiftTime(types.ShiftBackward, types.ShiftFiveMinutes)
-			if err != nil {
-				return m, tea.Batch(cmds...)
+			switch m.activeView {
+			case editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+				err := m.shiftTime(types.ShiftBackward, types.ShiftFiveMinutes)
+				if err != nil {
+					return m, tea.Batch(cmds...)
+				}
 			}
 		case "J":
-			err := m.shiftTime(types.ShiftForward, types.ShiftFiveMinutes)
-			if err != nil {
-				return m, tea.Batch(cmds...)
+			switch m.activeView {
+			case editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+				err := m.shiftTime(types.ShiftForward, types.ShiftFiveMinutes)
+				if err != nil {
+					return m, tea.Batch(cmds...)
+				}
 			}
 		case "h":
-			err := m.shiftTime(types.ShiftBackward, types.ShiftDay)
-			if err != nil {
-				return m, tea.Batch(cmds...)
+			switch m.activeView {
+			case editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+				err := m.shiftTime(types.ShiftBackward, types.ShiftDay)
+				if err != nil {
+					return m, tea.Batch(cmds...)
+				}
+			case taskLogDetailsView:
+				m.taskLogList.CursorUp()
+				m.handleRequestToViewTLDetails()
 			}
 		case "l":
-			err := m.shiftTime(types.ShiftForward, types.ShiftDay)
-			if err != nil {
-				return m, tea.Batch(cmds...)
+			switch m.activeView {
+			case editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+				err := m.shiftTime(types.ShiftForward, types.ShiftDay)
+				if err != nil {
+					return m, tea.Batch(cmds...)
+				}
+			case taskLogDetailsView:
+				m.taskLogList.CursorDown()
+				m.handleRequestToViewTLDetails()
 			}
 		}
 	}
@@ -221,12 +245,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.handleRequestToUpdateTask()
 			}
 		case "k":
-			if m.activeView == helpView {
-				m.handleRequestToScrollVPUp()
-			}
+			m.handleRequestToScrollVPUp()
 		case "j":
-			if m.activeView == helpView {
-				m.handleRequestToScrollVPDown()
+			m.handleRequestToScrollVPDown()
+		case "d":
+			if m.activeView == taskLogView {
+				m.handleRequestToViewTLDetails()
 			}
 		case "?":
 			m.lastView = m.activeView

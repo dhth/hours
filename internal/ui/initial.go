@@ -66,6 +66,8 @@ This can be used to record additional details about your work on this task.`
 	m.activeTasksList.DisableQuitKeybindings()
 	m.activeTasksList.SetShowHelp(false)
 	m.activeTasksList.Styles.Title = m.activeTasksList.Styles.Title.Foreground(lipgloss.Color(defaultBackgroundColor)).Background(lipgloss.Color(activeTaskListColor)).Bold(true)
+	m.activeTasksList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
+	m.activeTasksList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
 	m.taskLogList.Title = "Task Logs (last 50)"
 	m.taskLogList.SetStatusBarItemName("entry", "entries")
@@ -73,12 +75,16 @@ This can be used to record additional details about your work on this task.`
 	m.taskLogList.DisableQuitKeybindings()
 	m.taskLogList.SetShowHelp(false)
 	m.taskLogList.Styles.Title = m.taskLogList.Styles.Title.Foreground(lipgloss.Color(defaultBackgroundColor)).Background(lipgloss.Color(taskLogListColor)).Bold(true)
+	m.taskLogList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
+	m.taskLogList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
 	m.inactiveTasksList.Title = "Inactive Tasks"
 	m.inactiveTasksList.SetStatusBarItemName("task", "tasks")
 	m.inactiveTasksList.DisableQuitKeybindings()
 	m.inactiveTasksList.SetShowHelp(false)
 	m.inactiveTasksList.Styles.Title = m.inactiveTasksList.Styles.Title.Foreground(lipgloss.Color(defaultBackgroundColor)).Background(lipgloss.Color(inactiveTaskListColor)).Bold(true)
+	m.inactiveTasksList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
+	m.inactiveTasksList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
 	return m
 }

@@ -9,7 +9,21 @@ import (
 	pers "github.com/dhth/hours/internal/persistence"
 )
 
-const nonEmptyCommentChance = 0.8
+const (
+	nonEmptyCommentChance = 0.8
+	sampleDescription     = `This is a task log description.
+
+This can be used to record additional information for a task log.
+
+You can include:
+- Detailed steps taken during the task
+- Observations and notes
+- Any issues encountered and how they were resolved
+- Future actions or follow-ups required
+- References to related tasks or documents
+
+Use this section to ensure all relevant details are captured for each task, providing a comprehensive log that can be referred to later.`
+)
 
 var (
 	tasks = []string{
@@ -107,10 +121,16 @@ func GenerateData(db *sql.DB, numDays, numTasks uint8) error {
 			endTs := beginTs.Add(time.Minute * time.Duration(numMinutes))
 			var comment *string
 			commentStr := fmt.Sprintf("%s %s", verbs[rand.Intn(len(verbs))], nouns[rand.Intn(len(nouns))])
-			if rand.Float64() < nonEmptyCommentChance {
+			if rand.Float64() > nonEmptyCommentChance {
 				comment = &commentStr
 			}
-			_, err = pers.InsertManualTL(db, int(i+1), beginTs, endTs, comment, nil)
+
+			var desc *string
+			descriptionStr := sampleDescription
+			if rand.Float64() > nonEmptyCommentChance {
+				desc = &descriptionStr
+			}
+			_, err = pers.InsertManualTL(db, int(i+1), beginTs, endTs, comment, desc)
 			if err != nil {
 				return err
 			}

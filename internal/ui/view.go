@@ -62,6 +62,13 @@ func (m Model) View() string {
 		content = listStyle.Render(m.activeTasksList.View())
 	case taskLogView:
 		content = listStyle.Render(m.taskLogList.View())
+	case taskLogDetailsView:
+		if !m.helpVPReady {
+			content = "\n  Initializing..."
+		} else {
+			content = viewPortStyle.Render(fmt.Sprintf("%s\n\n%s",
+				tLDetailsViewTitleStyle.Render("Task Log Details"), m.tLDetailsVP.View()))
+		}
 	case inactiveTaskListView:
 		content = listStyle.Render(m.inactiveTasksList.View())
 	case taskInputView:
@@ -229,7 +236,10 @@ func (m Model) View() string {
 		if !m.helpVPReady {
 			content = "\n  Initializing..."
 		} else {
-			content = viewPortStyle.Render(fmt.Sprintf("  %s  %s\n\n%s\n", helpTitleStyle.Render("Help"), helpSectionStyle.Render("(scroll with j/k/↓/↑)"), m.helpVP.View()))
+			content = viewPortStyle.Render(fmt.Sprintf("%s  %s\n\n%s\n",
+				helpTitleStyle.Render("Help"),
+				helpSectionStyle.Render("(scroll with j/k/↓/↑)"),
+				m.helpVP.View()))
 		}
 	case insufficientDimensionsView:
 		return fmt.Sprintf(`

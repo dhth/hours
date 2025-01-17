@@ -109,6 +109,26 @@ func (tl *TaskLogEntry) GetComment() string {
 	return *tl.Comment
 }
 
+func (tl *TaskLogEntry) GetDescription() string {
+	if tl.Desc == nil {
+		return "∅"
+	}
+
+	return *tl.Desc
+}
+
+func (tl *TaskLogEntry) GetDetails() string {
+	timeSpentStr := HumanizeDuration(tl.SecsSpent)
+
+	return fmt.Sprintf(`
+Comment: %s
+
+%s..%s (%s)
+
+%s
+`, tl.GetComment(), tl.BeginTS.Format(timeFormat), tl.EndTS.Format(timeFormat), timeSpentStr, tl.GetDescription())
+}
+
 func (t Task) Title() string {
 	return t.TaskTitle
 }
