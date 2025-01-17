@@ -36,7 +36,7 @@ func InitialModel(db *sql.DB) Model {
 	tLDescriptionInput.Placeholder = `Task Log Description goes here.
 
 This can be used to record additional details about your work on this task.`
-	tLDescriptionInput.CharLimit = 1024
+	tLDescriptionInput.CharLimit = 3000
 	tLDescriptionInput.SetWidth(100)
 	tLDescriptionInput.SetHeight(8)
 	tLDescriptionInput.ShowLineNumbers = false
