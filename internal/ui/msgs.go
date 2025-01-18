@@ -28,7 +28,6 @@ type manualTLInsertedMsg struct {
 type activeTLUpdatedMsg struct {
 	beginTS time.Time
 	comment *string
-	desc    *string
 	err     error
 }
 

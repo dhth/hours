@@ -36,12 +36,11 @@ VALUES (?, ?, ?);
 	})
 }
 
-func EditActiveTL(db *sql.DB, beginTs time.Time, comment *string, desc *string) error {
+func EditActiveTL(db *sql.DB, beginTs time.Time, comment *string) error {
 	stmt, err := db.Prepare(`
 UPDATE task_log
     SET begin_ts=?,
-    comment = ?,
-    desc = ?
+    comment = ?
 WHERE active is true;
 `)
 	if err != nil {
@@ -49,7 +48,7 @@ WHERE active is true;
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(beginTs.UTC(), comment, desc)
+	_, err = stmt.Exec(beginTs.UTC(), comment)
 	return err
 }
 
@@ -68,7 +67,7 @@ WHERE active=true;
 	return err
 }
 
-func FinishActiveTL(db *sql.DB, taskLogID int, taskID int, beginTs, endTs time.Time, secsSpent int, comment *string, desc *string) error {
+func FinishActiveTL(db *sql.DB, taskLogID int, taskID int, beginTs, endTs time.Time, secsSpent int, comment *string) error {
 	return runInTx(db, func(tx *sql.Tx) error {
 		stmt, err := tx.Prepare(`
 UPDATE task_log
@@ -76,8 +75,7 @@ SET active = 0,
     begin_ts = ?,
     end_ts = ?,
     secs_spent = ?,
-    comment = ?,
-    desc = ?
+    comment = ?
 WHERE id = ?
 AND active = 1;
 `)
@@ -86,7 +84,7 @@ AND active = 1;
 		}
 		defer stmt.Close()
 
-		_, err = stmt.Exec(beginTs.UTC(), endTs.UTC(), secsSpent, comment, desc, taskLogID)
+		_, err = stmt.Exec(beginTs.UTC(), endTs.UTC(), secsSpent, comment, taskLogID)
 		if err != nil {
 			return err
 		}
@@ -108,11 +106,11 @@ WHERE id = ?;
 	})
 }
 
-func InsertManualTL(db *sql.DB, taskID int, beginTs time.Time, endTs time.Time, comment *string, desc *string) (int, error) {
+func InsertManualTL(db *sql.DB, taskID int, beginTs time.Time, endTs time.Time, comment *string) (int, error) {
 	return runInTxAndReturnID(db, func(tx *sql.Tx) (int, error) {
 		stmt, err := tx.Prepare(`
-INSERT INTO task_log (task_id, begin_ts, end_ts, secs_spent, comment, desc, active)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT INTO task_log (task_id, begin_ts, end_ts, secs_spent, comment, active)
+VALUES (?, ?, ?, ?, ?, ?);
 `)
 		if err != nil {
 			return -1, err
@@ -121,7 +119,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?);
 
 		secsSpent := int(endTs.Sub(beginTs).Seconds())
 
-		res, err := stmt.Exec(taskID, beginTs.UTC(), endTs.UTC(), secsSpent, comment, desc, false)
+		res, err := stmt.Exec(taskID, beginTs.UTC(), endTs.UTC(), secsSpent, comment, false)
 		if err != nil {
 			return -1, err
 		}
@@ -153,7 +151,7 @@ WHERE id = ?;
 
 func FetchActiveTaskDetails(db *sql.DB) (types.ActiveTaskDetails, error) {
 	row := db.QueryRow(`
-SELECT t.id, t.summary, tl.begin_ts, tl.comment, tl.desc
+SELECT t.id, t.summary, tl.begin_ts, tl.comment
 FROM task_log tl left join task t on tl.task_id = t.id
 WHERE tl.active=true;
 `)
@@ -164,7 +162,6 @@ WHERE tl.active=true;
 		&activeTaskDetails.TaskSummary,
 		&activeTaskDetails.CurrentLogBeginTS,
 		&activeTaskDetails.CurrentLogComment,
-		&activeTaskDetails.CurrentLogDesc,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		activeTaskDetails.TaskID = -1
@@ -305,7 +302,7 @@ func FetchTLEntries(db *sql.DB, desc bool, limit int) ([]types.TaskLogEntry, err
 		order = "ASC"
 	}
 	query := fmt.Sprintf(`
-SELECT tl.id, tl.task_id, t.summary, tl.begin_ts, tl.end_ts, tl.secs_spent, tl.comment, tl.desc
+SELECT tl.id, tl.task_id, t.summary, tl.begin_ts, tl.end_ts, tl.secs_spent, tl.comment
 FROM task_log tl left join task t on tl.task_id=t.id
 WHERE tl.active=false
 ORDER by tl.begin_ts %s
@@ -327,7 +324,6 @@ LIMIT ?;
 			&entry.EndTS,
 			&entry.SecsSpent,
 			&entry.Comment,
-			&entry.Desc,
 		)
 		if err != nil {
 			return nil, err
@@ -593,7 +589,7 @@ WHERE id=?;
 func fetchTLByID(db *sql.DB, id int) (types.TaskLogEntry, error) {
 	var tl types.TaskLogEntry
 	row := db.QueryRow(`
-SELECT id, task_id, begin_ts, end_ts, secs_spent, comment, desc
+SELECT id, task_id, begin_ts, end_ts, secs_spent, comment
 FROM task_log
 WHERE id=?;
     `, id)
@@ -607,7 +603,6 @@ WHERE id=?;
 		&tl.EndTS,
 		&tl.SecsSpent,
 		&tl.Comment,
-		&tl.Desc,
 	)
 	if err != nil {
 		return tl, err

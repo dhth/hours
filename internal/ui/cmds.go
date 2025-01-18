@@ -16,7 +16,6 @@ func toggleTracking(db *sql.DB,
 	beginTs time.Time,
 	endTs time.Time,
 	comment *string,
-	desc *string,
 ) tea.Cmd {
 	return func() tea.Msg {
 		row := db.QueryRow(`
@@ -50,7 +49,7 @@ LIMIT 1
 
 		default:
 			secsSpent := int(endTs.Sub(beginTs).Seconds())
-			err := pers.FinishActiveTL(db, activeTaskLogID, activeTaskID, beginTs, endTs, secsSpent, comment, desc)
+			err := pers.FinishActiveTL(db, activeTaskLogID, activeTaskID, beginTs, endTs, secsSpent, comment)
 			if err != nil {
 				return trackingToggledMsg{err: err}
 			} else {
@@ -60,16 +59,16 @@ LIMIT 1
 	}
 }
 
-func updateActiveTL(db *sql.DB, beginTS time.Time, comment *string, desc *string) tea.Cmd {
+func updateActiveTL(db *sql.DB, beginTS time.Time, comment *string) tea.Cmd {
 	return func() tea.Msg {
-		err := pers.EditActiveTL(db, beginTS, comment, desc)
-		return activeTLUpdatedMsg{beginTS, comment, desc, err}
+		err := pers.EditActiveTL(db, beginTS, comment)
+		return activeTLUpdatedMsg{beginTS, comment, err}
 	}
 }
 
-func insertManualTL(db *sql.DB, taskID int, beginTS time.Time, endTS time.Time, comment *string, desc *string) tea.Cmd {
+func insertManualTL(db *sql.DB, taskID int, beginTS time.Time, endTS time.Time, comment *string) tea.Cmd {
 	return func() tea.Msg {
-		_, err := pers.InsertManualTL(db, taskID, beginTS, endTS, comment, desc)
+		_, err := pers.InsertManualTL(db, taskID, beginTS, endTS, comment)
 		return manualTLInsertedMsg{taskID, err}
 	}
 }

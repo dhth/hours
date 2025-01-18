@@ -11,9 +11,11 @@ import (
 
 const (
 	nonEmptyCommentChance = 0.8
-	sampleDescription     = `This is a task log description.
+	longCommentChance     = 0.3
+	sampleLongCommentBody = `
 
-This can be used to record additional information for a task log.
+This is a sample task log comment. The comment can be used to record
+additional information for a task log.
 
 You can include:
 - Detailed steps taken during the task
@@ -22,7 +24,8 @@ You can include:
 - Future actions or follow-ups required
 - References to related tasks or documents
 
-Use this section to ensure all relevant details are captured for each task, providing a comprehensive log that can be referred to later.`
+Use this section to ensure all relevant details are captured for each task,
+providing a comprehensive log that can be referred to later.`
 )
 
 var (
@@ -121,16 +124,14 @@ func GenerateData(db *sql.DB, numDays, numTasks uint8) error {
 			endTs := beginTs.Add(time.Minute * time.Duration(numMinutes))
 			var comment *string
 			commentStr := fmt.Sprintf("%s %s", verbs[rand.Intn(len(verbs))], nouns[rand.Intn(len(nouns))])
-			if rand.Float64() > nonEmptyCommentChance {
+			if rand.Float64() < nonEmptyCommentChance {
+				if rand.Float64() < longCommentChance {
+					commentStr += sampleLongCommentBody
+				}
 				comment = &commentStr
 			}
 
-			var desc *string
-			descriptionStr := sampleDescription
-			if rand.Float64() > nonEmptyCommentChance {
-				desc = &descriptionStr
-			}
-			_, err = pers.InsertManualTL(db, int(i+1), beginTs, endTs, comment, desc)
+			_, err = pers.InsertManualTL(db, int(i+1), beginTs, endTs, comment)
 			if err != nil {
 				return err
 			}

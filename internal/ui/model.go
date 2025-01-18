@@ -54,13 +54,12 @@ const (
 	summaryField taskInputField = iota
 )
 
-type timeTrackingFormField uint
+type tLTrackingFormField uint
 
 const (
-	entryBeginTS timeTrackingFormField = iota
+	entryBeginTS tLTrackingFormField = iota
 	entryEndTS
 	entryComment
-	entryDesc
 )
 
 type tasklogSaveType uint
@@ -99,12 +98,11 @@ type Model struct {
 	activeTLBeginTS                time.Time
 	activeTLEndTS                  time.Time
 	activeTLComment                *string
-	activeTLDesc                   *string
 	tasksFetched                   bool
 	taskLogList                    list.Model
 	tLInputs                       []textinput.Model
-	trackingFocussedField          timeTrackingFormField
-	tLDescInput                    textarea.Model
+	trackingFocussedField          tLTrackingFormField
+	tLCommentInput                 textarea.Model
 	taskInputs                     []textinput.Model
 	taskMgmtContext                taskMgmtContext
 	taskInputFocussedField         taskInputField
@@ -121,6 +119,13 @@ type Model struct {
 	terminalWidth                  int
 	terminalHeight                 int
 	trackingActive                 bool
+}
+
+func (m *Model) blurTLTrackingInputs() {
+	for i := range m.tLInputs {
+		m.tLInputs[i].Blur()
+	}
+	m.tLCommentInput.Blur()
 }
 
 func (m Model) Init() tea.Cmd {

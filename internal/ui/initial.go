@@ -12,8 +12,7 @@ import (
 )
 
 const (
-	tlCommentLengthLimit = 255
-	tlDescLengthLimit    = 3000
+	tlCommentLengthLimit = 3000
 )
 
 func InitialModel(db *sql.DB) Model {
@@ -21,7 +20,7 @@ func InitialModel(db *sql.DB) Model {
 	var inactiveTaskItems []list.Item
 	var tasklogListItems []list.Item
 
-	tLInputs := make([]textinput.Model, 3)
+	tLInputs := make([]textinput.Model, 2)
 	tLInputs[entryBeginTS] = textinput.New()
 	tLInputs[entryBeginTS].Placeholder = "09:30"
 	tLInputs[entryBeginTS].CharLimit = len(timeFormat)
@@ -32,22 +31,17 @@ func InitialModel(db *sql.DB) Model {
 	tLInputs[entryEndTS].CharLimit = len(timeFormat)
 	tLInputs[entryEndTS].Width = 30
 
-	tLInputs[entryComment] = textinput.New()
-	tLInputs[entryComment].Placeholder = "Your comment goes here"
-	tLInputs[entryComment].CharLimit = tlCommentLengthLimit
-	tLInputs[entryComment].Width = 100
-
-	tLDescriptionInput := textarea.New()
-	tLDescriptionInput.Placeholder = `Task Log Description goes here.
+	tLCommentInput := textarea.New()
+	tLCommentInput.Placeholder = `Task Log comment goes here.
 
 This can be used to record additional details about your work on this task.`
-	tLDescriptionInput.CharLimit = tlDescLengthLimit
-	tLDescriptionInput.SetWidth(100)
-	tLDescriptionInput.SetHeight(8)
-	tLDescriptionInput.ShowLineNumbers = false
-	tLDescriptionInput.Prompt = "  ┃ "
+	tLCommentInput.CharLimit = tlCommentLengthLimit
+	tLCommentInput.SetWidth(100)
+	tLCommentInput.SetHeight(10)
+	tLCommentInput.ShowLineNumbers = false
+	tLCommentInput.Prompt = "  ┃ "
 
-	taskInputs := make([]textinput.Model, 3)
+	taskInputs := make([]textinput.Model, 1)
 	taskInputs[summaryField] = textinput.New()
 	taskInputs[summaryField].Placeholder = "task summary goes here"
 	taskInputs[summaryField].Focus()
@@ -63,7 +57,7 @@ This can be used to record additional details about your work on this task.`
 		taskLogList:       list.New(tasklogListItems, newItemDelegate(lipgloss.Color(taskLogListColor)), listWidth, 0),
 		showHelpIndicator: true,
 		tLInputs:          tLInputs,
-		tLDescInput:       tLDescriptionInput,
+		tLCommentInput:    tLCommentInput,
 		taskInputs:        taskInputs,
 	}
 	m.activeTasksList.Title = "Tasks"

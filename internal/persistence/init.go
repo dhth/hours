@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS task_log (
     begin_ts TIMESTAMP NOT NULL,
     end_ts TIMESTAMP,
     secs_spent INTEGER NOT NULL DEFAULT 0,
-    comment VARCHAR(255),
+    comment TEXT,
     active BOOLEAN NOT NULL,
     FOREIGN KEY(task_id) REFERENCES task(id)
 );

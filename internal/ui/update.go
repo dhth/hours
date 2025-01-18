@@ -48,14 +48,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		switch keyMsg.String() {
 		case enter, "ctrl+s":
+			var bail bool
 			if keyMsg.String() == enter {
 				switch m.activeView {
 				case taskInputView, editActiveTLView, finishActiveTLView, manualTasklogEntryView:
-					if m.trackingFocussedField == entryDesc {
-						break
+					if m.trackingFocussedField == entryComment {
+						bail = true
 					}
 				}
 			}
+
+			if bail {
+				break
+			}
+
 			var updateCmd tea.Cmd
 			switch m.activeView {
 			case taskInputView:
@@ -146,7 +152,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.tLInputs[i], cmd = m.tLInputs[i].Update(msg)
 			cmds = append(cmds, cmd)
 		}
-		m.tLDescInput, cmd = m.tLDescInput.Update(msg)
+		m.tLCommentInput, cmd = m.tLCommentInput.Update(msg)
 		cmds = append(cmds, cmd)
 		return m, tea.Batch(cmds...)
 	case finishActiveTLView:
@@ -154,7 +160,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.tLInputs[i], cmd = m.tLInputs[i].Update(msg)
 			cmds = append(cmds, cmd)
 		}
-		m.tLDescInput, cmd = m.tLDescInput.Update(msg)
+		m.tLCommentInput, cmd = m.tLCommentInput.Update(msg)
 		cmds = append(cmds, cmd)
 		return m, tea.Batch(cmds...)
 	case manualTasklogEntryView:
@@ -162,7 +168,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.tLInputs[i], cmd = m.tLInputs[i].Update(msg)
 			cmds = append(cmds, cmd)
 		}
-		m.tLDescInput, cmd = m.tLDescInput.Update(msg)
+		m.tLCommentInput, cmd = m.tLCommentInput.Update(msg)
 		cmds = append(cmds, cmd)
 		return m, tea.Batch(cmds...)
 	}
@@ -283,7 +289,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			m.activeTLBeginTS = msg.beginTS
 			m.activeTLComment = msg.comment
-			m.activeTLDesc = msg.desc
 		}
 	case manualTLInsertedMsg:
 		handleCmds := m.handleManualTLInsertedMsg(msg)

@@ -15,10 +15,6 @@ import (
 const (
 	secsInOneHour  = 60 * 60
 	taskLogComment = "a task log outside the time range"
-	description    = `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`
 )
 
 func TestRepository(t *testing.T) {
@@ -72,12 +68,11 @@ func TestRepository(t *testing.T) {
 		// WHEN
 		updatedBeginTS := endTS.Add(time.Second * -1 * time.Duration(numSeconds))
 		comment := "updated active TL"
-		desc := description
-		err = EditActiveTL(testDB, updatedBeginTS, &comment, &desc)
+		err = EditActiveTL(testDB, updatedBeginTS, &comment)
 		activeTaskDetails, err := FetchActiveTaskDetails(testDB)
 		require.NoError(t, err, "failed to fetch active task details")
 
-		err = EditActiveTL(testDB, updatedBeginTS, nil, nil)
+		err = EditActiveTL(testDB, updatedBeginTS, nil)
 		require.NoError(t, err, "failed to update active task log the second time")
 		activeTaskDetailsTwo, err := FetchActiveTaskDetails(testDB)
 		require.NoError(t, err, "failed to fetch active task details the second time")
@@ -86,14 +81,11 @@ func TestRepository(t *testing.T) {
 		assert.Equal(t, taskID, activeTaskDetails.TaskID)
 		assert.True(t, updatedBeginTS.Equal(activeTaskDetails.CurrentLogBeginTS))
 		require.NotNil(t, activeTaskDetails.CurrentLogComment)
-		require.NotNil(t, activeTaskDetails.CurrentLogDesc)
 		assert.Equal(t, comment, *activeTaskDetails.CurrentLogComment)
-		assert.Equal(t, desc, *activeTaskDetails.CurrentLogDesc)
 
 		assert.Equal(t, taskID, activeTaskDetailsTwo.TaskID)
 		assert.True(t, updatedBeginTS.Equal(activeTaskDetailsTwo.CurrentLogBeginTS))
 		require.Nil(t, activeTaskDetailsTwo.CurrentLogComment)
-		require.Nil(t, activeTaskDetailsTwo.CurrentLogDesc)
 	})
 
 	t.Run("TestFinishActiveTL", func(t *testing.T) {
@@ -116,8 +108,7 @@ func TestRepository(t *testing.T) {
 
 		// WHEN
 		comment := "a task log"
-		desc := description
-		err = FinishActiveTL(testDB, tlID, taskID, beginTS, endTS, numSeconds, &comment, &desc)
+		err = FinishActiveTL(testDB, tlID, taskID, beginTS, endTS, numSeconds, &comment)
 
 		// THEN
 		require.NoError(t, err, "failed to update task log")
@@ -130,13 +121,11 @@ func TestRepository(t *testing.T) {
 
 		assert.Equal(t, numSeconds, taskLog.SecsSpent)
 		require.NotNil(t, taskLog.Comment)
-		require.NotNil(t, taskLog.Desc)
 		assert.Equal(t, comment, *taskLog.Comment)
-		assert.Equal(t, desc, *taskLog.Desc)
 		assert.Equal(t, numSecondsBefore+numSeconds, taskAfter.SecsSpent)
 	})
 
-	t.Run("TestFinishActiveTL can save TL with empty comment and description", func(t *testing.T) {
+	t.Run("TestFinishActiveTL can save TL with empty comment", func(t *testing.T) {
 		t.Cleanup(func() { cleanupDB(t, testDB) })
 
 		// GIVEN
@@ -151,7 +140,7 @@ func TestRepository(t *testing.T) {
 		require.NoError(t, insertErr, "failed to insert task log")
 
 		// WHEN
-		err = FinishActiveTL(testDB, tlID, taskID, beginTS, endTS, numSeconds, nil, nil)
+		err = FinishActiveTL(testDB, tlID, taskID, beginTS, endTS, numSeconds, nil)
 
 		// THEN
 		require.NoError(t, err, "failed to update task log")
@@ -161,7 +150,6 @@ func TestRepository(t *testing.T) {
 
 		assert.Equal(t, numSeconds, taskLog.SecsSpent)
 		require.Nil(t, taskLog.Comment)
-		require.Nil(t, taskLog.Desc)
 	})
 
 	t.Run("TestInsertManualTL", func(t *testing.T) {
@@ -179,11 +167,10 @@ func TestRepository(t *testing.T) {
 
 		// WHEN
 		comment := "a task log"
-		desc := description
 		numSeconds := 60 * 90
 		endTS := time.Now()
 		beginTS := endTS.Add(time.Second * -1 * time.Duration(numSeconds))
-		tlID, err := InsertManualTL(testDB, taskID, beginTS, endTS, &comment, &desc)
+		tlID, err := InsertManualTL(testDB, taskID, beginTS, endTS, &comment)
 
 		// THEN
 		require.NoError(t, err, "failed to insert task log")
@@ -196,13 +183,11 @@ func TestRepository(t *testing.T) {
 
 		assert.Equal(t, numSeconds, taskLog.SecsSpent)
 		require.NotNil(t, taskLog.Comment)
-		require.NotNil(t, taskLog.Desc)
 		assert.Equal(t, comment, *taskLog.Comment)
-		assert.Equal(t, desc, *taskLog.Desc)
 		assert.Equal(t, numSecondsBefore+numSeconds, taskAfter.SecsSpent)
 	})
 
-	t.Run("TestInsertManualTL can insert TL with empty comment and description", func(t *testing.T) {
+	t.Run("TestInsertManualTL can insert TL with empty comment", func(t *testing.T) {
 		t.Cleanup(func() { cleanupDB(t, testDB) })
 
 		// GIVEN
@@ -215,7 +200,7 @@ func TestRepository(t *testing.T) {
 		numSeconds := 60 * 90
 		endTS := time.Now()
 		beginTS := endTS.Add(time.Second * -1 * time.Duration(numSeconds))
-		tlID, err := InsertManualTL(testDB, taskID, beginTS, endTS, nil, nil)
+		tlID, err := InsertManualTL(testDB, taskID, beginTS, endTS, nil)
 
 		// THEN
 		require.NoError(t, err, "failed to insert task log")
@@ -225,7 +210,6 @@ func TestRepository(t *testing.T) {
 
 		assert.Equal(t, numSeconds, taskLog.SecsSpent)
 		assert.Nil(t, taskLog.Comment)
-		assert.Nil(t, taskLog.Desc)
 	})
 
 	t.Run("TestDeleteTaskLogEntry", func(t *testing.T) {
@@ -268,7 +252,7 @@ func TestRepository(t *testing.T) {
 		tlEndTS := referenceTS.Add(time.Hour * 2)
 		tlBeginTS := tlEndTS.Add(time.Second * -1 * time.Duration(numSeconds))
 		comment := taskLogComment
-		_, err = InsertManualTL(testDB, taskID, tlBeginTS, tlEndTS, &comment, nil)
+		_, err = InsertManualTL(testDB, taskID, tlBeginTS, tlEndTS, &comment)
 		require.NoError(t, err, "failed to insert task log")
 
 		// WHEN
@@ -293,7 +277,7 @@ func TestRepository(t *testing.T) {
 		numSeconds := 60 * 90
 		tlEndTS := referenceTS.Add(time.Hour * 2)
 		tlBeginTS := tlEndTS.Add(time.Second * -1 * time.Duration(numSeconds))
-		_, err = InsertManualTL(testDB, taskID, tlBeginTS, tlEndTS, &comment, nil)
+		_, err = InsertManualTL(testDB, taskID, tlBeginTS, tlEndTS, &comment)
 		require.NoError(t, err, "failed to insert task log")
 
 		// WHEN
@@ -325,7 +309,7 @@ func TestRepository(t *testing.T) {
 		tlEndTS := referenceTS.Add(time.Hour * 2)
 		tlBeginTS := tlEndTS.Add(time.Second * -1 * time.Duration(numSeconds))
 		comment := taskLogComment
-		_, err = InsertManualTL(testDB, taskID, tlBeginTS, tlEndTS, &comment, nil)
+		_, err = InsertManualTL(testDB, taskID, tlBeginTS, tlEndTS, &comment)
 		require.NoError(t, err, "failed to insert task log")
 
 		// WHEN
@@ -358,7 +342,7 @@ func TestRepository(t *testing.T) {
 		tlEndTS := referenceTS.Add(time.Hour * 2)
 		tlBeginTS := tlEndTS.Add(time.Second * -1 * time.Duration(numSeconds))
 		comment := taskLogComment
-		_, err = InsertManualTL(testDB, taskID, tlBeginTS, tlEndTS, &comment, nil)
+		_, err = InsertManualTL(testDB, taskID, tlBeginTS, tlEndTS, &comment)
 		require.NoError(t, err, "failed to insert task log")
 
 		// WHEN

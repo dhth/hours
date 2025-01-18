@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/dhth/hours/internal/utils"
@@ -29,7 +30,6 @@ type TaskLogEntry struct {
 	EndTS       time.Time
 	SecsSpent   int
 	Comment     *string
-	Desc        *string
 	TLTitle     string
 	TLDesc      string
 }
@@ -39,7 +39,6 @@ type ActiveTaskDetails struct {
 	TaskSummary       string
 	CurrentLogBeginTS time.Time
 	CurrentLogComment *string
-	CurrentLogDesc    *string
 }
 
 type TaskReportEntry struct {
@@ -72,7 +71,7 @@ func (t *Task) UpdateDesc() {
 }
 
 func (tl *TaskLogEntry) UpdateTitle() {
-	tl.TLTitle = utils.Trim(tl.GetComment(), 60)
+	tl.TLTitle = utils.Trim(tl.GetCommentsFirstLine(), 60)
 }
 
 func (tl *TaskLogEntry) UpdateDesc() {
@@ -109,24 +108,18 @@ func (tl *TaskLogEntry) GetComment() string {
 	return *tl.Comment
 }
 
-func (tl *TaskLogEntry) GetDescription() string {
-	if tl.Desc == nil {
+func (tl *TaskLogEntry) GetCommentsFirstLine() string {
+	if tl.Comment == nil {
 		return "∅"
 	}
 
-	return *tl.Desc
-}
+	lines := strings.SplitN(*tl.Comment, "\n", 2)
 
-func (tl *TaskLogEntry) GetDetails() string {
-	timeSpentStr := HumanizeDuration(tl.SecsSpent)
+	if len(lines) > 1 {
+		return fmt.Sprintf("%s ↴", lines[0])
+	}
 
-	return fmt.Sprintf(`
-Comment: %s
-
-%s..%s (%s)
-
-%s
-`, tl.GetComment(), tl.BeginTS.Format(timeFormat), tl.EndTS.Format(timeFormat), timeSpentStr, tl.GetDescription())
+	return lines[0]
 }
 
 func (t Task) Title() string {
@@ -142,9 +135,6 @@ func (t Task) FilterValue() string {
 }
 
 func (tl TaskLogEntry) Title() string {
-	if tl.Desc != nil {
-		return fmt.Sprintf("📃 %s", tl.TLTitle)
-	}
 	return tl.TLTitle
 }
 

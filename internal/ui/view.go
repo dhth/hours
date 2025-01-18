@@ -9,7 +9,7 @@ import (
 
 const (
 	taskLogEntryViewHeading = "Task Log Entry"
-	minHeightNeeded         = 36
+	minHeightNeeded         = 32
 	minWidthNeeded          = 110
 )
 
@@ -45,26 +45,19 @@ func (m Model) View() string {
 	formBeginTimeHelp := "Begin Time* (format: 2006/01/02 15:04)"
 	formEndTimeHelp := "End Time* (format: 2006/01/02 15:04)"
 	formTimeShiftHelp := "(j/k/J/K/h/l moves time)"
+
 	var formCommentContext string
-	if m.tLInputs[entryComment].Value() == "" {
+	if m.tLCommentInput.Length() == 0 {
 		formCommentContext = "optional"
 	} else {
-		formCommentContext = fmt.Sprintf("%d/%d", len(m.tLInputs[entryComment].Value()), tlCommentLengthLimit)
+		formCommentContext = fmt.Sprintf("%d/%d", m.tLCommentInput.Length(), tlCommentLengthLimit)
 	}
 	formCommentHelp := fmt.Sprintf("Comment (%s)", formCommentContext)
-
-	var formDescContext string
-	if m.tLDescInput.Length() == 0 {
-		formDescContext = "optional"
-	} else {
-		formDescContext = fmt.Sprintf("%d/%d", m.tLDescInput.Length(), tlDescLengthLimit)
-	}
-	formDescHelp := fmt.Sprintf("Description (%s)", formDescContext)
 	var formSubmitHelp string
 
 	switch m.activeView {
 	case taskInputView, editActiveTLView, finishActiveTLView, manualTasklogEntryView:
-		if m.trackingFocussedField == entryDesc {
+		if m.trackingFocussedField == entryComment {
 			formSubmitHelp = "Press <ctrl+s> to submit"
 		} else {
 			formSubmitHelp = "Press <ctrl+s>/<enter> to submit"
@@ -130,10 +123,6 @@ func (m Model) View() string {
 
   %s
 
-  %s
-
-  %s
-
 %s
 
   %s
@@ -148,12 +137,10 @@ func (m Model) View() string {
 			m.tLInputs[entryEndTS].View(),
 			formHelpStyle.Render(formTimeShiftHelp),
 			formFieldNameStyle.Render(formCommentHelp),
-			m.tLInputs[entryComment].View(),
-			formFieldNameStyle.Render(formDescHelp),
-			m.tLDescInput.View(),
+			m.tLCommentInput.View(),
 			formHelpStyle.Render(formSubmitHelp),
 		)
-		for i := 0; i < m.terminalHeight-34; i++ {
+		for i := 0; i < m.terminalHeight-32; i++ {
 			content += "\n"
 		}
 	case editActiveTLView:
@@ -171,10 +158,6 @@ func (m Model) View() string {
 
   %s
 
-  %s
-
-  %s
-
 %s
 
   %s
@@ -185,12 +168,10 @@ func (m Model) View() string {
 			m.tLInputs[entryBeginTS].View(),
 			formHelpStyle.Render(formTimeShiftHelp),
 			formFieldNameStyle.Render(formCommentHelp),
-			m.tLInputs[entryComment].View(),
-			formFieldNameStyle.Render(formDescHelp),
-			m.tLDescInput.View(),
+			m.tLCommentInput.View(),
 			formHelpStyle.Render(formSubmitHelp),
 		)
-		for i := 0; i < m.terminalHeight-28; i++ {
+		for i := 0; i < m.terminalHeight-26; i++ {
 			content += "\n"
 		}
 	case manualTasklogEntryView:
@@ -220,10 +201,6 @@ func (m Model) View() string {
 
   %s
 
-  %s
-
-  %s
-
 %s
 
   %s
@@ -238,12 +215,10 @@ func (m Model) View() string {
 			m.tLInputs[entryEndTS].View(),
 			formHelpStyle.Render(formTimeShiftHelp),
 			formFieldNameStyle.Render(formCommentHelp),
-			m.tLInputs[entryComment].View(),
-			formFieldNameStyle.Render(formDescHelp),
-			m.tLDescInput.View(),
+			m.tLCommentInput.View(),
 			formHelpStyle.Render(formSubmitHelp),
 		)
-		for i := 0; i < m.terminalHeight-34; i++ {
+		for i := 0; i < m.terminalHeight-32; i++ {
 			content += "\n"
 		}
 	case helpView:
@@ -285,10 +260,24 @@ func (m Model) View() string {
 		helpMsg += " " + helpMsgStyle.Render("Press ? for help")
 	}
 
-	footer = fmt.Sprintf("%s%s%s",
+	var indicator string
+	switch m.activeView {
+	case taskInputView, editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+		switch m.trackingFocussedField {
+		case entryBeginTS:
+			indicator = "begin"
+		case entryEndTS:
+			indicator = "end"
+		case entryComment:
+			indicator = "comment"
+		}
+	}
+
+	footer = fmt.Sprintf("%s%s%s  %s",
 		toolNameStyle.Render("hours"),
 		helpMsg,
 		activeMsg,
+		indicator,
 	)
 
 	return lipgloss.JoinVertical(lipgloss.Left,
