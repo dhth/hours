@@ -586,8 +586,8 @@ func (m *Model) handleTasksFetchedMsg(msg tasksFetchedMsg) tea.Cmd {
 		m.taskIndexMap = make(map[int]int)
 		tasks := make([]list.Item, len(msg.tasks))
 		for i, task := range msg.tasks {
-			task.UpdateTitle()
-			task.UpdateDesc()
+			task.UpdateListTitle()
+			task.UpdateListDesc()
 			tasks[i] = &task
 			m.taskMap[task.ID] = &task
 			m.taskIndexMap[task.ID] = i
@@ -600,8 +600,8 @@ func (m *Model) handleTasksFetchedMsg(msg tasksFetchedMsg) tea.Cmd {
 	case false:
 		inactiveTasks := make([]list.Item, len(msg.tasks))
 		for i, inactiveTask := range msg.tasks {
-			inactiveTask.UpdateTitle()
-			inactiveTask.UpdateDesc()
+			inactiveTask.UpdateListTitle()
+			inactiveTask.UpdateListDesc()
 			inactiveTasks[i] = &inactiveTask
 		}
 		m.inactiveTasksList.SetItems(inactiveTasks)
@@ -635,8 +635,8 @@ func (m *Model) handleTLSFetchedMsg(msg tLsFetchedMsg) {
 
 	items := make([]list.Item, len(msg.entries))
 	for i, e := range msg.entries {
-		e.UpdateTitle()
-		e.UpdateDesc()
+		e.UpdateListTitle()
+		e.UpdateListDesc()
 		items[i] = e
 	}
 	m.taskLogList.SetItems(items)
@@ -661,7 +661,7 @@ func (m *Model) handleActiveTaskFetchedMsg(msg activeTaskFetchedMsg) {
 	activeTask, ok := m.taskMap[m.activeTaskID]
 	if ok {
 		activeTask.TrackingActive = true
-		activeTask.UpdateTitle()
+		activeTask.UpdateListTitle()
 
 		// go to tracked item on startup
 		activeIndex, aOk := m.taskIndexMap[msg.activeTask.TaskID]
@@ -705,7 +705,7 @@ func (m *Model) handleTrackingToggledMsg(msg trackingToggledMsg) []tea.Cmd {
 		m.activeTaskID = msg.taskID
 	}
 
-	task.UpdateTitle()
+	task.UpdateListTitle()
 
 	return cmds
 }
@@ -739,7 +739,7 @@ func (m *Model) handleActiveTLDeletedMsg(msg activeTaskLogDeletedMsg) {
 	}
 
 	activeTask.TrackingActive = false
-	activeTask.UpdateTitle()
+	activeTask.UpdateListTitle()
 	m.lastTrackingChange = trackingFinished
 	m.trackingActive = false
 	m.activeTLComment = nil
