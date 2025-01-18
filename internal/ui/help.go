@@ -39,7 +39,8 @@ var helpText = fmt.Sprintf(`%s
   3                                       Switch to Inactive Tasks List View
   <tab>                                   Go to next view/form entry
   <shift+tab>                             Go to previous view/form entry
-    ?                                     Show help view
+  q/<ctrl+c>                              Go back
+  ?                                       Show help view
 `),
 	helpHeaderStyle.Render("General List Controls"),
 	helpSectionStyle.Render(`
@@ -61,7 +62,7 @@ var helpText = fmt.Sprintf(`%s
 `),
 	helpHeaderStyle.Render("Task Logs List View"),
 	helpSectionStyle.Render(`
-  📃 indicates that a task log has description attached to it
+  ~ at the end of a task log comment indicates that it has more lines that are not visible in the list view
 
   d                                       Show task log details
   <ctrl+d>                                Delete task log entry

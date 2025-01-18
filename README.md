@@ -1,5 +1,10 @@
 # hours
 
+[![Build Workflow Status](https://img.shields.io/github/actions/workflow/status/dhth/hours/build.yml?style=flat-square)](https://github.com/dhth/hours/actions/workflows/build.yml)
+[![Vulncheck Workflow Status](https://img.shields.io/github/actions/workflow/status/dhth/hours/vulncheck.yml?style=flat-square&label=vulncheck)](https://github.com/dhth/hours/actions/workflows/vulncheck.yml)
+[![Latest Release](https://img.shields.io/github/release/dhth/hours.svg?style=flat-square)](https://github.com/dhth/hours/releases/latest)
+[![Commits Since Latest Release](https://img.shields.io/github/commits-since/dhth/hours/latest?style=flat-square)](https://github.com/dhth/hours/releases)
+
 `hours` is a no-frills time tracking toolkit for the command line.
 
 It's designed for users who want basic time tracking for their tasks/projects
@@ -201,7 +206,8 @@ General
   3                                       Switch to Inactive Tasks List View
   <tab>                                   Go to next view/form entry
   <shift+tab>                             Go to previous view/form entry
-    ?                                     Show help view
+  q/<ctrl+c>                              Go back
+  ?                                       Show help view
 
 General List Controls
 
@@ -224,6 +230,9 @@ Task List View
 
 Task Logs List View
 
+  ~ at the end of a task log comment indicates that it has more lines that are not visible in the list view
+
+  d                                       Show task log details
   <ctrl+d>                                Delete task log entry
   <ctrl+r>                                Refresh list
 
