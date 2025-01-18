@@ -67,7 +67,7 @@ WHERE active=true;
 	return err
 }
 
-func UpdateActiveTL(db *sql.DB, taskLogID int, taskID int, beginTs, endTs time.Time, secsSpent int, comment *string) error {
+func FinishActiveTL(db *sql.DB, taskLogID int, taskID int, beginTs, endTs time.Time, secsSpent int, comment *string) error {
 	return runInTx(db, func(tx *sql.Tx) error {
 		stmt, err := tx.Prepare(`
 UPDATE task_log

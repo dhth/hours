@@ -5,9 +5,14 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dhth/hours/internal/types"
+)
+
+const (
+	tlCommentLengthLimit = 3000
 )
 
 func InitialModel(db *sql.DB) Model {
@@ -15,26 +20,28 @@ func InitialModel(db *sql.DB) Model {
 	var inactiveTaskItems []list.Item
 	var tasklogListItems []list.Item
 
-	trackingInputs := make([]textinput.Model, 3)
-	trackingInputs[entryBeginTS] = textinput.New()
-	trackingInputs[entryBeginTS].Placeholder = "09:30"
-	trackingInputs[entryBeginTS].Focus()
-	trackingInputs[entryBeginTS].CharLimit = len(string(timeFormat))
-	trackingInputs[entryBeginTS].Width = 30
+	tLInputs := make([]textinput.Model, 2)
+	tLInputs[entryBeginTS] = textinput.New()
+	tLInputs[entryBeginTS].Placeholder = "09:30"
+	tLInputs[entryBeginTS].CharLimit = len(timeFormat)
+	tLInputs[entryBeginTS].Width = 30
 
-	trackingInputs[entryEndTS] = textinput.New()
-	trackingInputs[entryEndTS].Placeholder = "12:30pm"
-	trackingInputs[entryEndTS].Focus()
-	trackingInputs[entryEndTS].CharLimit = len(string(timeFormat))
-	trackingInputs[entryEndTS].Width = 30
+	tLInputs[entryEndTS] = textinput.New()
+	tLInputs[entryEndTS].Placeholder = "12:30pm"
+	tLInputs[entryEndTS].CharLimit = len(timeFormat)
+	tLInputs[entryEndTS].Width = 30
 
-	trackingInputs[entryComment] = textinput.New()
-	trackingInputs[entryComment].Placeholder = "Your comment goes here"
-	trackingInputs[entryComment].Focus()
-	trackingInputs[entryComment].CharLimit = 255
-	trackingInputs[entryComment].Width = 80
+	tLCommentInput := textarea.New()
+	tLCommentInput.Placeholder = `Task log comment goes here.
 
-	taskInputs := make([]textinput.Model, 3)
+This can be used to record details about your work on this task.`
+	tLCommentInput.CharLimit = tlCommentLengthLimit
+	tLCommentInput.SetWidth(100)
+	tLCommentInput.SetHeight(10)
+	tLCommentInput.ShowLineNumbers = false
+	tLCommentInput.Prompt = "  ┃ "
+
+	taskInputs := make([]textinput.Model, 1)
 	taskInputs[summaryField] = textinput.New()
 	taskInputs[summaryField].Placeholder = "task summary goes here"
 	taskInputs[summaryField].Focus()
@@ -49,7 +56,8 @@ func InitialModel(db *sql.DB) Model {
 		taskIndexMap:      make(map[int]int),
 		taskLogList:       list.New(tasklogListItems, newItemDelegate(lipgloss.Color(taskLogListColor)), listWidth, 0),
 		showHelpIndicator: true,
-		trackingInputs:    trackingInputs,
+		tLInputs:          tLInputs,
+		tLCommentInput:    tLCommentInput,
 		taskInputs:        taskInputs,
 	}
 	m.activeTasksList.Title = "Tasks"
@@ -57,6 +65,8 @@ func InitialModel(db *sql.DB) Model {
 	m.activeTasksList.DisableQuitKeybindings()
 	m.activeTasksList.SetShowHelp(false)
 	m.activeTasksList.Styles.Title = m.activeTasksList.Styles.Title.Foreground(lipgloss.Color(defaultBackgroundColor)).Background(lipgloss.Color(activeTaskListColor)).Bold(true)
+	m.activeTasksList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
+	m.activeTasksList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
 	m.taskLogList.Title = "Task Logs (last 50)"
 	m.taskLogList.SetStatusBarItemName("entry", "entries")
@@ -64,12 +74,16 @@ func InitialModel(db *sql.DB) Model {
 	m.taskLogList.DisableQuitKeybindings()
 	m.taskLogList.SetShowHelp(false)
 	m.taskLogList.Styles.Title = m.taskLogList.Styles.Title.Foreground(lipgloss.Color(defaultBackgroundColor)).Background(lipgloss.Color(taskLogListColor)).Bold(true)
+	m.taskLogList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
+	m.taskLogList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
 	m.inactiveTasksList.Title = "Inactive Tasks"
 	m.inactiveTasksList.SetStatusBarItemName("task", "tasks")
 	m.inactiveTasksList.DisableQuitKeybindings()
 	m.inactiveTasksList.SetShowHelp(false)
 	m.inactiveTasksList.Styles.Title = m.inactiveTasksList.Styles.Title.Foreground(lipgloss.Color(defaultBackgroundColor)).Background(lipgloss.Color(inactiveTaskListColor)).Bold(true)
+	m.inactiveTasksList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
+	m.inactiveTasksList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
 	return m
 }

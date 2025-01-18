@@ -88,7 +88,7 @@ func TestRepository(t *testing.T) {
 		require.Nil(t, activeTaskDetailsTwo.CurrentLogComment)
 	})
 
-	t.Run("TestUpdateActiveTL", func(t *testing.T) {
+	t.Run("TestFinishActiveTL", func(t *testing.T) {
 		t.Cleanup(func() { cleanupDB(t, testDB) })
 
 		// GIVEN
@@ -108,7 +108,7 @@ func TestRepository(t *testing.T) {
 
 		// WHEN
 		comment := "a task log"
-		err = UpdateActiveTL(testDB, tlID, taskID, beginTS, endTS, numSeconds, &comment)
+		err = FinishActiveTL(testDB, tlID, taskID, beginTS, endTS, numSeconds, &comment)
 
 		// THEN
 		require.NoError(t, err, "failed to update task log")
@@ -123,6 +123,33 @@ func TestRepository(t *testing.T) {
 		require.NotNil(t, taskLog.Comment)
 		assert.Equal(t, comment, *taskLog.Comment)
 		assert.Equal(t, numSecondsBefore+numSeconds, taskAfter.SecsSpent)
+	})
+
+	t.Run("TestFinishActiveTL can save TL with empty comment", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Now()
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+		taskID := 1
+		numSeconds := 60 * 90
+		endTS := time.Now()
+		beginTS := endTS.Add(time.Second * -1 * time.Duration(numSeconds))
+		tlID, insertErr := InsertNewTL(testDB, taskID, beginTS)
+		require.NoError(t, insertErr, "failed to insert task log")
+
+		// WHEN
+		err = FinishActiveTL(testDB, tlID, taskID, beginTS, endTS, numSeconds, nil)
+
+		// THEN
+		require.NoError(t, err, "failed to update task log")
+
+		taskLog, err := fetchTLByID(testDB, tlID)
+		require.NoError(t, err, "failed to fetch task log")
+
+		assert.Equal(t, numSeconds, taskLog.SecsSpent)
+		require.Nil(t, taskLog.Comment)
 	})
 
 	t.Run("TestInsertManualTL", func(t *testing.T) {

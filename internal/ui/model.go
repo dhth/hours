@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -30,12 +31,14 @@ type stateView uint
 const (
 	taskListView stateView = iota
 	taskLogView
+	taskLogDetailsView
 	inactiveTaskListView
 	editActiveTLView
-	saveActiveTLView
+	finishActiveTLView
 	manualTasklogEntryView
 	taskInputView
 	helpView
+	insufficientDimensionsView
 )
 
 type taskMgmtContext uint
@@ -51,10 +54,10 @@ const (
 	summaryField taskInputField = iota
 )
 
-type timeTrackingFormField uint
+type tLTrackingFormField uint
 
 const (
-	entryBeginTS timeTrackingFormField = iota
+	entryBeginTS tLTrackingFormField = iota
 	entryEndTS
 	entryComment
 )
@@ -84,33 +87,45 @@ const (
 )
 
 type Model struct {
-	activeView             stateView
-	lastView               stateView
-	db                     *sql.DB
-	activeTasksList        list.Model
-	inactiveTasksList      list.Model
-	taskMap                map[int]*types.Task
-	taskIndexMap           map[int]int
-	activeTLBeginTS        time.Time
-	activeTLEndTS          time.Time
-	activeTLComment        *string
-	tasksFetched           bool
-	taskLogList            list.Model
-	trackingInputs         []textinput.Model
-	trackingFocussedField  timeTrackingFormField
-	taskInputs             []textinput.Model
-	taskMgmtContext        taskMgmtContext
-	taskInputFocussedField taskInputField
-	helpVP                 viewport.Model
-	helpVPReady            bool
-	lastTrackingChange     trackingChange
-	changesLocked          bool
-	activeTaskID           int
-	tasklogSaveType        tasklogSaveType
-	message                string
-	showHelpIndicator      bool
-	terminalHeight         int
-	trackingActive         bool
+	activeView                     stateView
+	lastView                       stateView
+	lastViewBeforeInsufficientDims stateView
+	db                             *sql.DB
+	activeTasksList                list.Model
+	inactiveTasksList              list.Model
+	taskMap                        map[int]*types.Task
+	taskIndexMap                   map[int]int
+	activeTLBeginTS                time.Time
+	activeTLEndTS                  time.Time
+	activeTLComment                *string
+	tasksFetched                   bool
+	taskLogList                    list.Model
+	tLInputs                       []textinput.Model
+	trackingFocussedField          tLTrackingFormField
+	tLCommentInput                 textarea.Model
+	taskInputs                     []textinput.Model
+	taskMgmtContext                taskMgmtContext
+	taskInputFocussedField         taskInputField
+	helpVP                         viewport.Model
+	helpVPReady                    bool
+	tLDetailsVP                    viewport.Model
+	tLDetailsVPReady               bool
+	lastTrackingChange             trackingChange
+	changesLocked                  bool
+	activeTaskID                   int
+	tasklogSaveType                tasklogSaveType
+	message                        string
+	showHelpIndicator              bool
+	terminalWidth                  int
+	terminalHeight                 int
+	trackingActive                 bool
+}
+
+func (m *Model) blurTLTrackingInputs() {
+	for i := range m.tLInputs {
+		m.tLInputs[i].Blur()
+	}
+	m.tLCommentInput.Blur()
 }
 
 func (m Model) Init() tea.Cmd {

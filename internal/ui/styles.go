@@ -26,6 +26,7 @@ const (
 	recordsDateRangeColor    = "#fabd2f"
 	recordsHelpColor         = "#928374"
 	helpMsgColor             = "#83a598"
+	tLDetailsViewTitleColor  = "#d3869b"
 	helpViewTitleColor       = "#83a598"
 	helpHeaderColor          = "#83a598"
 	helpSectionColor         = "#bdae93"
@@ -57,6 +58,7 @@ var (
 
 	viewPortStyle = lipgloss.NewStyle().
 			PaddingTop(1).
+			PaddingLeft(2).
 			PaddingRight(2).
 			PaddingBottom(1)
 
@@ -111,6 +113,9 @@ var (
 			Bold(true).
 			Background(lipgloss.Color(helpViewTitleColor)).
 			Align(lipgloss.Left)
+
+	tLDetailsViewTitleStyle = helpTitleStyle.
+				Background(lipgloss.Color(tLDetailsViewTitleColor))
 
 	helpHeaderStyle = lipgloss.NewStyle().
 			Bold(true).

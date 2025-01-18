@@ -9,6 +9,8 @@ import (
 	"github.com/dustin/go-humanize"
 )
 
+const emptyCommentIndicator = "∅"
+
 type Task struct {
 	ID             int
 	Summary        string
@@ -17,8 +19,8 @@ type Task struct {
 	TrackingActive bool
 	SecsSpent      int
 	Active         bool
-	TaskTitle      string
-	TaskDesc       string
+	ListTitle      string
+	ListDesc       string
 }
 
 type TaskLogEntry struct {
@@ -29,8 +31,8 @@ type TaskLogEntry struct {
 	EndTS       time.Time
 	SecsSpent   int
 	Comment     *string
-	TLTitle     string
-	TLDesc      string
+	ListTitle   string
+	ListDesc    string
 }
 
 type ActiveTaskDetails struct {
@@ -47,16 +49,16 @@ type TaskReportEntry struct {
 	SecsSpent   int
 }
 
-func (t *Task) UpdateTitle() {
+func (t *Task) UpdateListTitle() {
 	var trackingIndicator string
 	if t.TrackingActive {
 		trackingIndicator = "⏲ "
 	}
 
-	t.TaskTitle = trackingIndicator + t.Summary
+	t.ListTitle = trackingIndicator + t.Summary
 }
 
-func (t *Task) UpdateDesc() {
+func (t *Task) UpdateListDesc() {
 	var timeSpent string
 
 	if t.SecsSpent != 0 {
@@ -66,14 +68,14 @@ func (t *Task) UpdateDesc() {
 	}
 	lastUpdated := fmt.Sprintf("last updated: %s", humanize.Time(t.UpdatedAt))
 
-	t.TaskDesc = fmt.Sprintf("%s %s", utils.RightPadTrim(lastUpdated, 60, true), timeSpent)
+	t.ListDesc = fmt.Sprintf("%s %s", utils.RightPadTrim(lastUpdated, 60, true), timeSpent)
 }
 
-func (tl *TaskLogEntry) UpdateTitle() {
-	tl.TLTitle = utils.Trim(tl.GetComment(), 60)
+func (tl *TaskLogEntry) UpdateListTitle() {
+	tl.ListTitle = utils.TrimWithMoreLinesIndicator(tl.GetComment(), 60)
 }
 
-func (tl *TaskLogEntry) UpdateDesc() {
+func (tl *TaskLogEntry) UpdateListDesc() {
 	timeSpentStr := HumanizeDuration(tl.SecsSpent)
 
 	var timeStr string
@@ -96,23 +98,23 @@ func (tl *TaskLogEntry) UpdateDesc() {
 		utils.RightPadTrim(durationMsg, 40, true),
 		timeSpentStr)
 
-	tl.TLDesc = fmt.Sprintf("%s %s", utils.RightPadTrim("["+tl.TaskSummary+"]", 60, true), timeStr)
+	tl.ListDesc = fmt.Sprintf("%s %s", utils.RightPadTrim(tl.TaskSummary, 60, true), timeStr)
 }
 
 func (tl *TaskLogEntry) GetComment() string {
 	if tl.Comment == nil {
-		return "∅"
+		return emptyCommentIndicator
 	}
 
 	return *tl.Comment
 }
 
 func (t Task) Title() string {
-	return t.TaskTitle
+	return t.ListTitle
 }
 
 func (t Task) Description() string {
-	return t.TaskDesc
+	return t.ListDesc
 }
 
 func (t Task) FilterValue() string {
@@ -120,11 +122,11 @@ func (t Task) FilterValue() string {
 }
 
 func (tl TaskLogEntry) Title() string {
-	return tl.TLTitle
+	return tl.ListTitle
 }
 
 func (tl TaskLogEntry) Description() string {
-	return tl.TLDesc
+	return tl.ListDesc
 }
 
 func (tl TaskLogEntry) FilterValue() string {
