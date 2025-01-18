@@ -260,24 +260,10 @@ func (m Model) View() string {
 		helpMsg += " " + helpMsgStyle.Render("Press ? for help")
 	}
 
-	var indicator string
-	switch m.activeView {
-	case taskInputView, editActiveTLView, finishActiveTLView, manualTasklogEntryView:
-		switch m.trackingFocussedField {
-		case entryBeginTS:
-			indicator = "begin"
-		case entryEndTS:
-			indicator = "end"
-		case entryComment:
-			indicator = "comment"
-		}
-	}
-
-	footer = fmt.Sprintf("%s%s%s  %s",
+	footer = fmt.Sprintf("%s%s%s",
 		toolNameStyle.Render("hours"),
 		helpMsg,
 		activeMsg,
-		indicator,
 	)
 
 	return lipgloss.JoinVertical(lipgloss.Left,
