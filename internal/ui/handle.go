@@ -47,20 +47,15 @@ func (m *Model) getCmdToUpdateActiveTL() tea.Cmd {
 		m.message = err.Error()
 		return nil
 	}
-	// commentValue := m.tLInputs[entryComment].Value()
-	// var comment *string
-	// if isCommentValid(commentValue) {
-	// 	comment = &commentValue
-	// }
 
-	descValue := m.tLCommentInput.Value()
-	var desc *string
-	if isCommentValid(descValue) {
-		desc = &descValue
+	commentValue := strings.TrimSpace(m.tLCommentInput.Value())
+	var comment *string
+	if commentValue != "" {
+		comment = &commentValue
 	}
 
 	m.activeView = taskListView
-	return updateActiveTL(m.db, beginTS, desc)
+	return updateActiveTL(m.db, beginTS, comment)
 }
 
 func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
@@ -83,10 +78,10 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 		return nil
 	}
 
-	descValue := m.tLCommentInput.Value()
-	var desc *string
-	if isCommentValid(descValue) {
-		desc = &descValue
+	commentValue := strings.TrimSpace(m.tLCommentInput.Value())
+	var comment *string
+	if commentValue != "" {
+		comment = &commentValue
 	}
 
 	for i := range m.tLInputs {
@@ -95,7 +90,7 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 	m.tLCommentInput.SetValue("")
 	m.activeView = taskListView
 
-	return toggleTracking(m.db, m.activeTaskID, m.activeTLBeginTS, m.activeTLEndTS, desc)
+	return toggleTracking(m.db, m.activeTaskID, m.activeTLBeginTS, m.activeTLEndTS, comment)
 }
 
 func (m *Model) getCmdToSaveOrUpdateTL() tea.Cmd {
@@ -116,10 +111,10 @@ func (m *Model) getCmdToSaveOrUpdateTL() tea.Cmd {
 		return nil
 	}
 
-	descValue := m.tLCommentInput.Value()
-	var desc *string
-	if isCommentValid(descValue) {
-		desc = &descValue
+	commentValue := strings.TrimSpace(m.tLCommentInput.Value())
+	var comment *string
+	if commentValue != "" {
+		comment = &commentValue
 	}
 
 	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
@@ -136,7 +131,7 @@ func (m *Model) getCmdToSaveOrUpdateTL() tea.Cmd {
 	m.activeTLComment = nil
 	m.activeView = taskListView
 
-	return insertManualTL(m.db, task.ID, beginTS, endTS, desc)
+	return insertManualTL(m.db, task.ID, beginTS, endTS, comment)
 }
 
 func (m *Model) handleEscape() {
