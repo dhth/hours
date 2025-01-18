@@ -32,9 +32,9 @@ func InitialModel(db *sql.DB) Model {
 	tLInputs[entryEndTS].Width = 30
 
 	tLCommentInput := textarea.New()
-	tLCommentInput.Placeholder = `Task Log comment goes here.
+	tLCommentInput.Placeholder = `Task log comment goes here.
 
-This can be used to record additional details about your work on this task.`
+This can be used to record details about your work on this task.`
 	tLCommentInput.CharLimit = tlCommentLengthLimit
 	tLCommentInput.SetWidth(100)
 	tLCommentInput.SetHeight(10)
