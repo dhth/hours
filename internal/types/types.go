@@ -3,12 +3,13 @@ package types
 import (
 	"fmt"
 	"math"
-	"strings"
 	"time"
 
 	"github.com/dhth/hours/internal/utils"
 	"github.com/dustin/go-humanize"
 )
+
+const emptyCommentIndicator = "∅"
 
 type Task struct {
 	ID             int
@@ -71,7 +72,7 @@ func (t *Task) UpdateDesc() {
 }
 
 func (tl *TaskLogEntry) UpdateTitle() {
-	tl.TLTitle = utils.Trim(tl.GetCommentsFirstLine(), 60)
+	tl.TLTitle = utils.TrimWithMoreLinesIndicator(tl.GetComment(), 60)
 }
 
 func (tl *TaskLogEntry) UpdateDesc() {
@@ -102,24 +103,10 @@ func (tl *TaskLogEntry) UpdateDesc() {
 
 func (tl *TaskLogEntry) GetComment() string {
 	if tl.Comment == nil {
-		return "∅"
+		return emptyCommentIndicator
 	}
 
 	return *tl.Comment
-}
-
-func (tl *TaskLogEntry) GetCommentsFirstLine() string {
-	if tl.Comment == nil {
-		return "∅"
-	}
-
-	lines := strings.SplitN(*tl.Comment, "\n", 2)
-
-	if len(lines) > 1 {
-		return fmt.Sprintf("%s ↴", lines[0])
-	}
-
-	return lines[0]
 }
 
 func (t Task) Title() string {
