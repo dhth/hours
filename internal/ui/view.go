@@ -56,7 +56,9 @@ func (m Model) View() string {
 	var formSubmitHelp string
 
 	switch m.activeView {
-	case taskInputView, editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
+	case taskInputView:
+		formSubmitHelp = "Press <ctrl+s>/<enter> to submit"
+	case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
 		if m.trackingFocussedField == entryComment {
 			formSubmitHelp = "Press <ctrl+s> to submit"
 		} else {
@@ -82,7 +84,7 @@ func (m Model) View() string {
 		var formTitle string
 		switch m.taskMgmtContext {
 		case taskCreateCxt:
-			formTitle = "Add a task"
+			formTitle = "Add task"
 		case taskUpdateCxt:
 			formTitle = "Update task"
 		}
@@ -92,14 +94,13 @@ func (m Model) View() string {
 
   %s
 
-
   %s
 `,
-			formFieldNameStyle.Render(formTitle),
+			taskEntryHeadingStyle.Render(formTitle),
 			m.taskInputs[summaryField].View(),
 			formHelpStyle.Render(formSubmitHelp),
 		)
-		for i := 0; i < m.terminalHeight-20+10; i++ {
+		for i := 0; i < m.terminalHeight-9; i++ {
 			content += "\n"
 		}
 	case finishActiveTLView:

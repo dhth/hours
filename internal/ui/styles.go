@@ -10,6 +10,7 @@ const (
 	defaultBackgroundColor   = "#282828"
 	activeTaskListColor      = "#fe8019"
 	inactiveTaskListColor    = "#928374"
+	taskEntryColor           = "#8ec07c"
 	taskLogEntryColor        = "#fabd2f"
 	taskLogListColor         = "#b8bb26"
 	trackingColor            = "#fabd2f"
@@ -68,6 +69,9 @@ var (
 			Align(lipgloss.Center).
 			Bold(true).
 			Background(lipgloss.Color(toolNameColor))
+
+	taskEntryHeadingStyle = baseHeadingStyle.
+				Background(lipgloss.Color(taskEntryColor))
 
 	taskLogEntryHeadingStyle = baseHeadingStyle.
 					Background(lipgloss.Color(taskLogEntryColor))
