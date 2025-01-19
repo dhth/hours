@@ -63,11 +63,11 @@ Open the TUI by simply running `hours`. The TUI lets you do the following:
 - deactivate/activate a task
 - view historical task log entries
 
-![Usage](https://github.com/user-attachments/assets/6399387a-d10c-4938-946e-2626b4945779)
+![Usage](https://github.com/user-attachments/assets/16e34df0-fab3-42d9-a183-c8a07af06cca)
 
-![Usage](https://github.com/user-attachments/assets/622f89eb-4cca-4688-9bbb-17da316a549b)
+![Usage](https://github.com/user-attachments/assets/1213b61b-498a-4840-9ba3-f17097801b9d)
 
-![Usage](https://github.com/user-attachments/assets/aa54d19c-90f5-48e3-9e48-be7a7826ddd9)
+![Usage](https://github.com/user-attachments/assets/d804cc05-53d0-4740-ac53-6f8bf636be6c)
 
 Besides a TUI, `hours` also offers reports, statistics, and logs based on the
 time tracking you do. These can be viewed using the subcommands `report`,
