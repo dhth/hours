@@ -54,17 +54,21 @@ var helpText = fmt.Sprintf(`%s
 	helpSectionStyle.Render(`
   a                                       Add a task
   u                                       Update task details
-  s                                       Start/stop recording time on a task; stopping will open up the "Task Log Entry View"
-  S                                       Quick switch recording; will save a task log entry for the currently active task,
-                                              and start recording time for another
-  <ctrl+s>                                Edit the currently active task log/Add a new manual task log entry
+  s                                       Start/stop recording time on a task; stopping
+                                              will open up the "Task Log Entry View"
+  S                                       Quick switch recording; will save a task log
+                                              entry for the currently active task, and
+                                              start recording time for another
+  <ctrl+s>                                Edit the currently active task log/Add a new
+                                              manual task log entry
   <ctrl+x>                                Discard currently active recording
   <ctrl+t>                                Go to currently tracked item
   <ctrl+d>                                Deactivate task
 `),
 	helpHeaderStyle.Render("Task Logs List View"),
 	helpSectionStyle.Render(`
-  ~ at the end of a task log comment indicates that it has more lines that are not visible in the list view
+  ~ at the end of a task log comment indicates that it has more lines that are not
+  visible in the list view
 
   d                                       Show task log details
   <ctrl+s>/u                              Update task log entry

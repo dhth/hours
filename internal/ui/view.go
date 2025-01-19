@@ -10,7 +10,7 @@ import (
 const (
 	taskLogEntryViewHeading = "Task Log Entry"
 	minHeightNeeded         = 32
-	minWidthNeeded          = 110
+	minWidthNeeded          = 96
 )
 
 var listWidth = 140

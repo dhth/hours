@@ -13,6 +13,7 @@ import (
 
 const (
 	tlCommentLengthLimit = 3000
+	textInputWidth       = 80
 )
 
 func InitialModel(db *sql.DB) Model {
@@ -36,7 +37,7 @@ func InitialModel(db *sql.DB) Model {
 
 This can be used to record details about your work on this task.`
 	tLCommentInput.CharLimit = tlCommentLengthLimit
-	tLCommentInput.SetWidth(100)
+	tLCommentInput.SetWidth(textInputWidth)
 	tLCommentInput.SetHeight(10)
 	tLCommentInput.ShowLineNumbers = false
 	tLCommentInput.Prompt = "  ┃ "
@@ -46,7 +47,7 @@ This can be used to record details about your work on this task.`
 	taskInputs[summaryField].Placeholder = "task summary goes here"
 	taskInputs[summaryField].Focus()
 	taskInputs[summaryField].CharLimit = 100
-	taskInputs[entryBeginTS].Width = 60
+	taskInputs[entryBeginTS].Width = textInputWidth
 
 	m := Model{
 		db:                db,
