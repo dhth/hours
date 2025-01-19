@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 env:
-  GO_VERSION: '1.23.4'
+  GO_VERSION: '1.23.5'
 
 jobs:
   release:
@@ -30,7 +30,7 @@ jobs:
       - name: Release Binaries
         uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
+          version: '~> v2'
           args: release --clean
         env:
           GITHUB_TOKEN: ${{secrets.GH_PAT}}
