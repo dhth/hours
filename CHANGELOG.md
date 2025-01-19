@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Time tracking can now be switched between tasks with a single keypress
+- The active task log can now be edited before it's finished
+- Task logs can now be edited after saving
+- Adds a view for viewing task log details
+
+### Changed
+
+- Allow for longer task log comments
+- Task log comments can now be empty
+
 ## [v0.3.0] - Jun 29, 2024
 
 ### Added
@@ -12,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Timestamps in the "Task Log Entry" view can be moved forwards/backwards using
   j/k/J/K
 - The TUI now shows the start time of an active recording
-- An active task log recording can now be cancelled (using ctrl+x)
+- An active task log recording can now be cancelled
 
 ### Changed
 

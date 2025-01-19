@@ -866,6 +866,7 @@ func (m *Model) handleActiveTLSwitchedMsg(msg activeTLSwitchedMsg) tea.Cmd {
 
 	m.activeTLComment = nil
 	m.activeTaskID = msg.currentlyActiveTaskID
+	m.activeTLBeginTS = msg.ts
 
 	return fetchTLS(m.db, nil)
 }
