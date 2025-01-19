@@ -95,7 +95,7 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 	m.activeTLEndTS = endTS
 
 	if m.activeTLEndTS.Sub(m.activeTLBeginTS).Seconds() <= 0 {
-		m.message = "time spent needs to be positive"
+		m.message = c.TimeSpentNeedsToBePositiveMsg
 		return nil
 	}
 

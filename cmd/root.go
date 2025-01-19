@@ -478,6 +478,14 @@ eg. hours active -t ' {{task}} ({{time}}) '
 				return errs.Unwrap()
 			}
 
+			if beginTS != nil && endTS != nil {
+				b := *beginTS
+				e := *endTS
+				if e.Sub(b).Seconds() <= 0 {
+					return c.ErrTimeSpentIsNotPositive
+				}
+			}
+
 			var comment *string
 			commentTrimmed := strings.TrimSpace(trackTaskComment)
 			if commentTrimmed != "" {

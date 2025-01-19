@@ -5,14 +5,10 @@ import (
 	"strings"
 )
 
-const (
-	BeginTsCannotBeInTheFutureMsg = "begin timestamp cannot be in the future"
-	EndTsCannotBeInTheFutureMsg   = "end timestamp cannot be in the future"
-)
-
 var (
 	ErrBeginTsCannotBeInTheFuture = errors.New(BeginTsCannotBeInTheFutureMsg)
 	ErrEndTsCannotBeInTheFuture   = errors.New(EndTsCannotBeInTheFutureMsg)
+	ErrTimeSpentIsNotPositive     = errors.New(TimeSpentNeedsToBePositiveMsg)
 )
 
 type MultiError struct {
