@@ -36,6 +36,7 @@ const (
 	editActiveTLView
 	finishActiveTLView
 	manualTasklogEntryView
+	editSavedTLView
 	taskInputView
 	helpView
 	insufficientDimensionsView
@@ -132,7 +133,7 @@ func (m Model) Init() tea.Cmd {
 	return tea.Batch(
 		hideHelp(time.Minute*1),
 		fetchTasks(m.db, true),
-		fetchTLS(m.db),
+		fetchTLS(m.db, nil),
 		fetchTasks(m.db, false),
 	)
 }

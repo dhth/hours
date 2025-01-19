@@ -73,6 +73,13 @@ func insertManualTL(db *sql.DB, taskID int, beginTS time.Time, endTS time.Time, 
 	}
 }
 
+func editSavedTL(db *sql.DB, tlID, taskID int, beginTS time.Time, endTS time.Time, comment *string) tea.Cmd {
+	return func() tea.Msg {
+		_, err := pers.EditSavedTL(db, tlID, beginTS, endTS, comment)
+		return savedTLEditedMsg{tlID, taskID, err}
+	}
+}
+
 func fetchActiveTask(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
 		activeTaskDetails, err := pers.FetchActiveTaskDetails(db)
@@ -100,12 +107,13 @@ func updateTaskRep(db *sql.DB, t *types.Task) tea.Cmd {
 	}
 }
 
-func fetchTLS(db *sql.DB) tea.Cmd {
+func fetchTLS(db *sql.DB, tlIDToFocusOn *int) tea.Cmd {
 	return func() tea.Msg {
 		entries, err := pers.FetchTLEntries(db, true, 50)
 		return tLsFetchedMsg{
-			entries: entries,
-			err:     err,
+			entries:       entries,
+			tlIDToFocusOn: tlIDToFocusOn,
+			err:           err,
 		}
 	}
 }

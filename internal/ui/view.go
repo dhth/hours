@@ -56,7 +56,7 @@ func (m Model) View() string {
 	var formSubmitHelp string
 
 	switch m.activeView {
-	case taskInputView, editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+	case taskInputView, editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
 		if m.trackingFocussedField == entryComment {
 			formSubmitHelp = "Press <ctrl+s> to submit"
 		} else {
@@ -174,7 +174,7 @@ func (m Model) View() string {
 		for i := 0; i < m.terminalHeight-26; i++ {
 			content += "\n"
 		}
-	case manualTasklogEntryView:
+	case manualTasklogEntryView, editSavedTLView:
 		var formHeadingText string
 		switch m.tasklogSaveType {
 		case tasklogInsert:
