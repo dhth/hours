@@ -65,6 +65,7 @@ var helpText = fmt.Sprintf(`%s
   ~ at the end of a task log comment indicates that it has more lines that are not visible in the list view
 
   d                                       Show task log details
+  <ctrl+s>/u                              Update task log entry
   <ctrl+d>                                Delete task log entry
 `),
 	helpHeaderStyle.Render("Task Log Details View"),

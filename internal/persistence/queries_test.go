@@ -13,8 +13,10 @@ import (
 )
 
 const (
-	secsInOneHour  = 60 * 60
-	taskLogComment = "a task log outside the time range"
+	secsInOneHour      = 60 * 60
+	taskLogComment     = "a task log outside the time range"
+	testComment        = "a test log"
+	testCommentUpdated = "a task log, updated"
 )
 
 func TestRepository(t *testing.T) {
@@ -67,7 +69,7 @@ func TestRepository(t *testing.T) {
 
 		// WHEN
 		updatedBeginTS := endTS.Add(time.Second * -1 * time.Duration(numSeconds))
-		comment := "updated active TL"
+		comment := testComment
 		err = EditActiveTL(testDB, updatedBeginTS, &comment)
 		activeTaskDetails, err := FetchActiveTaskDetails(testDB)
 		require.NoError(t, err, "failed to fetch active task details")
@@ -107,7 +109,7 @@ func TestRepository(t *testing.T) {
 		numSecondsBefore := taskBefore.SecsSpent
 
 		// WHEN
-		comment := "a task log"
+		comment := testComment
 		err = FinishActiveTL(testDB, tlID, taskID, beginTS, endTS, numSeconds, &comment)
 
 		// THEN
@@ -166,7 +168,7 @@ func TestRepository(t *testing.T) {
 		numSecondsBefore := taskBefore.SecsSpent
 
 		// WHEN
-		comment := "a task log"
+		comment := testComment
 		numSeconds := 60 * 90
 		endTS := time.Now()
 		beginTS := endTS.Add(time.Second * -1 * time.Duration(numSeconds))
@@ -210,6 +212,131 @@ func TestRepository(t *testing.T) {
 
 		assert.Equal(t, numSeconds, taskLog.SecsSpent)
 		assert.Nil(t, taskLog.Comment)
+	})
+
+	t.Run("TestEditSavedTL works when new time spent is larger than the previous one", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Now().Truncate(time.Second)
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+		taskID := 1
+
+		comment := testComment
+		numSeconds := 60 * 90
+		endTS := time.Now().Truncate(time.Second)
+		beginTS := endTS.Add(time.Second * -1 * time.Duration(numSeconds))
+		tlID, err := InsertManualTL(testDB, taskID, beginTS, endTS, &comment)
+		require.NoError(t, err, "failed to insert task log")
+		taskBefore, err := fetchTaskByID(testDB, taskID)
+		require.NoError(t, err, "failed to fetch task after tl insert")
+
+		// WHEN
+		numSecondsDelta := 60
+		updatedComment := testCommentUpdated
+		newBeginTS := beginTS.Add(time.Second * -2 * time.Duration(numSecondsDelta))
+		newEndTS := endTS.Add(time.Second * -1 * time.Duration(numSecondsDelta))
+		_, err = EditSavedTL(testDB, tlID, newBeginTS, newEndTS, &updatedComment)
+
+		// THEN
+		require.NoError(t, err, "failed to edit saved task log")
+
+		taskLog, err := fetchTLByID(testDB, tlID)
+		require.NoError(t, err, "failed to fetch task log")
+
+		taskAfter, err := fetchTaskByID(testDB, taskID)
+		require.NoError(t, err, "failed to fetch task")
+
+		assert.True(t, newBeginTS.Equal(taskLog.BeginTS), "new begin ts is not correct; expected=%v, got=%v", newBeginTS, taskLog.BeginTS)
+		assert.True(t, newEndTS.Equal(taskLog.EndTS), "new end ts is not correct; expected=%v, got=%v", newEndTS, taskLog.EndTS)
+		assert.Equal(t, numSeconds+numSecondsDelta, taskLog.SecsSpent)
+		require.NotNil(t, taskLog.Comment)
+		assert.Equal(t, updatedComment, *taskLog.Comment)
+		assert.Equal(t, taskBefore.SecsSpent+numSecondsDelta, taskAfter.SecsSpent)
+	})
+
+	t.Run("TestEditSavedTL works when new time spent is smaller than the previous one", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Now().Truncate(time.Second)
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+		taskID := 1
+
+		comment := testComment
+		numSeconds := 60 * 90
+		endTS := time.Now().Truncate(time.Second)
+		beginTS := endTS.Add(time.Second * -1 * time.Duration(numSeconds))
+		tlID, err := InsertManualTL(testDB, taskID, beginTS, endTS, &comment)
+		require.NoError(t, err, "failed to insert task log")
+		taskBefore, err := fetchTaskByID(testDB, taskID)
+		require.NoError(t, err, "failed to fetch task after tl insert")
+
+		// WHEN
+		numSecondsDelta := 60
+		updatedComment := testCommentUpdated
+		newBeginTS := beginTS.Add(time.Second * time.Duration(numSecondsDelta))
+		_, err = EditSavedTL(testDB, tlID, newBeginTS, endTS, &updatedComment)
+
+		// THEN
+		require.NoError(t, err, "failed to edit saved task log")
+
+		taskLog, err := fetchTLByID(testDB, tlID)
+		require.NoError(t, err, "failed to fetch task log")
+
+		taskAfter, err := fetchTaskByID(testDB, taskID)
+		require.NoError(t, err, "failed to fetch task")
+
+		assert.True(t, newBeginTS.Equal(taskLog.BeginTS), "new begin ts is not correct; expected=%v, got=%v", newBeginTS, taskLog.BeginTS)
+		assert.True(t, endTS.Equal(taskLog.EndTS), "new end ts is not correct; expected=%v, got=%v", endTS, taskLog.EndTS)
+		assert.Equal(t, numSeconds-numSecondsDelta, taskLog.SecsSpent)
+		require.NotNil(t, taskLog.Comment)
+		assert.Equal(t, updatedComment, *taskLog.Comment)
+		assert.Equal(t, taskBefore.SecsSpent-numSecondsDelta, taskAfter.SecsSpent)
+	})
+
+	t.Run("TestEditSavedTL works when time spent is unchanged", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Now().Truncate(time.Second)
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+		taskID := 1
+
+		comment := testComment
+		numSeconds := 60 * 90
+		endTS := time.Now().Truncate(time.Second)
+		beginTS := endTS.Add(time.Second * -1 * time.Duration(numSeconds))
+		tlID, err := InsertManualTL(testDB, taskID, beginTS, endTS, &comment)
+		require.NoError(t, err, "failed to insert task log")
+		taskBefore, err := fetchTaskByID(testDB, taskID)
+		require.NoError(t, err, "failed to fetch task after tl insert")
+
+		// WHEN
+		numSecondsDelta := 60
+		updatedComment := testCommentUpdated
+		newBeginTS := beginTS.Add(time.Second * -1 * time.Duration(numSecondsDelta))
+		newEndTS := endTS.Add(time.Second * -1 * time.Duration(numSecondsDelta))
+		_, err = EditSavedTL(testDB, tlID, newBeginTS, newEndTS, &updatedComment)
+
+		// THEN
+		require.NoError(t, err, "failed to edit saved task log")
+
+		taskLog, err := fetchTLByID(testDB, tlID)
+		require.NoError(t, err, "failed to fetch task log")
+
+		taskAfter, err := fetchTaskByID(testDB, taskID)
+		require.NoError(t, err, "failed to fetch task")
+
+		assert.True(t, newBeginTS.Equal(taskLog.BeginTS), "new begin ts is not correct; expected=%v, got=%v", newBeginTS, taskLog.BeginTS)
+		assert.True(t, newEndTS.Equal(taskLog.EndTS), "new end ts is not correct; expected=%v, got=%v", newEndTS, taskLog.EndTS)
+		assert.Equal(t, numSeconds, taskLog.SecsSpent)
+		require.NotNil(t, taskLog.Comment)
+		assert.Equal(t, updatedComment, *taskLog.Comment)
+		assert.Equal(t, taskBefore.SecsSpent, taskAfter.SecsSpent)
 	})
 
 	t.Run("TestDeleteTaskLogEntry", func(t *testing.T) {

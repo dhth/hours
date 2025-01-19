@@ -9,7 +9,11 @@ import (
 	"github.com/dhth/hours/internal/types"
 )
 
-var ErrCouldntRollBackTx = errors.New("couldn't roll back transaction")
+var (
+	ErrCouldntRollBackTx          = errors.New("couldn't roll back transaction")
+	ErrCouldntGetTaskLogDetails   = errors.New("couldn't get task log details")
+	ErrCouldntUpdateTaskTimeSpent = errors.New("couldn't update time spent on task")
+)
 
 func InsertNewTL(db *sql.DB, taskID int, beginTs time.Time) (int, error) {
 	return runInTxAndReturnID(db, func(tx *sql.Tx) (int, error) {
@@ -143,6 +147,81 @@ WHERE id = ?;
 		_, err = tStmt.Exec(secsSpent, time.Now().UTC(), taskID)
 		if err != nil {
 			return -1, err
+		}
+
+		return int(lastID), nil
+	})
+}
+
+func EditSavedTL(db *sql.DB, tlID int, beginTs time.Time, endTs time.Time, comment *string) (int, error) {
+	return runInTxAndReturnID(db, func(tx *sql.Tx) (int, error) {
+		var tl types.TaskLogEntry
+		row := tx.QueryRow(`
+SELECT id, task_id, begin_ts, end_ts, secs_spent, comment
+FROM task_log
+WHERE id=?;
+    `, tlID)
+
+		if row.Err() != nil {
+			return -1, fmt.Errorf("%w: %s", ErrCouldntGetTaskLogDetails, row.Err().Error())
+		}
+		err := row.Scan(&tl.ID,
+			&tl.TaskID,
+			&tl.BeginTS,
+			&tl.EndTS,
+			&tl.SecsSpent,
+			&tl.Comment,
+		)
+		if err != nil {
+			return -1, fmt.Errorf("%w: %s", ErrCouldntGetTaskLogDetails, err.Error())
+		}
+
+		previousSecsSpent := tl.SecsSpent
+		taskID := tl.TaskID
+
+		stmt, err := tx.Prepare(`
+UPDATE task_log
+SET begin_ts = ?,
+    end_ts = ?,
+    secs_spent = ?,
+    comment = ?
+WHERE id=?;
+`)
+		if err != nil {
+			return -1, err
+		}
+		defer stmt.Close()
+
+		secsSpent := int(endTs.Sub(beginTs).Seconds())
+
+		res, err := stmt.Exec(beginTs.UTC(), endTs.UTC(), secsSpent, comment, tlID)
+		if err != nil {
+			return -1, err
+		}
+
+		lastID, err := res.LastInsertId()
+		if err != nil {
+			return -1, err
+		}
+
+		if previousSecsSpent == secsSpent {
+			return int(lastID), nil
+		}
+
+		tStmt, err := tx.Prepare(`
+UPDATE task
+SET secs_spent = secs_spent+?,
+    updated_at = ?
+WHERE id = ?;
+    `)
+		if err != nil {
+			return -1, err
+		}
+		defer tStmt.Close()
+
+		_, err = tStmt.Exec(secsSpent-previousSecsSpent, time.Now().UTC(), taskID)
+		if err != nil {
+			return -1, fmt.Errorf("%w: %s", ErrCouldntUpdateTaskTimeSpent, err.Error())
 		}
 
 		return int(lastID), nil

@@ -51,7 +51,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			var bail bool
 			if keyMsg.String() == enter {
 				switch m.activeView {
-				case taskInputView, editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+				case taskInputView, editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
 					if m.trackingFocussedField == entryComment {
 						bail = true
 					}
@@ -70,8 +70,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				updateCmd = m.getCmdToUpdateActiveTL()
 			case finishActiveTLView:
 				updateCmd = m.getCmdToFinishTrackingActiveTL()
-			case manualTasklogEntryView:
-				updateCmd = m.getCmdToSaveOrUpdateTL()
+			case manualTasklogEntryView, editSavedTLView:
+				updateCmd = m.getCmdToCreateOrEditTL()
 			}
 			if updateCmd != nil {
 				cmds = append(cmds, updateCmd)
@@ -85,7 +85,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.goBackwardInView()
 		case "k":
 			switch m.activeView {
-			case editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+			case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
 				err := m.shiftTime(types.ShiftBackward, types.ShiftMinute)
 				if err != nil {
 					return m, tea.Batch(cmds...)
@@ -93,7 +93,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "j":
 			switch m.activeView {
-			case editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+			case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
 				err := m.shiftTime(types.ShiftForward, types.ShiftMinute)
 				if err != nil {
 					return m, tea.Batch(cmds...)
@@ -101,7 +101,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "K":
 			switch m.activeView {
-			case editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+			case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
 				err := m.shiftTime(types.ShiftBackward, types.ShiftFiveMinutes)
 				if err != nil {
 					return m, tea.Batch(cmds...)
@@ -109,7 +109,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "J":
 			switch m.activeView {
-			case editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+			case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
 				err := m.shiftTime(types.ShiftForward, types.ShiftFiveMinutes)
 				if err != nil {
 					return m, tea.Batch(cmds...)
@@ -117,7 +117,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "h":
 			switch m.activeView {
-			case editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+			case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
 				err := m.shiftTime(types.ShiftBackward, types.ShiftDay)
 				if err != nil {
 					return m, tea.Batch(cmds...)
@@ -128,7 +128,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "l":
 			switch m.activeView {
-			case editActiveTLView, finishActiveTLView, manualTasklogEntryView:
+			case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
 				err := m.shiftTime(types.ShiftForward, types.ShiftDay)
 				if err != nil {
 					return m, tea.Batch(cmds...)
@@ -147,23 +147,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, cmd)
 		}
 		return m, tea.Batch(cmds...)
-	case editActiveTLView:
-		for i := range m.tLInputs {
-			m.tLInputs[i], cmd = m.tLInputs[i].Update(msg)
-			cmds = append(cmds, cmd)
-		}
-		m.tLCommentInput, cmd = m.tLCommentInput.Update(msg)
-		cmds = append(cmds, cmd)
-		return m, tea.Batch(cmds...)
-	case finishActiveTLView:
-		for i := range m.tLInputs {
-			m.tLInputs[i], cmd = m.tLInputs[i].Update(msg)
-			cmds = append(cmds, cmd)
-		}
-		m.tLCommentInput, cmd = m.tLCommentInput.Update(msg)
-		cmds = append(cmds, cmd)
-		return m, tea.Batch(cmds...)
-	case manualTasklogEntryView:
+	case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
 		for i := range m.tLInputs {
 			m.tLInputs[i], cmd = m.tLInputs[i].Update(msg)
 			cmds = append(cmds, cmd)
@@ -205,13 +189,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+t":
 			m.goToActiveTask()
 		case "ctrl+s":
-			if m.activeView == taskListView {
+			switch m.activeView {
+			case taskListView:
 				switch m.trackingActive {
 				case true:
 					m.handleRequestToEditActiveTL()
 				case false:
 					m.handleRequestToCreateManualTL()
 				}
+			case taskLogView:
+				m.handleRequestToEditSavedTL()
+			}
+		case "u":
+			switch m.activeView {
+			case taskListView:
+				m.handleRequestToUpdateTask()
+			case taskLogView:
+				m.handleRequestToEditSavedTL()
 			}
 		case "ctrl+d":
 			var handleCmd tea.Cmd
@@ -246,10 +240,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.activeView == taskListView {
 				m.handleRequestToCreateTask()
 			}
-		case "u":
-			if m.activeView == taskListView {
-				m.handleRequestToUpdateTask()
-			}
 		case "k":
 			m.handleRequestToScrollVPUp()
 		case "j":
@@ -262,9 +252,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.lastView = m.activeView
 			m.activeView = helpView
 		}
-
-	// case tea.WindowSizeMsg:
-	// 	m.handleWindowResizing(msg)
 	case taskCreatedMsg:
 		if msg.err != nil {
 			m.message = fmt.Sprintf("Error creating task: %s", msg.err)
@@ -292,6 +279,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case manualTLInsertedMsg:
 		handleCmds := m.handleManualTLInsertedMsg(msg)
+		if handleCmds != nil {
+			cmds = append(cmds, handleCmds...)
+		}
+	case savedTLEditedMsg:
+		handleCmds := m.handleSavedTLEditedMsg(msg)
 		if handleCmds != nil {
 			cmds = append(cmds, handleCmds...)
 		}

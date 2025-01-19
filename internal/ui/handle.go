@@ -93,7 +93,7 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 	return toggleTracking(m.db, m.activeTaskID, m.activeTLBeginTS, m.activeTLEndTS, comment)
 }
 
-func (m *Model) getCmdToSaveOrUpdateTL() tea.Cmd {
+func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
 	beginTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryBeginTS].Value(), time.Local)
 	if err != nil {
 		m.message = err.Error()
@@ -117,21 +117,31 @@ func (m *Model) getCmdToSaveOrUpdateTL() tea.Cmd {
 		comment = &commentValue
 	}
 
-	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
-	if !ok {
-		m.message = "Something went wrong"
-		return nil
-	}
-	if m.tasklogSaveType != tasklogInsert {
-		return nil
-	}
-
 	m.blurTLTrackingInputs()
 	m.tLCommentInput.SetValue("")
 	m.activeTLComment = nil
-	m.activeView = taskListView
 
-	return insertManualTL(m.db, task.ID, beginTS, endTS, comment)
+	var cmd tea.Cmd
+	switch m.tasklogSaveType {
+	case tasklogInsert:
+		m.activeView = taskListView
+		task, ok := m.activeTasksList.SelectedItem().(*types.Task)
+		if !ok {
+			m.message = genericErrorMsg
+			return nil
+		}
+		cmd = insertManualTL(m.db, task.ID, beginTS, endTS, comment)
+	case tasklogUpdate:
+		m.activeView = taskLogView
+		tl, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
+		if !ok {
+			m.message = genericErrorMsg
+			return nil
+		}
+		cmd = editSavedTL(m.db, tl.ID, tl.TaskID, beginTS, endTS, comment)
+	}
+
+	return cmd
 }
 
 func (m *Model) handleEscape() {
@@ -155,6 +165,8 @@ func (m *Model) handleEscape() {
 			m.tLInputs[i].SetValue("")
 			m.tLCommentInput.SetValue("")
 		}
+	case editSavedTLView:
+		m.activeView = taskLogView
 	}
 }
 
@@ -177,7 +189,7 @@ func (m *Model) goForwardInView() {
 			m.tLInputs[entryBeginTS].Focus()
 			m.tLCommentInput.Blur()
 		}
-	case finishActiveTLView, manualTasklogEntryView:
+	case finishActiveTLView, manualTasklogEntryView, editSavedTLView:
 		switch m.trackingFocussedField {
 		case entryBeginTS:
 			m.trackingFocussedField = entryEndTS
@@ -214,7 +226,7 @@ func (m *Model) goBackwardInView() {
 			m.tLInputs[entryBeginTS].Focus()
 			m.tLCommentInput.Blur()
 		}
-	case finishActiveTLView, manualTasklogEntryView:
+	case finishActiveTLView, manualTasklogEntryView, editSavedTLView:
 		switch m.trackingFocussedField {
 		case entryBeginTS:
 			m.trackingFocussedField = entryComment
@@ -276,8 +288,6 @@ func (m *Model) handleRequestToGoBackOrQuit() bool {
 		}
 	case helpView:
 		m.activeView = taskListView
-	default:
-		shouldQuit = true
 	}
 
 	return shouldQuit
@@ -289,7 +299,7 @@ func (m *Model) getCmdToReloadData() tea.Cmd {
 	case taskListView:
 		cmd = fetchTasks(m.db, true)
 	case taskLogView:
-		cmd = fetchTLS(m.db)
+		cmd = fetchTLS(m.db, nil)
 		m.taskLogList.ResetSelected()
 	case inactiveTaskListView:
 		cmd = fetchTasks(m.db, false)
@@ -343,6 +353,37 @@ func (m *Model) handleRequestToCreateManualTL() {
 
 	m.tLInputs[entryBeginTS].SetValue(currentTimeStr)
 	m.tLInputs[entryEndTS].SetValue(currentTimeStr)
+
+	m.blurTLTrackingInputs()
+	m.trackingFocussedField = entryBeginTS
+	m.tLInputs[entryBeginTS].Focus()
+}
+
+func (m *Model) handleRequestToEditSavedTL() {
+	if len(m.taskLogList.Items()) == 0 {
+		return
+	}
+
+	tl, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
+	if !ok {
+		m.message = genericErrorMsg
+		return
+	}
+
+	m.activeView = editSavedTLView
+	m.tasklogSaveType = tasklogUpdate
+
+	beginTimeStr := tl.BeginTS.Format(timeFormat)
+	endTimeStr := tl.EndTS.Format(timeFormat)
+
+	var comment string
+	if tl.Comment != nil {
+		comment = *tl.Comment
+	}
+
+	m.tLInputs[entryBeginTS].SetValue(beginTimeStr)
+	m.tLInputs[entryEndTS].SetValue(endTimeStr)
+	m.tLCommentInput.SetValue(comment)
 
 	m.blurTLTrackingInputs()
 	m.trackingFocussedField = entryBeginTS
@@ -622,7 +663,24 @@ func (m *Model) handleManualTLInsertedMsg(msg manualTLInsertedMsg) []tea.Cmd {
 	if ok {
 		cmds = append(cmds, updateTaskRep(m.db, task))
 	}
-	cmds = append(cmds, fetchTLS(m.db))
+	cmds = append(cmds, fetchTLS(m.db, nil))
+
+	return cmds
+}
+
+func (m *Model) handleSavedTLEditedMsg(msg savedTLEditedMsg) []tea.Cmd {
+	if msg.err != nil {
+		m.message = msg.err.Error()
+		return nil
+	}
+
+	task, ok := m.taskMap[msg.taskID]
+
+	var cmds []tea.Cmd
+	if ok {
+		cmds = append(cmds, updateTaskRep(m.db, task))
+	}
+	cmds = append(cmds, fetchTLS(m.db, &msg.tlID))
 
 	return cmds
 }
@@ -634,12 +692,24 @@ func (m *Model) handleTLSFetchedMsg(msg tLsFetchedMsg) {
 	}
 
 	items := make([]list.Item, len(msg.entries))
+	var indexToFocusOn *int
+	var indexToFocusOnFound bool
 	for i, e := range msg.entries {
 		e.UpdateListTitle()
 		e.UpdateListDesc()
 		items[i] = e
+		if !indexToFocusOnFound && msg.tlIDToFocusOn != nil && e.ID == *msg.tlIDToFocusOn {
+			indexToFocusOn = &i
+			indexToFocusOnFound = true
+		}
 	}
 	m.taskLogList.SetItems(items)
+
+	if indexToFocusOn != nil {
+		m.taskLogList.Select(*indexToFocusOn)
+	} else {
+		m.taskLogList.Select(0)
+	}
 }
 
 func (m *Model) handleActiveTaskFetchedMsg(msg activeTaskFetchedMsg) {
@@ -697,7 +767,7 @@ func (m *Model) handleTrackingToggledMsg(msg trackingToggledMsg) []tea.Cmd {
 		m.trackingActive = false
 		m.activeTaskID = -1
 		cmds = append(cmds, updateTaskRep(m.db, task))
-		cmds = append(cmds, fetchTLS(m.db))
+		cmds = append(cmds, fetchTLS(m.db, nil))
 	case false:
 		m.lastTrackingChange = trackingStarted
 		task.TrackingActive = true
@@ -721,7 +791,7 @@ func (m *Model) handleTLDeleted(msg tLDeletedMsg) []tea.Cmd {
 	if ok {
 		cmds = append(cmds, updateTaskRep(m.db, task))
 	}
-	cmds = append(cmds, fetchTLS(m.db))
+	cmds = append(cmds, fetchTLS(m.db, nil))
 
 	return cmds
 }

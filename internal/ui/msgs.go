@@ -25,6 +25,12 @@ type manualTLInsertedMsg struct {
 	err    error
 }
 
+type savedTLEditedMsg struct {
+	tlID   int
+	taskID int
+	err    error
+}
+
 type activeTLUpdatedMsg struct {
 	beginTS time.Time
 	comment *string
@@ -42,8 +48,9 @@ type activeTaskFetchedMsg struct {
 }
 
 type tLsFetchedMsg struct {
-	entries []types.TaskLogEntry
-	err     error
+	entries       []types.TaskLogEntry
+	tlIDToFocusOn *int
+	err           error
 }
 
 type taskCreatedMsg struct {
