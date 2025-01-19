@@ -236,6 +236,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.handleRequestToStopTracking()
 				}
 			}
+		case "S":
+			if m.activeView != taskListView {
+				break
+			}
+			quickSwitchCmd := m.getCmdToQuickSwitchTracking()
+			if quickSwitchCmd != nil {
+				cmds = append(cmds, quickSwitchCmd)
+			}
 		case "a":
 			if m.activeView == taskListView {
 				m.handleRequestToCreateTask()
@@ -295,6 +303,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		updateCmds := m.handleTrackingToggledMsg(msg)
 		if updateCmds != nil {
 			cmds = append(cmds, updateCmds...)
+		}
+	case activeTLSwitchedMsg:
+		updateCmd := m.handleActiveTLSwitchedMsg(msg)
+		if updateCmd != nil {
+			cmds = append(cmds, updateCmd)
 		}
 	case taskRepUpdatedMsg:
 		if msg.err != nil {

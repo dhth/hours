@@ -8,13 +8,18 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
+	c "github.com/dhth/hours/internal/common"
 	"github.com/dhth/hours/internal/types"
 )
 
 const (
-	genericErrorMsg = "Something went wrong"
-	removeFilterMsg = "Remove filter first"
+	genericErrorMsg               = "Something went wrong"
+	removeFilterMsg               = "Remove filter first"
+	beginTsCannotBeInTheFutureMsg = "Begin timestamp cannot be in the future"
+	endTsCannotBeInTheFutureMsg   = "End timestamp cannot be in the future"
 )
+
+var suggestReloadingMsg = fmt.Sprintf("Something went wrong, please restart hours; let %s know about this error via %s.", c.Author, c.RepoIssuesURL)
 
 func (m *Model) getCmdToCreateOrUpdateTask() tea.Cmd {
 	if strings.TrimSpace(m.taskInputs[summaryField].Value()) == "" {
@@ -48,6 +53,11 @@ func (m *Model) getCmdToUpdateActiveTL() tea.Cmd {
 		return nil
 	}
 
+	if beginTS.After(time.Now()) {
+		m.message = beginTsCannotBeInTheFutureMsg
+		return nil
+	}
+
 	commentValue := strings.TrimSpace(m.tLCommentInput.Value())
 	var comment *string
 	if commentValue != "" {
@@ -64,6 +74,13 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 		m.message = err.Error()
 		return nil
 	}
+
+	now := time.Now()
+	if beginTS.After(now) {
+		m.message = beginTsCannotBeInTheFutureMsg
+		return nil
+	}
+
 	m.activeTLBeginTS = beginTS
 
 	endTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryEndTS].Value(), time.Local)
@@ -71,6 +88,12 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 		m.message = err.Error()
 		return nil
 	}
+
+	if endTS.After(now) {
+		m.message = endTsCannotBeInTheFutureMsg
+		return nil
+	}
+
 	m.activeTLEndTS = endTS
 
 	if m.activeTLEndTS.Sub(m.activeTLBeginTS).Seconds() <= 0 {
@@ -100,9 +123,20 @@ func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
 		return nil
 	}
 
+	now := time.Now()
+	if beginTS.After(now) {
+		m.message = beginTsCannotBeInTheFutureMsg
+		return nil
+	}
+
 	endTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryEndTS].Value(), time.Local)
 	if err != nil {
 		m.message = err.Error()
+		return nil
+	}
+
+	if endTS.After(now) {
+		m.message = endTsCannotBeInTheFutureMsg
 		return nil
 	}
 
@@ -464,6 +498,31 @@ func (m *Model) handleRequestToStopTracking() {
 	m.tLCommentInput.Focus()
 }
 
+func (m *Model) getCmdToQuickSwitchTracking() tea.Cmd {
+	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
+	if !ok {
+		m.message = genericErrorMsg
+		return nil
+	}
+
+	if task.ID == m.activeTaskID {
+		return nil
+	}
+
+	if !m.trackingActive {
+		m.changesLocked = true
+		m.activeTLBeginTS = time.Now().Truncate(time.Second)
+		return toggleTracking(m.db,
+			task.ID,
+			m.activeTLBeginTS,
+			m.activeTLEndTS,
+			nil,
+		)
+	}
+
+	return quickSwitchActiveIssue(m.db, task.ID, time.Now())
+}
+
 func (m *Model) handleRequestToCreateTask() {
 	if m.activeTasksList.IsFiltered() {
 		m.message = removeFilterMsg
@@ -778,6 +837,37 @@ func (m *Model) handleTrackingToggledMsg(msg trackingToggledMsg) []tea.Cmd {
 	task.UpdateListTitle()
 
 	return cmds
+}
+
+func (m *Model) handleActiveTLSwitchedMsg(msg activeTLSwitchedMsg) tea.Cmd {
+	if msg.err != nil {
+		m.message = msg.err.Error()
+		return nil
+	}
+
+	lastActiveTask, ok := m.taskMap[msg.lastActiveTaskID]
+
+	if !ok {
+		m.message = suggestReloadingMsg
+		return nil
+	}
+
+	lastActiveTask.TrackingActive = false
+	lastActiveTask.UpdateListTitle()
+
+	currentlyActiveTask, ok := m.taskMap[msg.currentlyActiveTaskID]
+
+	if !ok {
+		m.message = suggestReloadingMsg
+		return nil
+	}
+	currentlyActiveTask.TrackingActive = true
+	currentlyActiveTask.UpdateListTitle()
+
+	m.activeTLComment = nil
+	m.activeTaskID = msg.currentlyActiveTaskID
+
+	return fetchTLS(m.db, nil)
 }
 
 func (m *Model) handleTLDeleted(msg tLDeletedMsg) []tea.Cmd {

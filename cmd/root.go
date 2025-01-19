@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	c "github.com/dhth/hours/internal/common"
 	pers "github.com/dhth/hours/internal/persistence"
 	"github.com/dhth/hours/internal/ui"
 	"github.com/spf13/cobra"
@@ -18,8 +19,6 @@ import (
 
 const (
 	defaultDBName     = "hours.db"
-	author            = "@dhth"
-	repoIssuesURL     = "https://github.com/dhth/hours/issues"
 	numDaysThreshold  = 30
 	numTasksThreshold = 20
 )
@@ -37,7 +36,7 @@ var (
 	errCouldntReadInput         = errors.New("couldn't read input")
 	errIncorrectCodeEntered     = errors.New("incorrect code entered")
 
-	msgReportIssue = fmt.Sprintf("This isn't supposed to happen; let %s know about this error via \n%s.", author, repoIssuesURL)
+	msgReportIssue = fmt.Sprintf("This isn't supposed to happen; let %s know about this error via \n%s.", c.Author, c.RepoIssuesURL)
 )
 
 func Execute() error {

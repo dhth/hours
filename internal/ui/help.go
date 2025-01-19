@@ -55,6 +55,8 @@ var helpText = fmt.Sprintf(`%s
   a                                       Add a task
   u                                       Update task details
   s                                       Start/stop recording time on a task; stopping will open up the "Task Log Entry View"
+  S                                       Quick switch recording; will save a task log entry for the currently active task,
+                                              and start recording time for another
   <ctrl+s>                                Edit the currently active task log/Add a new manual task log entry
   <ctrl+x>                                Discard currently active recording
   <ctrl+t>                                Go to currently tracked item
