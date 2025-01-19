@@ -58,6 +58,8 @@ Open the TUI by simply running `hours`. The TUI lets you do the following:
 - create/update tasks
 - start/stop tracking time on a task
 - add manual task log entries
+- edit task logs
+- view task log details
 - deactivate/activate a task
 - view historical task log entries
 
@@ -193,6 +195,7 @@ hours gen --dbpath=/var/tmp/throwaway.db
   - Tasks List View                       Shows active tasks
   - Task Management View                  Shows a form to create/update tasks
   - Task Logs List View                   Shows your task logs
+  - Task Log Details View                 Shows details for a task log
   - Inactive Tasks List View              Shows inactive tasks
   - Task Log Entry View                   Shows a form to save/update a task log entry
   - Help View
@@ -221,20 +224,30 @@ Task List View
 
   a                                       Add a task
   u                                       Update task details
-  s                                       Toggle recording time on the currently selected task,
-                                              will open up a form to record a task log entry on
-                                              the second "s" keypress
-  <ctrl+s>                                Edit the currently active task log/Add a new manual task log entry
+  s                                       Start/stop recording time on a task; stopping
+                                              will open up the "Task Log Entry View"
+  S                                       Quick switch recording; will save a task log
+                                              entry for the currently active task, and
+                                              start recording time for another
+  <ctrl+s>                                Edit the currently active task log/Add a new
+                                              manual task log entry
+  <ctrl+x>                                Discard currently active recording
   <ctrl+t>                                Go to currently tracked item
   <ctrl+d>                                Deactivate task
 
 Task Logs List View
 
-  ~ at the end of a task log comment indicates that it has more lines that are not visible in the list view
+  ~ at the end of a task log comment indicates that it has more lines that are not
+  visible in the list view
 
   d                                       Show task log details
+  <ctrl+s>/u                              Update task log entry
   <ctrl+d>                                Delete task log entry
-  <ctrl+r>                                Refresh list
+
+Task Log Details View
+
+  h                                       Go to previous entry
+  l                                       Go to next entry
 
 Inactive Task List View
 
@@ -242,11 +255,13 @@ Inactive Task List View
 
 Task Log Entry View
 
-  enter/<ctrl+s>                          Save task log entry
+  enter/<ctrl+s>                          Save entered details for the task log
   k                                       Move timestamp backwards by one minute
   j                                       Move timestamp forwards by one minute
   K                                       Move timestamp backwards by five minutes
   J                                       Move timestamp forwards by five minutes
+  h                                       Move timestamp backwards by a day
+  l                                       Move timestamp forwards by a day
 ```
 
 Acknowledgements
