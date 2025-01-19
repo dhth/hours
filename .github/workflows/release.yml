@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  id-token: write
+
 env:
   GO_VERSION: '1.23.5'
 
