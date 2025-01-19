@@ -10,15 +10,15 @@ import (
 )
 
 var (
-	ErrCouldntRollBackTx          = errors.New("db: couldn't roll back transaction")
-	ErrCouldntGetTaskLogDetails   = errors.New("db: couldn't get task log details")
-	ErrCouldntUpdateTaskTimeSpent = errors.New("db: couldn't update time spent on task")
-	ErrCouldntPrepareStatement    = errors.New("db: couldn't prepare sql statement")
-	ErrCouldntFinishActiveTL      = errors.New("db: couldn't finish active task log")
-	ErrCouldntCreateTL            = errors.New("db: couldn't create new task log")
-	ErrNoTaskActive               = errors.New("db: no task is being actively tracked right now")
-	ErrCouldntGetActiveTask       = errors.New("db: couldn't get active task details")
-	ErrCouldntLastInsertID        = errors.New("db: couldn't get ID of the row last inserted")
+	ErrCouldntRollBackTx          = errors.New("couldn't roll back transaction")
+	ErrCouldntGetTaskLogDetails   = errors.New("couldn't get task log details")
+	ErrCouldntUpdateTaskTimeSpent = errors.New("couldn't update time spent on task")
+	ErrCouldntPrepareStatement    = errors.New("couldn't prepare sql statement")
+	ErrCouldntFinishActiveTL      = errors.New("couldn't finish active task log")
+	ErrCouldntCreateTL            = errors.New("couldn't create new task log")
+	ErrNoTaskActive               = errors.New("no task is being tracked right now")
+	ErrCouldntGetActiveTask       = errors.New("couldn't get active task details")
+	ErrCouldntLastInsertID        = errors.New("couldn't get ID of the row last inserted")
 )
 
 type QuickSwitchResult struct {
@@ -26,18 +26,18 @@ type QuickSwitchResult struct {
 	CurrentlyActiveTLID int
 }
 
-func InsertNewTL(db *sql.DB, taskID int, beginTs time.Time) (int, error) {
+func InsertNewTL(db *sql.DB, taskID int, beginTs time.Time, comment *string) (int, error) {
 	return runInTxAndReturnID(db, func(tx *sql.Tx) (int, error) {
 		stmt, err := tx.Prepare(`
-INSERT INTO task_log (task_id, begin_ts, active)
-VALUES (?, ?, ?);
+INSERT INTO task_log (task_id, begin_ts, comment, active)
+VALUES (?, ?, ?, true);
 `)
 		if err != nil {
 			return -1, err
 		}
 		defer stmt.Close()
 
-		res, err := stmt.Exec(taskID, beginTs.UTC(), true)
+		res, err := stmt.Exec(taskID, beginTs.UTC(), comment)
 		if err != nil {
 			return -1, err
 		}
@@ -82,7 +82,7 @@ WHERE active=true;
 	return err
 }
 
-func FinishActiveTL(db *sql.DB, taskLogID int, taskID int, beginTs, endTs time.Time, secsSpent int, comment *string) error {
+func FinishActiveTL(db *sql.DB, taskID int, beginTs, endTs time.Time, comment *string) error {
 	return runInTx(db, func(tx *sql.Tx) error {
 		stmt, err := tx.Prepare(`
 UPDATE task_log
@@ -91,15 +91,15 @@ SET active = 0,
     end_ts = ?,
     secs_spent = ?,
     comment = ?
-WHERE id = ?
-AND active = 1;
+WHERE active = 1;
 `)
 		if err != nil {
 			return err
 		}
 		defer stmt.Close()
 
-		_, err = stmt.Exec(beginTs.UTC(), endTs.UTC(), secsSpent, comment, taskLogID)
+		secsSpent := int(endTs.Sub(beginTs).Seconds())
+		_, err = stmt.Exec(beginTs.UTC(), endTs.UTC(), secsSpent, comment)
 		if err != nil {
 			return err
 		}
@@ -121,7 +121,7 @@ WHERE id = ?;
 	})
 }
 
-func QuickSwitchActiveTL(db *sql.DB, newActiveTaskID int, ts time.Time) (QuickSwitchResult, error) {
+func QuickSwitchActiveTL(db *sql.DB, newActiveTaskID int, ts time.Time, comment *string) (QuickSwitchResult, error) {
 	return runInTxAndReturnA(db, func(tx *sql.Tx) (QuickSwitchResult, error) {
 		// fetch currently active task
 		currentlyActiveTaskRow := tx.QueryRow(`
@@ -185,15 +185,15 @@ WHERE id = ?;
 
 		// insert new task log
 		tlInsertStmt, err := tx.Prepare(`
-INSERT INTO task_log (task_id, begin_ts, active)
-VALUES (?, ?, ?);
+INSERT INTO task_log (task_id, begin_ts, comment, active)
+VALUES (?, ?, ?, true);
 `)
 		if err != nil {
 			return zero, fmt.Errorf("%w: %s", ErrCouldntPrepareStatement, err.Error())
 		}
 		defer tlInsertStmt.Close()
 
-		insertRes, err := tlInsertStmt.Exec(newActiveTaskID, tsUTC, true)
+		insertRes, err := tlInsertStmt.Exec(newActiveTaskID, tsUTC, comment)
 		if err != nil {
 			return zero, fmt.Errorf("%w: %s", ErrCouldntCreateTL, err.Error())
 		}
@@ -252,7 +252,7 @@ WHERE id = ?;
 
 func EditSavedTL(db *sql.DB, tlID int, beginTs time.Time, endTs time.Time, comment *string) (int, error) {
 	return runInTxAndReturnID(db, func(tx *sql.Tx) (int, error) {
-		var tl types.TaskLogEntry
+		var tl types.TaskLogWithTaskDetails
 		row := tx.QueryRow(`
 SELECT id, task_id, begin_ts, end_ts, secs_spent, comment
 FROM task_log
@@ -262,7 +262,7 @@ WHERE id=?;
 		if row.Err() != nil {
 			return -1, fmt.Errorf("%w: %s", ErrCouldntGetTaskLogDetails, row.Err().Error())
 		}
-		err := row.Scan(&tl.ID,
+		err := row.Scan(&tl.TLID,
 			&tl.TaskID,
 			&tl.BeginTS,
 			&tl.EndTS,
@@ -327,7 +327,7 @@ WHERE id = ?;
 
 func FetchActiveTaskDetails(db *sql.DB) (types.ActiveTaskDetails, error) {
 	row := db.QueryRow(`
-SELECT t.id, t.summary, tl.begin_ts, tl.comment
+SELECT t.id, t.summary, tl.id, tl.begin_ts, tl.comment
 FROM task_log tl left join task t on tl.task_id = t.id
 WHERE tl.active=true;
 `)
@@ -336,17 +336,41 @@ WHERE tl.active=true;
 	err := row.Scan(
 		&activeTaskDetails.TaskID,
 		&activeTaskDetails.TaskSummary,
+		&activeTaskDetails.TLID,
 		&activeTaskDetails.CurrentLogBeginTS,
 		&activeTaskDetails.CurrentLogComment,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
-		activeTaskDetails.TaskID = -1
-		return activeTaskDetails, nil
+		return activeTaskDetails, ErrNoTaskActive
 	} else if err != nil {
 		return activeTaskDetails, err
 	}
+
 	activeTaskDetails.CurrentLogBeginTS = activeTaskDetails.CurrentLogBeginTS.Local()
+
 	return activeTaskDetails, nil
+}
+
+func IsTrackingActive(db *sql.DB) (bool, error) {
+	row := db.QueryRow(`
+SELECT COUNT(*)
+FROM task_log
+WHERE active=true;
+`)
+
+	var count int
+	err := row.Scan(
+		&count,
+	)
+	if err != nil {
+		return false, err
+	}
+
+	if count > 0 {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func InsertTask(db *sql.DB, summary string) (int, error) {
@@ -430,7 +454,7 @@ WHERE id=?;
 	return nil
 }
 
-func FetchTasks(db *sql.DB, active bool, limit int) ([]types.Task, error) {
+func FetchTasks(db *sql.DB, active bool, limit uint) ([]types.Task, error) {
 	var tasks []types.Task
 
 	rows, err := db.Query(`
@@ -468,8 +492,8 @@ LIMIT ?;
 	return tasks, nil
 }
 
-func FetchTLEntries(db *sql.DB, desc bool, limit int) ([]types.TaskLogEntry, error) {
-	var logEntries []types.TaskLogEntry
+func FetchTLEntries(db *sql.DB, desc bool, limit int) ([]types.TaskLogWithTaskDetails, error) {
+	var logEntries []types.TaskLogWithTaskDetails
 
 	var order string
 	if desc {
@@ -492,8 +516,8 @@ LIMIT ?;
 	defer rows.Close()
 
 	for rows.Next() {
-		var entry types.TaskLogEntry
-		err = rows.Scan(&entry.ID,
+		var entry types.TaskLogWithTaskDetails
+		err = rows.Scan(&entry.TLID,
 			&entry.TaskID,
 			&entry.TaskSummary,
 			&entry.BeginTS,
@@ -515,8 +539,8 @@ LIMIT ?;
 	return logEntries, nil
 }
 
-func FetchTLEntriesBetweenTS(db *sql.DB, beginTs, endTs time.Time, limit int) ([]types.TaskLogEntry, error) {
-	var logEntries []types.TaskLogEntry
+func FetchTLEntriesBetweenTS(db *sql.DB, beginTs, endTs time.Time, limit int) ([]types.TaskLogWithTaskDetails, error) {
+	var logEntries []types.TaskLogWithTaskDetails
 
 	rows, err := db.Query(`
 SELECT tl.id, tl.task_id, t.summary, tl.begin_ts, tl.end_ts, tl.secs_spent, tl.comment
@@ -532,8 +556,8 @@ ORDER by tl.begin_ts ASC LIMIT ?;
 	defer rows.Close()
 
 	for rows.Next() {
-		var entry types.TaskLogEntry
-		err = rows.Scan(&entry.ID,
+		var entry types.TaskLogWithTaskDetails
+		err = rows.Scan(&entry.TLID,
 			&entry.TaskID,
 			&entry.TaskSummary,
 			&entry.BeginTS,
@@ -665,7 +689,7 @@ LIMIT ?;
 	return tLE, nil
 }
 
-func DeleteTL(db *sql.DB, entry *types.TaskLogEntry) error {
+func DeleteTL(db *sql.DB, entry *types.TaskLogWithTaskDetails) error {
 	return runInTx(db, func(tx *sql.Tx) error {
 		stmt, err := tx.Prepare(`
 DELETE from task_log
@@ -676,7 +700,7 @@ WHERE ID=?;
 		}
 		defer stmt.Close()
 
-		_, err = stmt.Exec(entry.ID)
+		_, err = stmt.Exec(entry.TLID)
 		if err != nil {
 			return err
 		}
@@ -782,19 +806,28 @@ WHERE id=?;
 	return task, nil
 }
 
-func fetchTLByID(db *sql.DB, id int) (types.TaskLogEntry, error) {
-	var tl types.TaskLogEntry
+func FetchTLByID(db *sql.DB, id int) (types.TaskLogWithTaskDetails, error) {
+	var tl types.TaskLogWithTaskDetails
 	row := db.QueryRow(`
-SELECT id, task_id, begin_ts, end_ts, secs_spent, comment
-FROM task_log
-WHERE id=?;
-    `, id)
+SELECT
+    tl.task_id,
+    t.summary,
+    tl.id,
+    tl.begin_ts,
+    tl.end_ts,
+    tl.secs_spent,
+    tl.comment
+FROM task_log tl LEFT JOIN task t ON tl.task_id=t.id
+WHERE tl.id=?;
+`, id)
 
 	if row.Err() != nil {
 		return tl, row.Err()
 	}
-	err := row.Scan(&tl.ID,
+	err := row.Scan(
 		&tl.TaskID,
+		&tl.TaskSummary,
+		&tl.TLID,
 		&tl.BeginTS,
 		&tl.EndTS,
 		&tl.SecsSpent,

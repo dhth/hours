@@ -67,7 +67,7 @@ func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, er
 	var nextDay time.Time
 
 	var maxEntryForADay int
-	reportData := make(map[int][]types.TaskLogEntry)
+	reportData := make(map[int][]types.TaskLogWithTaskDetails)
 
 	noEntriesFound := true
 	for i := 0; i < numDays; i++ {

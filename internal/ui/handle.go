@@ -13,10 +13,8 @@ import (
 )
 
 const (
-	genericErrorMsg               = "Something went wrong"
-	removeFilterMsg               = "Remove filter first"
-	beginTsCannotBeInTheFutureMsg = "Begin timestamp cannot be in the future"
-	endTsCannotBeInTheFutureMsg   = "End timestamp cannot be in the future"
+	genericErrorMsg = "Something went wrong"
+	removeFilterMsg = "Remove filter first"
 )
 
 var suggestReloadingMsg = fmt.Sprintf("Something went wrong, please restart hours; let %s know about this error via %s.", c.Author, c.RepoIssuesURL)
@@ -47,14 +45,14 @@ func (m *Model) getCmdToCreateOrUpdateTask() tea.Cmd {
 }
 
 func (m *Model) getCmdToUpdateActiveTL() tea.Cmd {
-	beginTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryBeginTS].Value(), time.Local)
+	beginTS, err := time.ParseInLocation(c.TimeFormat, m.tLInputs[entryBeginTS].Value(), time.Local)
 	if err != nil {
 		m.message = err.Error()
 		return nil
 	}
 
 	if beginTS.After(time.Now()) {
-		m.message = beginTsCannotBeInTheFutureMsg
+		m.message = c.BeginTsCannotBeInTheFutureMsg
 		return nil
 	}
 
@@ -69,7 +67,7 @@ func (m *Model) getCmdToUpdateActiveTL() tea.Cmd {
 }
 
 func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
-	beginTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryBeginTS].Value(), time.Local)
+	beginTS, err := time.ParseInLocation(c.TimeFormat, m.tLInputs[entryBeginTS].Value(), time.Local)
 	if err != nil {
 		m.message = err.Error()
 		return nil
@@ -77,20 +75,20 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 
 	now := time.Now()
 	if beginTS.After(now) {
-		m.message = beginTsCannotBeInTheFutureMsg
+		m.message = c.BeginTsCannotBeInTheFutureMsg
 		return nil
 	}
 
 	m.activeTLBeginTS = beginTS
 
-	endTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryEndTS].Value(), time.Local)
+	endTS, err := time.ParseInLocation(c.TimeFormat, m.tLInputs[entryEndTS].Value(), time.Local)
 	if err != nil {
 		m.message = err.Error()
 		return nil
 	}
 
 	if endTS.After(now) {
-		m.message = endTsCannotBeInTheFutureMsg
+		m.message = c.EndTsCannotBeInTheFutureMsg
 		return nil
 	}
 
@@ -117,7 +115,7 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 }
 
 func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
-	beginTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryBeginTS].Value(), time.Local)
+	beginTS, err := time.ParseInLocation(c.TimeFormat, m.tLInputs[entryBeginTS].Value(), time.Local)
 	if err != nil {
 		m.message = err.Error()
 		return nil
@@ -125,18 +123,18 @@ func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
 
 	now := time.Now()
 	if beginTS.After(now) {
-		m.message = beginTsCannotBeInTheFutureMsg
+		m.message = c.BeginTsCannotBeInTheFutureMsg
 		return nil
 	}
 
-	endTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryEndTS].Value(), time.Local)
+	endTS, err := time.ParseInLocation(c.TimeFormat, m.tLInputs[entryEndTS].Value(), time.Local)
 	if err != nil {
 		m.message = err.Error()
 		return nil
 	}
 
 	if endTS.After(now) {
-		m.message = endTsCannotBeInTheFutureMsg
+		m.message = c.EndTsCannotBeInTheFutureMsg
 		return nil
 	}
 
@@ -167,12 +165,12 @@ func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
 		cmd = insertManualTL(m.db, task.ID, beginTS, endTS, comment)
 	case tasklogUpdate:
 		m.activeView = taskLogView
-		tl, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
+		tl, ok := m.taskLogList.SelectedItem().(types.TaskLogWithTaskDetails)
 		if !ok {
 			m.message = genericErrorMsg
 			return nil
 		}
-		cmd = editSavedTL(m.db, tl.ID, tl.TaskID, beginTS, endTS, comment)
+		cmd = editSavedTL(m.db, tl.TLID, tl.TaskID, beginTS, endTS, comment)
 	}
 
 	return cmd
@@ -281,14 +279,14 @@ func (m *Model) goBackwardInView() {
 func (m *Model) shiftTime(direction types.TimeShiftDirection, duration types.TimeShiftDuration) error {
 	switch m.trackingFocussedField {
 	case entryBeginTS, entryEndTS:
-		ts, err := time.ParseInLocation(timeFormat, m.tLInputs[m.trackingFocussedField].Value(), time.Local)
+		ts, err := time.ParseInLocation(c.TimeFormat, m.tLInputs[m.trackingFocussedField].Value(), time.Local)
 		if err != nil {
 			return err
 		}
 
 		newTs := types.GetShiftedTime(ts, direction, duration)
 
-		m.tLInputs[m.trackingFocussedField].SetValue(newTs.Format(timeFormat))
+		m.tLInputs[m.trackingFocussedField].SetValue(newTs.Format(c.TimeFormat))
 	}
 
 	return nil
@@ -367,7 +365,7 @@ func (m *Model) goToActiveTask() {
 
 func (m *Model) handleRequestToEditActiveTL() {
 	m.activeView = editActiveTLView
-	m.tLInputs[entryBeginTS].SetValue(m.activeTLBeginTS.Format(timeFormat))
+	m.tLInputs[entryBeginTS].SetValue(m.activeTLBeginTS.Format(c.TimeFormat))
 	if m.activeTLComment != nil {
 		m.tLCommentInput.SetValue(*m.activeTLComment)
 	} else {
@@ -383,7 +381,7 @@ func (m *Model) handleRequestToCreateManualTL() {
 	m.activeView = manualTasklogEntryView
 	m.tasklogSaveType = tasklogInsert
 	currentTime := time.Now()
-	currentTimeStr := currentTime.Format(timeFormat)
+	currentTimeStr := currentTime.Format(c.TimeFormat)
 
 	m.tLInputs[entryBeginTS].SetValue(currentTimeStr)
 	m.tLInputs[entryEndTS].SetValue(currentTimeStr)
@@ -398,7 +396,7 @@ func (m *Model) handleRequestToEditSavedTL() {
 		return
 	}
 
-	tl, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
+	tl, ok := m.taskLogList.SelectedItem().(types.TaskLogWithTaskDetails)
 	if !ok {
 		m.message = genericErrorMsg
 		return
@@ -407,8 +405,8 @@ func (m *Model) handleRequestToEditSavedTL() {
 	m.activeView = editSavedTLView
 	m.tasklogSaveType = tasklogUpdate
 
-	beginTimeStr := tl.BeginTS.Format(timeFormat)
-	endTimeStr := tl.EndTS.Format(timeFormat)
+	beginTimeStr := tl.BeginTS.Format(c.TimeFormat)
+	endTimeStr := tl.EndTS.Format(c.TimeFormat)
 
 	var comment string
 	if tl.Comment != nil {
@@ -445,7 +443,7 @@ func (m *Model) getCmdToDeactivateTask() tea.Cmd {
 }
 
 func (m *Model) getCmdToDeleteTL() tea.Cmd {
-	entry, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
+	entry, ok := m.taskLogList.SelectedItem().(types.TaskLogWithTaskDetails)
 	if !ok {
 		m.message = "Couldn't delete task log entry"
 		return nil
@@ -476,7 +474,7 @@ func (m *Model) getCmdToStartTracking() tea.Cmd {
 	}
 
 	m.changesLocked = true
-	m.activeTLBeginTS = time.Now().Truncate(time.Second)
+	m.activeTLBeginTS = time.Now()
 	return toggleTracking(m.db, task.ID, m.activeTLBeginTS, m.activeTLEndTS, nil)
 }
 
@@ -484,8 +482,8 @@ func (m *Model) handleRequestToStopTracking() {
 	m.activeView = finishActiveTLView
 	m.activeTLEndTS = time.Now()
 
-	beginTimeStr := m.activeTLBeginTS.Format(timeFormat)
-	currentTimeStr := m.activeTLEndTS.Format(timeFormat)
+	beginTimeStr := m.activeTLBeginTS.Format(c.TimeFormat)
+	currentTimeStr := m.activeTLEndTS.Format(c.TimeFormat)
 
 	m.tLInputs[entryBeginTS].SetValue(beginTimeStr)
 	m.tLInputs[entryEndTS].SetValue(currentTimeStr)
@@ -511,7 +509,7 @@ func (m *Model) getCmdToQuickSwitchTracking() tea.Cmd {
 
 	if !m.trackingActive {
 		m.changesLocked = true
-		m.activeTLBeginTS = time.Now().Truncate(time.Second)
+		m.activeTLBeginTS = time.Now()
 		return toggleTracking(m.db,
 			task.ID,
 			m.activeTLBeginTS,
@@ -593,7 +591,7 @@ func (m *Model) handleRequestToViewTLDetails() {
 		return
 	}
 
-	tl, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
+	tl, ok := m.taskLogList.SelectedItem().(types.TaskLogWithTaskDetails)
 	if !ok {
 		m.message = genericErrorMsg
 		return
@@ -615,8 +613,8 @@ func (m *Model) handleRequestToViewTLDetails() {
 
 %s
 `, taskDetails,
-		tl.BeginTS.Format(timeFormat),
-		tl.EndTS.Format(timeFormat),
+		tl.BeginTS.Format(c.TimeFormat),
+		tl.EndTS.Format(c.TimeFormat),
 		timeSpentStr,
 		tl.GetComment())
 
@@ -757,7 +755,7 @@ func (m *Model) handleTLSFetchedMsg(msg tLsFetchedMsg) {
 		e.UpdateListTitle()
 		e.UpdateListDesc()
 		items[i] = e
-		if !indexToFocusOnFound && msg.tlIDToFocusOn != nil && e.ID == *msg.tlIDToFocusOn {
+		if !indexToFocusOnFound && msg.tlIDToFocusOn != nil && e.TLID == *msg.tlIDToFocusOn {
 			indexToFocusOn = &i
 			indexToFocusOnFound = true
 		}

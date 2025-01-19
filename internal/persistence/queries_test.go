@@ -64,7 +64,7 @@ func TestRepository(t *testing.T) {
 		numSeconds := 60 * 90
 		endTS := time.Now()
 		beginTS := endTS.Add(time.Second * -1 * time.Duration(numSeconds))
-		_, insertErr := InsertNewTL(testDB, taskID, beginTS)
+		_, insertErr := InsertNewTL(testDB, taskID, beginTS, nil)
 		require.NoError(t, insertErr, "failed to insert task log")
 
 		// WHEN
@@ -101,7 +101,7 @@ func TestRepository(t *testing.T) {
 		numSeconds := 60 * 90
 		endTS := time.Now()
 		beginTS := endTS.Add(time.Second * -1 * time.Duration(numSeconds))
-		tlID, insertErr := InsertNewTL(testDB, taskID, beginTS)
+		tlID, insertErr := InsertNewTL(testDB, taskID, beginTS, nil)
 		require.NoError(t, insertErr, "failed to insert task log")
 
 		taskBefore, err := fetchTaskByID(testDB, taskID)
@@ -110,12 +110,12 @@ func TestRepository(t *testing.T) {
 
 		// WHEN
 		comment := testComment
-		err = FinishActiveTL(testDB, tlID, taskID, beginTS, endTS, numSeconds, &comment)
+		err = FinishActiveTL(testDB, taskID, beginTS, endTS, &comment)
 
 		// THEN
 		require.NoError(t, err, "failed to update task log")
 
-		taskLog, err := fetchTLByID(testDB, tlID)
+		taskLog, err := FetchTLByID(testDB, tlID)
 		require.NoError(t, err, "failed to fetch task log")
 
 		taskAfter, err := fetchTaskByID(testDB, taskID)
@@ -138,16 +138,16 @@ func TestRepository(t *testing.T) {
 		numSeconds := 60 * 90
 		endTS := time.Now()
 		beginTS := endTS.Add(time.Second * -1 * time.Duration(numSeconds))
-		tlID, insertErr := InsertNewTL(testDB, taskID, beginTS)
+		tlID, insertErr := InsertNewTL(testDB, taskID, beginTS, nil)
 		require.NoError(t, insertErr, "failed to insert task log")
 
 		// WHEN
-		err = FinishActiveTL(testDB, tlID, taskID, beginTS, endTS, numSeconds, nil)
+		err = FinishActiveTL(testDB, taskID, beginTS, endTS, nil)
 
 		// THEN
 		require.NoError(t, err, "failed to update task log")
 
-		taskLog, err := fetchTLByID(testDB, tlID)
+		taskLog, err := FetchTLByID(testDB, tlID)
 		require.NoError(t, err, "failed to fetch task log")
 
 		assert.Equal(t, numSeconds, taskLog.SecsSpent)
@@ -166,19 +166,19 @@ func TestRepository(t *testing.T) {
 		numSeconds := 60 * 90
 		now := time.Now().Truncate(time.Second)
 		beginTS := now.Add(time.Second * -1 * time.Duration(numSeconds))
-		tlID, insertErr := InsertNewTL(testDB, taskID, beginTS)
+		tlID, insertErr := InsertNewTL(testDB, taskID, beginTS, nil)
 		require.NoError(t, insertErr, "failed to insert task log")
 
 		taskBefore, err := fetchTaskByID(testDB, taskID)
 		require.NoError(t, err, "failed to fetch task")
 
 		// WHEN
-		result, err := QuickSwitchActiveTL(testDB, secondTaskID, now)
+		result, err := QuickSwitchActiveTL(testDB, secondTaskID, now, nil)
 
 		// THEN
 		require.NoError(t, err, "failed to quick switch active task")
 
-		finishedTL, err := fetchTLByID(testDB, tlID)
+		finishedTL, err := FetchTLByID(testDB, tlID)
 		require.NoError(t, err, "failed to fetch last active task log")
 
 		activeTL, err := fetchActiveTLByID(testDB, result.CurrentlyActiveTLID)
@@ -209,7 +209,7 @@ func TestRepository(t *testing.T) {
 		numSeconds := 60 * 90
 		now := time.Now().Truncate(time.Second)
 		beginTS := now.Add(time.Second * -1 * time.Duration(numSeconds))
-		tlID, insertErr := InsertNewTL(testDB, taskID, beginTS)
+		tlID, insertErr := InsertNewTL(testDB, taskID, beginTS, nil)
 		require.NoError(t, insertErr, "failed to insert task log")
 
 		taskBefore, err := fetchTaskByID(testDB, taskID)
@@ -221,12 +221,12 @@ func TestRepository(t *testing.T) {
 		require.NoError(t, err, "failed to update active task log")
 
 		// WHEN
-		result, err := QuickSwitchActiveTL(testDB, secondTaskID, now)
+		result, err := QuickSwitchActiveTL(testDB, secondTaskID, now, nil)
 
 		// THEN
 		require.NoError(t, err, "failed to quick switch active task")
 
-		finishedTL, err := fetchTLByID(testDB, tlID)
+		finishedTL, err := FetchTLByID(testDB, tlID)
 		require.NoError(t, err, "failed to fetch last active task log")
 
 		activeTL, err := fetchActiveTLByID(testDB, result.CurrentlyActiveTLID)
@@ -253,7 +253,7 @@ func TestRepository(t *testing.T) {
 		now := time.Now().Truncate(time.Second)
 
 		// WHEN
-		_, err := QuickSwitchActiveTL(testDB, 1, now)
+		_, err := QuickSwitchActiveTL(testDB, 1, now, nil)
 
 		// THEN
 		require.ErrorIs(t, ErrNoTaskActive, err)
@@ -282,7 +282,7 @@ func TestRepository(t *testing.T) {
 		// THEN
 		require.NoError(t, err, "failed to insert task log")
 
-		taskLog, err := fetchTLByID(testDB, tlID)
+		taskLog, err := FetchTLByID(testDB, tlID)
 		require.NoError(t, err, "failed to fetch task log")
 
 		taskAfter, err := fetchTaskByID(testDB, taskID)
@@ -312,7 +312,7 @@ func TestRepository(t *testing.T) {
 		// THEN
 		require.NoError(t, err, "failed to insert task log")
 
-		taskLog, err := fetchTLByID(testDB, tlID)
+		taskLog, err := FetchTLByID(testDB, tlID)
 		require.NoError(t, err, "failed to fetch task log")
 
 		assert.Equal(t, numSeconds, taskLog.SecsSpent)
@@ -347,7 +347,7 @@ func TestRepository(t *testing.T) {
 		// THEN
 		require.NoError(t, err, "failed to edit saved task log")
 
-		taskLog, err := fetchTLByID(testDB, tlID)
+		taskLog, err := FetchTLByID(testDB, tlID)
 		require.NoError(t, err, "failed to fetch task log")
 
 		taskAfter, err := fetchTaskByID(testDB, taskID)
@@ -388,7 +388,7 @@ func TestRepository(t *testing.T) {
 		// THEN
 		require.NoError(t, err, "failed to edit saved task log")
 
-		taskLog, err := fetchTLByID(testDB, tlID)
+		taskLog, err := FetchTLByID(testDB, tlID)
 		require.NoError(t, err, "failed to fetch task log")
 
 		taskAfter, err := fetchTaskByID(testDB, taskID)
@@ -430,7 +430,7 @@ func TestRepository(t *testing.T) {
 		// THEN
 		require.NoError(t, err, "failed to edit saved task log")
 
-		taskLog, err := fetchTLByID(testDB, tlID)
+		taskLog, err := FetchTLByID(testDB, tlID)
 		require.NoError(t, err, "failed to fetch task log")
 
 		taskAfter, err := fetchTaskByID(testDB, taskID)
@@ -456,7 +456,7 @@ func TestRepository(t *testing.T) {
 		taskBefore, err := fetchTaskByID(testDB, taskID)
 		require.NoError(t, err, "failed to fetch task")
 		numSecondsBefore := taskBefore.SecsSpent
-		taskLog, err := fetchTLByID(testDB, tlID)
+		taskLog, err := FetchTLByID(testDB, tlID)
 		require.NoError(t, err, "failed to fetch task log")
 
 		// WHEN
@@ -613,7 +613,7 @@ func cleanupDB(t *testing.T, testDB *sql.DB) {
 
 type testData struct {
 	tasks    []types.Task
-	taskLogs []types.TaskLogEntry
+	taskLogs []types.TaskLogWithTaskDetails
 }
 
 func getTestData(referenceTS time.Time) testData {
@@ -641,9 +641,9 @@ func getTestData(referenceTS time.Time) testData {
 	commentTask1TL1 := "task 1 tl 1"
 	commentTask1TL2 := "task 1 tl 2"
 	commentTask2TL1 := "task 2 tl 1"
-	taskLogs := []types.TaskLogEntry{
+	taskLogs := []types.TaskLogWithTaskDetails{
 		{
-			ID:        1,
+			TLID:      1,
 			TaskID:    1,
 			BeginTS:   ca.Add(time.Hour * 2),
 			EndTS:     ca.Add(time.Hour * 4),
@@ -651,7 +651,7 @@ func getTestData(referenceTS time.Time) testData {
 			Comment:   &commentTask1TL1,
 		},
 		{
-			ID:        2,
+			TLID:      2,
 			TaskID:    1,
 			BeginTS:   ca.Add(time.Hour * 6),
 			EndTS:     ca.Add(time.Hour * 9),
@@ -659,7 +659,7 @@ func getTestData(referenceTS time.Time) testData {
 			Comment:   &commentTask1TL2,
 		},
 		{
-			ID:        3,
+			TLID:      3,
 			TaskID:    2,
 			BeginTS:   ca.Add(time.Hour * 2),
 			EndTS:     ca.Add(time.Hour * 6),
@@ -684,7 +684,7 @@ VALUES (?, ?, ?, ?, ?, ?)`, task.ID, task.Summary, task.SecsSpent, task.Active, 
 	for _, taskLog := range data.taskLogs {
 		_, err := db.Exec(`
 INSERT INTO task_log (id, task_id, begin_ts, end_ts, secs_spent, comment, active)
-VALUES (?, ?, ?, ?, ?, ?, ?)`, taskLog.ID, taskLog.TaskID, taskLog.BeginTS, taskLog.EndTS, taskLog.SecsSpent, taskLog.Comment, false)
+VALUES (?, ?, ?, ?, ?, ?, ?)`, taskLog.TLID, taskLog.TaskID, taskLog.BeginTS, taskLog.EndTS, taskLog.SecsSpent, taskLog.Comment, false)
 		require.NoError(t, err, "failed to insert data into table \"task_log\": %v", err)
 	}
 }

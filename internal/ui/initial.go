@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/lipgloss"
+	c "github.com/dhth/hours/internal/common"
 	"github.com/dhth/hours/internal/types"
 )
 
@@ -24,12 +25,12 @@ func InitialModel(db *sql.DB) Model {
 	tLInputs := make([]textinput.Model, 2)
 	tLInputs[entryBeginTS] = textinput.New()
 	tLInputs[entryBeginTS].Placeholder = "09:30"
-	tLInputs[entryBeginTS].CharLimit = len(timeFormat)
+	tLInputs[entryBeginTS].CharLimit = len(c.TimeFormat)
 	tLInputs[entryBeginTS].Width = 30
 
 	tLInputs[entryEndTS] = textinput.New()
 	tLInputs[entryEndTS].Placeholder = "12:30pm"
-	tLInputs[entryEndTS].CharLimit = len(timeFormat)
+	tLInputs[entryEndTS].CharLimit = len(c.TimeFormat)
 	tLInputs[entryEndTS].Width = 30
 
 	tLCommentInput := textarea.New()

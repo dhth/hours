@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	c "github.com/dhth/hours/internal/common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -81,8 +82,8 @@ func TestParseDateDuration(t *testing.T) {
 				return
 			}
 
-			startStr := got.Start.Format(timeFormat)
-			endStr := got.End.Format(timeFormat)
+			startStr := got.Start.Format(c.TimeFormat)
+			endStr := got.End.Format(c.TimeFormat)
 
 			require.NoError(t, err)
 			assert.Equal(t, tt.expectedStartStr, startStr)
@@ -93,17 +94,17 @@ func TestParseDateDuration(t *testing.T) {
 }
 
 func TestGetTimePeriod(t *testing.T) {
-	now, err := time.ParseInLocation(timeFormat, "2024/06/20 20:00", time.Local)
+	now, err := time.ParseInLocation(c.TimeFormat, "2024/06/20 20:00", time.Local)
 	if err != nil {
 		t.Fatalf("error setting up the test: time is not valid: %s", err)
 	}
 
-	nowME, err := time.ParseInLocation(timeFormat, "2024/05/31 20:00", time.Local)
+	nowME, err := time.ParseInLocation(c.TimeFormat, "2024/05/31 20:00", time.Local)
 	if err != nil {
 		t.Fatalf("error setting up the test: time is not valid: %s", err)
 	}
 
-	nowMB, err := time.ParseInLocation(timeFormat, "2024/06/01 20:00", time.Local)
+	nowMB, err := time.ParseInLocation(c.TimeFormat, "2024/06/01 20:00", time.Local)
 	if err != nil {
 		t.Fatalf("error setting up the test: time is not valid: %s", err)
 	}
@@ -204,8 +205,8 @@ func TestGetTimePeriod(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := GetTimePeriod(tt.period, tt.now, tt.fullWeek)
 
-			startStr := got.Start.Format(timeFormat)
-			endStr := got.End.Format(timeFormat)
+			startStr := got.Start.Format(c.TimeFormat)
+			endStr := got.End.Format(c.TimeFormat)
 
 			if tt.err == nil {
 				assert.Equal(t, tt.expectedStartStr, startStr)
