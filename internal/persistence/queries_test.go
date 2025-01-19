@@ -154,6 +154,111 @@ func TestRepository(t *testing.T) {
 		require.Nil(t, taskLog.Comment)
 	})
 
+	t.Run("TestQuickSwitchActiveTL", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Now().Truncate(time.Second)
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+		taskID := 1
+		secondTaskID := 2
+		numSeconds := 60 * 90
+		now := time.Now().Truncate(time.Second)
+		beginTS := now.Add(time.Second * -1 * time.Duration(numSeconds))
+		tlID, insertErr := InsertNewTL(testDB, taskID, beginTS)
+		require.NoError(t, insertErr, "failed to insert task log")
+
+		taskBefore, err := fetchTaskByID(testDB, taskID)
+		require.NoError(t, err, "failed to fetch task")
+
+		// WHEN
+		result, err := QuickSwitchActiveTL(testDB, secondTaskID, now)
+
+		// THEN
+		require.NoError(t, err, "failed to quick switch active task")
+
+		finishedTL, err := fetchTLByID(testDB, tlID)
+		require.NoError(t, err, "failed to fetch last active task log")
+
+		activeTL, err := fetchActiveTLByID(testDB, result.CurrentlyActiveTLID)
+		require.NoError(t, err, "failed to fetch active task log")
+
+		taskAfter, err := fetchTaskByID(testDB, taskID)
+		require.NoError(t, err, "failed to fetch task")
+
+		assert.True(t, beginTS.Equal(finishedTL.BeginTS), "finished TL's begin ts is not correct; got=%v, expected=%v", finishedTL.BeginTS, beginTS)
+		assert.True(t, now.Equal(finishedTL.EndTS), "finished TL's end ts is not correct; got=%v, expected=%v", finishedTL.EndTS, now)
+		assert.Equal(t, numSeconds, finishedTL.SecsSpent)
+		require.Nil(t, finishedTL.Comment)
+		assert.Equal(t, taskBefore.SecsSpent+numSeconds, taskAfter.SecsSpent)
+
+		assert.True(t, now.Equal(activeTL.BeginTS), "active TL's begin ts is not correct; got=%v, expected=%v", activeTL.BeginTS, now)
+		require.Nil(t, activeTL.Comment)
+	})
+
+	t.Run("TestQuickSwitchActiveTL works correctly with edited active task log", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Now().Truncate(time.Second)
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+		taskID := 1
+		secondTaskID := 2
+		numSeconds := 60 * 90
+		now := time.Now().Truncate(time.Second)
+		beginTS := now.Add(time.Second * -1 * time.Duration(numSeconds))
+		tlID, insertErr := InsertNewTL(testDB, taskID, beginTS)
+		require.NoError(t, insertErr, "failed to insert task log")
+
+		taskBefore, err := fetchTaskByID(testDB, taskID)
+		require.NoError(t, err, "failed to fetch task")
+
+		updatedBeginTS := now.Add(time.Second * -1 * time.Duration(numSeconds*2))
+		comment := testComment
+		err = EditActiveTL(testDB, updatedBeginTS, &comment)
+		require.NoError(t, err, "failed to update active task log")
+
+		// WHEN
+		result, err := QuickSwitchActiveTL(testDB, secondTaskID, now)
+
+		// THEN
+		require.NoError(t, err, "failed to quick switch active task")
+
+		finishedTL, err := fetchTLByID(testDB, tlID)
+		require.NoError(t, err, "failed to fetch last active task log")
+
+		activeTL, err := fetchActiveTLByID(testDB, result.CurrentlyActiveTLID)
+		require.NoError(t, err, "failed to fetch active task log")
+
+		taskAfter, err := fetchTaskByID(testDB, taskID)
+		require.NoError(t, err, "failed to fetch task")
+
+		assert.True(t, updatedBeginTS.Equal(finishedTL.BeginTS), "finished TL's begin ts is not correct; got=%v, expected=%v", finishedTL.BeginTS, updatedBeginTS)
+		assert.True(t, now.Equal(finishedTL.EndTS), "finished TL's end ts is not correct; got=%v, expected=%v", finishedTL.EndTS, now)
+		assert.Equal(t, numSeconds*2, finishedTL.SecsSpent)
+		require.NotNil(t, finishedTL.Comment)
+		require.Equal(t, comment, *finishedTL.Comment)
+		assert.Equal(t, taskBefore.SecsSpent+numSeconds*2, taskAfter.SecsSpent)
+
+		assert.True(t, now.Equal(activeTL.BeginTS), "active TL's begin ts is not correct; got=%v, expected=%v", activeTL.BeginTS, now)
+		require.Nil(t, activeTL.Comment)
+	})
+
+	t.Run("TestQuickSwitchActiveTL returns error if no task is active", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		now := time.Now().Truncate(time.Second)
+
+		// WHEN
+		_, err := QuickSwitchActiveTL(testDB, 1, now)
+
+		// THEN
+		require.ErrorIs(t, ErrNoTaskActive, err)
+	})
+
 	t.Run("TestInsertManualTL", func(t *testing.T) {
 		t.Cleanup(func() { cleanupDB(t, testDB) })
 
@@ -235,7 +340,7 @@ func TestRepository(t *testing.T) {
 		// WHEN
 		numSecondsDelta := 60
 		updatedComment := testCommentUpdated
-		newBeginTS := beginTS.Add(time.Second * -2 * time.Duration(numSecondsDelta))
+		newBeginTS := beginTS.Add(time.Second * -1 * time.Duration(numSecondsDelta*2))
 		newEndTS := endTS.Add(time.Second * -1 * time.Duration(numSecondsDelta))
 		_, err = EditSavedTL(testDB, tlID, newBeginTS, newEndTS, &updatedComment)
 

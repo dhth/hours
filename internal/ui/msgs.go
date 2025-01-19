@@ -15,6 +15,14 @@ type trackingToggledMsg struct {
 	err       error
 }
 
+type activeTLSwitchedMsg struct {
+	lastActiveTaskID      int
+	currentlyActiveTaskID int
+	currentlyActiveTLID   int
+	ts                    time.Time
+	err                   error
+}
+
 type taskRepUpdatedMsg struct {
 	tsk *types.Task
 	err error

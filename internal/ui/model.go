@@ -12,13 +12,6 @@ import (
 	"github.com/dhth/hours/internal/types"
 )
 
-type trackingStatus uint
-
-const (
-	trackingInactive trackingStatus = iota
-	trackingActive
-)
-
 type trackingChange uint
 
 const (

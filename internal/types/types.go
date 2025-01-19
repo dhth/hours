@@ -35,6 +35,14 @@ type TaskLogEntry struct {
 	ListDesc    string
 }
 
+type ActiveTaskLogEntry struct {
+	ID          int
+	TaskID      int
+	TaskSummary string
+	BeginTS     time.Time
+	Comment     *string
+}
+
 type ActiveTaskDetails struct {
 	TaskID            int
 	TaskSummary       string

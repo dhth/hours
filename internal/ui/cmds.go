@@ -25,21 +25,21 @@ WHERE active=1
 ORDER BY begin_ts DESC
 LIMIT 1
 `)
-		var trackStatus trackingStatus
+		var isTrackingActive bool
 		var activeTaskLogID int
 		var activeTaskID int
 
 		err := row.Scan(&activeTaskLogID, &activeTaskID)
 		if errors.Is(err, sql.ErrNoRows) {
-			trackStatus = trackingInactive
+			isTrackingActive = false
 		} else if err != nil {
 			return trackingToggledMsg{err: err}
 		} else {
-			trackStatus = trackingActive
+			isTrackingActive = true
 		}
 
-		switch trackStatus {
-		case trackingInactive:
+		switch isTrackingActive {
+		case false:
 			_, err = pers.InsertNewTL(db, taskID, beginTs)
 			if err != nil {
 				return trackingToggledMsg{err: err}
@@ -55,6 +55,19 @@ LIMIT 1
 			} else {
 				return trackingToggledMsg{taskID: taskID, finished: true, secsSpent: secsSpent}
 			}
+		}
+	}
+}
+
+func quickSwitchActiveIssue(db *sql.DB, taskID int, ts time.Time) tea.Cmd {
+	return func() tea.Msg {
+		result, err := pers.QuickSwitchActiveTL(db, taskID, ts)
+		return activeTLSwitchedMsg{
+			lastActiveTaskID:      result.LastActiveTaskID,
+			currentlyActiveTaskID: taskID,
+			currentlyActiveTLID:   result.CurrentlyActiveTLID,
+			ts:                    ts,
+			err:                   err,
 		}
 	}
 }
