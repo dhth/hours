@@ -12,4 +12,5 @@ var (
 	errTaskAlreadyBeingTracked = errors.New("task is already being tracked")
 	errCouldntParseBeginTS     = errors.New("couldn't parse begin timestamp")
 	errCouldntParseEndTS       = errors.New("couldn't parse end timestamp")
+	errTaskDoesNotExist        = errors.New("task does not exist")
 )

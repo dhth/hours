@@ -30,6 +30,15 @@ func renderActiveTLDetails(db *sql.DB, writer io.Writer) error {
 }
 
 func startTracking(db *sql.DB, writer io.Writer, taskID int, comment *string) error {
+	taskExists, err := pers.ValidateTaskExists(db, taskID)
+	if err != nil {
+		return fmt.Errorf("%w: %w", errCouldntFetchDataFromDB, err)
+	}
+
+	if !taskExists {
+		return errTaskDoesNotExist
+	}
+
 	details, err := pers.FetchActiveTaskDetails(db)
 	var noTaskActive bool
 	if errors.Is(err, pers.ErrNoTaskActive) {

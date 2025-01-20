@@ -594,6 +594,26 @@ func TestRepository(t *testing.T) {
 		assert.Equal(t, 5*secsInOneHour, entries[1].SecsSpent)
 	})
 
+	t.Run("ValidateTaskExists", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Now().Truncate(time.Second)
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+
+		// WHEN
+		oneExists, errOne := ValidateTaskExists(testDB, 1)
+		twoExists, errTwo := ValidateTaskExists(testDB, 9999)
+
+		// THEN
+		require.NoError(t, errOne)
+		require.NoError(t, errTwo)
+
+		assert.True(t, oneExists)
+		assert.False(t, twoExists)
+	})
+
 	err = testDB.Close()
 	require.NoErrorf(t, err, "error closing DB: %v", err)
 }

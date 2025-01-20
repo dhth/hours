@@ -848,7 +848,7 @@ func fetchActiveTLByID(db *sql.DB, id int) (types.ActiveTaskLogEntry, error) {
 SELECT id, task_id, begin_ts, comment
 FROM task_log
 WHERE id=?;
-    `, id)
+`, id)
 
 	if row.Err() != nil {
 		return tl, row.Err()
@@ -864,4 +864,27 @@ WHERE id=?;
 	tl.BeginTS = tl.BeginTS.Local()
 
 	return tl, nil
+}
+
+func ValidateTaskExists(db *sql.DB, id int) (bool, error) {
+	row := db.QueryRow(`
+SELECT id
+FROM task
+WHERE id=?;
+`, id)
+
+	if row.Err() != nil {
+		return false, row.Err()
+	}
+
+	var taskID int
+	err := row.Scan(&taskID)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
