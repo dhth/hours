@@ -10,6 +10,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	c "github.com/dhth/hours/internal/common"
 	pers "github.com/dhth/hours/internal/persistence"
 	"github.com/dhth/hours/internal/types"
 	"github.com/dhth/hours/internal/utils"
@@ -95,7 +96,7 @@ func getTaskLog(db *sql.DB, start, end time.Time, limit int, plain bool) (string
 			data[i] = []string{
 				utils.RightPadTrim(entry.TaskSummary, 20, false),
 				utils.RightPadTrimWithMoreLinesIndicator(entry.GetComment(), 40),
-				fmt.Sprintf("%s  ...  %s", entry.BeginTS.Format(timeFormat), entry.EndTS.Format(timeFormat)),
+				fmt.Sprintf("%s  ...  %s", entry.BeginTS.Format(c.TimeFormat), entry.EndTS.Format(c.TimeFormat)),
 				utils.RightPadTrim(timeSpentStr, logTimeCharsBudget, false),
 			}
 		} else {
@@ -107,7 +108,7 @@ func getTaskLog(db *sql.DB, start, end time.Time, limit int, plain bool) (string
 			data[i] = []string{
 				rowStyle.Render(utils.RightPadTrim(entry.TaskSummary, 20, false)),
 				rowStyle.Render(utils.RightPadTrimWithMoreLinesIndicator(entry.GetComment(), 40)),
-				rowStyle.Render(fmt.Sprintf("%s  ...  %s", entry.BeginTS.Format(timeFormat), entry.EndTS.Format(timeFormat))),
+				rowStyle.Render(fmt.Sprintf("%s  ...  %s", entry.BeginTS.Format(c.TimeFormat), entry.EndTS.Format(c.TimeFormat))),
 				rowStyle.Render(utils.RightPadTrim(timeSpentStr, logTimeCharsBudget, false)),
 			}
 		}

@@ -40,7 +40,7 @@ LIMIT 1
 
 		switch isTrackingActive {
 		case false:
-			_, err = pers.InsertNewTL(db, taskID, beginTs)
+			_, err = pers.InsertNewTL(db, taskID, beginTs, nil)
 			if err != nil {
 				return trackingToggledMsg{err: err}
 			} else {
@@ -48,12 +48,11 @@ LIMIT 1
 			}
 
 		default:
-			secsSpent := int(endTs.Sub(beginTs).Seconds())
-			err := pers.FinishActiveTL(db, activeTaskLogID, activeTaskID, beginTs, endTs, secsSpent, comment)
+			err := pers.FinishActiveTL(db, activeTaskID, beginTs, endTs, comment)
 			if err != nil {
 				return trackingToggledMsg{err: err}
 			} else {
-				return trackingToggledMsg{taskID: taskID, finished: true, secsSpent: secsSpent}
+				return trackingToggledMsg{taskID: taskID, finished: true}
 			}
 		}
 	}
@@ -61,7 +60,7 @@ LIMIT 1
 
 func quickSwitchActiveIssue(db *sql.DB, taskID int, ts time.Time) tea.Cmd {
 	return func() tea.Msg {
-		result, err := pers.QuickSwitchActiveTL(db, taskID, ts)
+		result, err := pers.QuickSwitchActiveTL(db, taskID, ts, nil)
 		return activeTLSwitchedMsg{
 			lastActiveTaskID:      result.LastActiveTaskID,
 			currentlyActiveTaskID: taskID,
@@ -96,12 +95,10 @@ func editSavedTL(db *sql.DB, tlID, taskID int, beginTS time.Time, endTS time.Tim
 func fetchActiveTask(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
 		activeTaskDetails, err := pers.FetchActiveTaskDetails(db)
-		if err != nil {
-			return activeTaskFetchedMsg{err: err}
-		}
-
-		if activeTaskDetails.TaskID == -1 {
+		if errors.Is(err, pers.ErrNoTaskActive) {
 			return activeTaskFetchedMsg{noneActive: true}
+		} else if err != nil {
+			return activeTaskFetchedMsg{err: err}
 		}
 
 		return activeTaskFetchedMsg{
@@ -131,7 +128,7 @@ func fetchTLS(db *sql.DB, tlIDToFocusOn *int) tea.Cmd {
 	}
 }
 
-func deleteTL(db *sql.DB, entry *types.TaskLogEntry) tea.Cmd {
+func deleteTL(db *sql.DB, entry *types.TaskLogWithTaskDetails) tea.Cmd {
 	return func() tea.Msg {
 		err := pers.DeleteTL(db, entry)
 		return tLDeletedMsg{

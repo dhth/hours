@@ -9,7 +9,9 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 
 	c "github.com/dhth/hours/internal/common"
 	pers "github.com/dhth/hours/internal/persistence"
@@ -21,6 +23,7 @@ const (
 	defaultDBName     = "hours.db"
 	numDaysThreshold  = 30
 	numTasksThreshold = 20
+	numTasksLimit     = 50
 )
 
 var (
@@ -109,6 +112,10 @@ func NewRootCommand() (*cobra.Command, error) {
 		genNumDays          uint8
 		genNumTasks         uint8
 		genSkipConfirmation bool
+		tasksLimit          uint
+		trackTaskComment    string
+		trackTaskBeginTS    string
+		trackTaskEndTS      string
 	)
 
 	rootCmd := &cobra.Command{
@@ -366,6 +373,138 @@ eg. hours active -t ' {{task}} ({{time}}) '
 		},
 	}
 
+	tasksCmd := &cobra.Command{
+		Use:   "tasks",
+		Short: "List tasks tracked by hours",
+		Args:  cobra.MaximumNArgs(0),
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return renderTasks(db, os.Stdout, tasksLimit)
+		},
+	}
+
+	trackCmd := &cobra.Command{
+		Use:   "track",
+		Short: "Interact with hours' time tracking",
+		Args:  cobra.ExactArgs(0),
+	}
+
+	startTrackCmd := &cobra.Command{
+		Use:   "start <TASK_ID>",
+		Short: "Start tracking time for a task",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(_ *cobra.Command, args []string) error {
+			taskID, err := strconv.Atoi(args[0])
+			if err != nil {
+				return fmt.Errorf("%w: %s", errCouldntParseTaskID, err.Error())
+			}
+
+			var comment *string
+			commentTrimmed := strings.TrimSpace(trackTaskComment)
+			if commentTrimmed != "" {
+				comment = &commentTrimmed
+			}
+
+			return startTracking(db, os.Stdout, taskID, comment)
+		},
+	}
+
+	updateTrackCmd := &cobra.Command{
+		Use:   "update",
+		Short: "Update active task log",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(_ *cobra.Command, _ []string) error {
+			var beginTS time.Time
+			var err error
+			if trackTaskBeginTS != "" {
+				beginTS, err = time.ParseInLocation(c.TimeFormat, trackTaskBeginTS, time.Local)
+				if err != nil {
+					return fmt.Errorf("%w: %s", errCouldntParseBeginTS, err.Error())
+				}
+			}
+
+			if beginTS.After(time.Now()) {
+				return c.ErrBeginTsCannotBeInTheFuture
+			}
+
+			var comment *string
+			commentTrimmed := strings.TrimSpace(trackTaskComment)
+			if commentTrimmed != "" {
+				comment = &commentTrimmed
+			}
+
+			return updateTracking(db, os.Stdout, beginTS, comment)
+		},
+	}
+
+	stopTrackCmd := &cobra.Command{
+		Use:   "stop",
+		Short: "Stop active task log",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(_ *cobra.Command, _ []string) error {
+			errs := &c.MultiError{}
+
+			now := time.Now()
+			var beginTS *time.Time
+			if trackTaskBeginTS != "" {
+				ts, err := time.ParseInLocation(c.TimeFormat, trackTaskBeginTS, time.Local)
+				if err != nil {
+					errs.Add(fmt.Errorf("%w: %s", errCouldntParseBeginTS, err.Error()))
+				} else {
+					if ts.After(now) {
+						errs.Add(c.ErrBeginTsCannotBeInTheFuture)
+					} else {
+						beginTS = &ts
+					}
+				}
+			}
+
+			var endTS *time.Time
+			if trackTaskBeginTS != "" {
+				ts, err := time.ParseInLocation(c.TimeFormat, trackTaskEndTS, time.Local)
+				if err != nil {
+					errs.Add(fmt.Errorf("%w: %s", errCouldntParseEndTS, err.Error()))
+				} else {
+					if ts.After(now) {
+						errs.Add(c.ErrEndTsCannotBeInTheFuture)
+					} else {
+						endTS = &ts
+					}
+				}
+			}
+
+			if errs.NumErrors() > 1 {
+				return errs
+			} else if errs.NumErrors() == 1 {
+				return errs.Unwrap()
+			}
+
+			if beginTS != nil && endTS != nil {
+				b := *beginTS
+				e := *endTS
+				if e.Sub(b).Seconds() <= 0 {
+					return c.ErrTimeSpentIsNotPositive
+				}
+			}
+
+			var comment *string
+			commentTrimmed := strings.TrimSpace(trackTaskComment)
+			if commentTrimmed != "" {
+				comment = &commentTrimmed
+			}
+
+			return stopTracking(db, os.Stdout, beginTS, endTS, comment)
+		},
+	}
+
+	activeTrackCmd := &cobra.Command{
+		Use:   "active",
+		Short: "Show details about the active task log",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return renderActiveTLDetails(db, os.Stdout)
+		},
+	}
+
 	var err error
 	userHomeDir, err = os.UserHomeDir()
 	if err != nil {
@@ -391,11 +530,29 @@ eg. hours active -t ' {{task}} ({{time}}) '
 
 	activeCmd.Flags().StringVarP(&activeTemplate, "template", "t", ui.ActiveTaskPlaceholder, "string template to use for outputting active task")
 
+	tasksCmd.Flags().UintVarP(&tasksLimit, "limit", "l", numTasksLimit, "number of tasks to output")
+
+	startTrackCmd.Flags().StringVarP(&trackTaskComment, "comment", "c", "", "task log comment")
+	startTrackCmd.Flags().StringVarP(&trackTaskBeginTS, "begin-ts", "b", "", "task log begin timestamp")
+
+	updateTrackCmd.Flags().StringVarP(&trackTaskComment, "comment", "c", "", "task log comment")
+	updateTrackCmd.Flags().StringVarP(&trackTaskBeginTS, "begin-ts", "b", "", "task log begin timestamp")
+
+	stopTrackCmd.Flags().StringVarP(&trackTaskComment, "comment", "c", "", "task log comment")
+	stopTrackCmd.Flags().StringVarP(&trackTaskBeginTS, "begin-ts", "b", "", "task log begin timestamp")
+	stopTrackCmd.Flags().StringVarP(&trackTaskEndTS, "end-ts", "e", "", "task log end timestamp")
+
 	rootCmd.AddCommand(generateCmd)
 	rootCmd.AddCommand(reportCmd)
 	rootCmd.AddCommand(logCmd)
 	rootCmd.AddCommand(statsCmd)
 	rootCmd.AddCommand(activeCmd)
+	rootCmd.AddCommand(tasksCmd)
+	trackCmd.AddCommand(startTrackCmd)
+	trackCmd.AddCommand(updateTrackCmd)
+	trackCmd.AddCommand(stopTrackCmd)
+	trackCmd.AddCommand(activeTrackCmd)
+	rootCmd.AddCommand(trackCmd)
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 

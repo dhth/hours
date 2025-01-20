@@ -12,27 +12,27 @@ import (
 const emptyCommentIndicator = "∅"
 
 type Task struct {
-	ID             int
-	Summary        string
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	TrackingActive bool
-	SecsSpent      int
-	Active         bool
-	ListTitle      string
-	ListDesc       string
+	ID             int       `json:"id"`
+	Summary        string    `json:"summary"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	TrackingActive bool      `json:"tracking_active"`
+	SecsSpent      int       `json:"seconds_spent"`
+	Active         bool      `json:"-"`
+	ListTitle      string    `json:"-"`
+	ListDesc       string    `json:"-"`
 }
 
-type TaskLogEntry struct {
-	ID          int
-	TaskID      int
-	TaskSummary string
-	BeginTS     time.Time
-	EndTS       time.Time
-	SecsSpent   int
-	Comment     *string
-	ListTitle   string
-	ListDesc    string
+type TaskLogWithTaskDetails struct {
+	TaskID      int       `json:"task_id"`
+	TaskSummary string    `json:"task_summary"`
+	TLID        int       `json:"-"`
+	BeginTS     time.Time `json:"begin_ts"`
+	EndTS       time.Time `json:"end_ts"`
+	SecsSpent   int       `json:"seconds_spent"`
+	Comment     *string   `json:"comment"`
+	ListTitle   string    `json:"-"`
+	ListDesc    string    `json:"-"`
 }
 
 type ActiveTaskLogEntry struct {
@@ -44,10 +44,11 @@ type ActiveTaskLogEntry struct {
 }
 
 type ActiveTaskDetails struct {
-	TaskID            int
-	TaskSummary       string
-	CurrentLogBeginTS time.Time
-	CurrentLogComment *string
+	TaskID            int       `json:"task_id"`
+	TaskSummary       string    `json:"task_summary"`
+	TLID              int       `json:"-"`
+	CurrentLogBeginTS time.Time `json:"begin_ts"`
+	CurrentLogComment *string   `json:"comment"`
 }
 
 type TaskReportEntry struct {
@@ -79,11 +80,11 @@ func (t *Task) UpdateListDesc() {
 	t.ListDesc = fmt.Sprintf("%s %s", utils.RightPadTrim(lastUpdated, 60, true), timeSpent)
 }
 
-func (tl *TaskLogEntry) UpdateListTitle() {
+func (tl *TaskLogWithTaskDetails) UpdateListTitle() {
 	tl.ListTitle = utils.TrimWithMoreLinesIndicator(tl.GetComment(), 60)
 }
 
-func (tl *TaskLogEntry) UpdateListDesc() {
+func (tl *TaskLogWithTaskDetails) UpdateListDesc() {
 	timeSpentStr := HumanizeDuration(tl.SecsSpent)
 
 	var timeStr string
@@ -109,7 +110,7 @@ func (tl *TaskLogEntry) UpdateListDesc() {
 	tl.ListDesc = fmt.Sprintf("%s %s", utils.RightPadTrim(tl.TaskSummary, 60, true), timeStr)
 }
 
-func (tl *TaskLogEntry) GetComment() string {
+func (tl *TaskLogWithTaskDetails) GetComment() string {
 	if tl.Comment == nil {
 		return emptyCommentIndicator
 	}
@@ -129,16 +130,16 @@ func (t Task) FilterValue() string {
 	return t.Summary
 }
 
-func (tl TaskLogEntry) Title() string {
+func (tl TaskLogWithTaskDetails) Title() string {
 	return tl.ListTitle
 }
 
-func (tl TaskLogEntry) Description() string {
+func (tl TaskLogWithTaskDetails) Description() string {
 	return tl.ListDesc
 }
 
-func (tl TaskLogEntry) FilterValue() string {
-	return fmt.Sprintf("%d", tl.ID)
+func (tl TaskLogWithTaskDetails) FilterValue() string {
+	return fmt.Sprintf("%d", tl.TLID)
 }
 
 func HumanizeDuration(durationInSecs int) string {

@@ -9,10 +9,9 @@ import (
 type hideHelpMsg struct{}
 
 type trackingToggledMsg struct {
-	taskID    int
-	finished  bool
-	secsSpent int
-	err       error
+	taskID   int
+	finished bool
+	err      error
 }
 
 type activeTLSwitchedMsg struct {
@@ -56,7 +55,7 @@ type activeTaskFetchedMsg struct {
 }
 
 type tLsFetchedMsg struct {
-	entries       []types.TaskLogEntry
+	entries       []types.TaskLogWithTaskDetails
 	tlIDToFocusOn *int
 	err           error
 }
@@ -78,7 +77,7 @@ type taskActiveStatusUpdatedMsg struct {
 }
 
 type tLDeletedMsg struct {
-	entry *types.TaskLogEntry
+	entry *types.TaskLogWithTaskDetails
 	err   error
 }
 

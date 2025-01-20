@@ -24,6 +24,24 @@ jobs:
       - name: go test
         run: go test -v ./...
 
+  integration:
+    needs: [test]
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Run integration tests
+        env:
+          INTEGRATION: "1"
+        run: |
+          go test ./tests/... -v
+
   live:
     needs: [test]
     strategy:

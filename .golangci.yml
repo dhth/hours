@@ -57,4 +57,4 @@ linters-settings:
       - name: confusing-naming
       - name: unused-receiver
       - name: unhandled-error
-        arguments: ["fmt.Print", "fmt.Printf", "fmt.Fprintf", "fmt.Fprint"]
+        arguments: ["fmt.Print", "fmt.Printf", "fmt.Fprintf", "fmt.Fprint", "fmt.Fprintln"]
