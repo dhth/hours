@@ -134,42 +134,42 @@ summary statistics for your tracked time.
 			db, err = setupDB(dbPathFull)
 			switch {
 			case errors.Is(err, errCouldntCreateDB):
-				fmt.Fprintf(os.Stderr, `Couldn't create omm's local database.
+				fmt.Fprintf(os.Stderr, `Couldn't create hours' local database.
 %s
 
 `, msgReportIssue)
 			case errors.Is(err, errCouldntInitializeDB):
-				fmt.Fprintf(os.Stderr, `Couldn't initialise omm's local database.
+				fmt.Fprintf(os.Stderr, `Couldn't initialise hours' local database.
 %s
 
 `, msgReportIssue)
 				// cleanup
 				cleanupErr := os.Remove(dbPathFull)
 				if cleanupErr != nil {
-					fmt.Fprintf(os.Stderr, `Failed to remove omm's database file as well (at %s). Remove it manually.
+					fmt.Fprintf(os.Stderr, `Failed to remove hours' database file as well (at %s). Remove it manually.
 Clean up error: %s
 
 `, dbPathFull, cleanupErr.Error())
 				}
 			case errors.Is(err, errCouldntOpenDB):
-				fmt.Fprintf(os.Stderr, `Couldn't open omm's local database.
+				fmt.Fprintf(os.Stderr, `Couldn't open hours' local database.
 %s
 
 `, msgReportIssue)
 			case errors.Is(err, pers.ErrCouldntFetchDBVersion):
-				fmt.Fprintf(os.Stderr, `Couldn't get omm's latest database version.
+				fmt.Fprintf(os.Stderr, `Couldn't get hours' latest database version.
 %s
 
 `, msgReportIssue)
 			case errors.Is(err, pers.ErrDBDowngraded):
-				fmt.Fprintf(os.Stderr, `Looks like you downgraded omm. You should either delete omm's database file (you
-will lose data by doing that), or upgrade omm to the latest version.
+				fmt.Fprintf(os.Stderr, `Looks like you downgraded hours. You should either delete hours' database file (you
+will lose data by doing that), or upgrade hours to the latest version.
 
 `)
 			case errors.Is(err, pers.ErrDBMigrationFailed):
-				fmt.Fprintf(os.Stderr, `Something went wrong migrating omm's database.
+				fmt.Fprintf(os.Stderr, `Something went wrong migrating hours' database.
 
-You can try running omm by passing it a custom database file path (using
+You can try running hours by passing it a custom database file path (using
 --db-path; this will create a new database) to see if that fixes things. If that
 works, you can either delete the previous database, or keep using this new
 database (both are not ideal).
