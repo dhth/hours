@@ -81,8 +81,8 @@ func DefaultTheme() Theme {
 	}
 }
 
-func LoadTheme(themeJson []byte) (Theme, error) {
+func LoadTheme(themeJSON []byte) (Theme, error) {
 	theme := DefaultTheme()
-	err := json.Unmarshal(themeJson, &theme)
+	err := json.Unmarshal(themeJSON, &theme)
 	return theme, err
 }
