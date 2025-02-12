@@ -14,11 +14,11 @@ func TestThemeDefaults(t *testing.T) {
 		TaskEntry:      "#0000ff",
 		HelpMsg:        "#00ff00",
 	}
-	customThemeJson, err := json.Marshal(customThemeOrig)
+	customThemeJSON, err := json.Marshal(customThemeOrig)
 	if err != nil {
 		t.Errorf("Error marshalling theme: %s", err)
 	}
-	customTheme, err := LoadTheme(customThemeJson)
+	customTheme, err := LoadTheme(customThemeJSON)
 	if err != nil {
 		t.Errorf("Error loading theme: %s", err)
 	}
