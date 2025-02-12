@@ -625,7 +625,7 @@ func (m *Model) handleRequestToViewTLDetails() {
 }
 
 func (m *Model) handleWindowResizing(msg tea.WindowSizeMsg) {
-	w, h := listStyle.GetFrameSize()
+	w, h := m.style.list.GetFrameSize()
 
 	m.terminalWidth = msg.Width
 	m.terminalHeight = msg.Height
@@ -653,7 +653,7 @@ func (m *Model) handleWindowResizing(msg tea.WindowSizeMsg) {
 
 	if !m.helpVPReady {
 		m.helpVP = viewport.New(msg.Width-4, m.terminalHeight-7)
-		m.helpVP.SetContent(helpText)
+		m.helpVP.SetContent(getHelpText(m.style))
 		m.helpVP.KeyMap.Up.SetEnabled(false)
 		m.helpVP.KeyMap.Down.SetEnabled(false)
 		m.helpVPReady = true

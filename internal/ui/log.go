@@ -27,7 +27,7 @@ var (
 	errCouldntGenerateLogs          = errors.New("couldn't generate logs")
 )
 
-func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string, interactive bool) error {
+func RenderTaskLog(db *sql.DB, style *Style, writer io.Writer, plain bool, period string, interactive bool) error {
 	if period == "" {
 		return nil
 	}
@@ -41,13 +41,13 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string, inte
 		return fmt.Errorf("%w (limited to %d day); use non-interactive mode to see logs for a larger time period", errInteractiveModeNotApplicable, interactiveLogDayLimit)
 	}
 
-	log, err := getTaskLog(db, ts.Start, ts.End, 100, plain)
+	log, err := getTaskLog(db, style, ts.Start, ts.End, 100, plain)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errCouldntGenerateLogs, err.Error())
 	}
 
 	if interactive {
-		p := tea.NewProgram(initialRecordsModel(reportLogs, db, ts.Start, ts.End, plain, period, ts.NumDays, log))
+		p := tea.NewProgram(initialRecordsModel(reportLogs, db, style, ts.Start, ts.End, plain, period, ts.NumDays, log))
 		_, err := p.Run()
 		if err != nil {
 			return err
@@ -58,7 +58,7 @@ func RenderTaskLog(db *sql.DB, writer io.Writer, plain bool, period string, inte
 	return nil
 }
 
-func getTaskLog(db *sql.DB, start, end time.Time, limit int, plain bool) (string, error) {
+func getTaskLog(db *sql.DB, style *Style, start, end time.Time, limit int, plain bool) (string, error) {
 	entries, err := pers.FetchTLEntriesBetweenTS(db, start, end, limit)
 	if err != nil {
 		return "", err
@@ -85,7 +85,7 @@ func getTaskLog(db *sql.DB, start, end time.Time, limit int, plain bool) (string
 
 	var timeSpentStr string
 
-	rs := getReportStyles(plain)
+	rs := style.getReportStyles(plain)
 	styleCache := make(map[string]lipgloss.Style)
 
 	for i, entry := range entries {
@@ -101,7 +101,7 @@ func getTaskLog(db *sql.DB, start, end time.Time, limit int, plain bool) (string
 		} else {
 			rowStyle, ok := styleCache[entry.TaskSummary]
 			if !ok {
-				rowStyle = getDynamicStyle(entry.TaskSummary)
+				rowStyle = style.getDynamicStyle(entry.TaskSummary)
 				styleCache[entry.TaskSummary] = rowStyle
 			}
 			data[i] = []string{

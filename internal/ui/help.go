@@ -2,7 +2,8 @@ package ui
 
 import "fmt"
 
-var helpText = fmt.Sprintf(`%s
+func getHelpText(style *Style) string {
+	return fmt.Sprintf(`%s
 %s
 %s
 
@@ -20,8 +21,8 @@ var helpText = fmt.Sprintf(`%s
 %s
 %s
 %s`,
-	helpHeaderStyle.Render("\"hours\" Reference Manual"),
-	helpSectionStyle.Render(`
+		style.helpHeader.Render("\"hours\" Reference Manual"),
+		style.helpSection.Render(`
 "hours" has 6 views:
   - Tasks List View                       Shows active tasks
   - Task Management View                  Shows a form to create/update tasks
@@ -31,9 +32,9 @@ var helpText = fmt.Sprintf(`%s
   - Task Log Entry View                   Shows a form to save/update a task log entry
   - Help View (this one)
 `),
-	helpHeaderStyle.Render("Keyboard Shortcuts"),
-	helpHeaderStyle.Render("General"),
-	helpSectionStyle.Render(`
+		style.helpHeader.Render("Keyboard Shortcuts"),
+		style.helpHeader.Render("General"),
+		style.helpSection.Render(`
   1                                       Switch to Tasks List View
   2                                       Switch to Task Logs List View
   3                                       Switch to Inactive Tasks List View
@@ -42,16 +43,16 @@ var helpText = fmt.Sprintf(`%s
   q/<ctrl+c>                              Go back
   ?                                       Show help view
 `),
-	helpHeaderStyle.Render("General List Controls"),
-	helpSectionStyle.Render(`
+		style.helpHeader.Render("General List Controls"),
+		style.helpSection.Render(`
   k/<Up>                                  Move cursor up
   j/<Down>                                Move cursor down
   h<Left>                                 Go to previous page
   l<Right>                                Go to next page
   <ctrl+r>                                Refresh list
 `),
-	helpHeaderStyle.Render("Task List View"),
-	helpSectionStyle.Render(`
+		style.helpHeader.Render("Task List View"),
+		style.helpSection.Render(`
   a                                       Add a task
   u                                       Update task details
   s                                       Start/stop recording time on a task; stopping
@@ -65,8 +66,8 @@ var helpText = fmt.Sprintf(`%s
   <ctrl+t>                                Go to currently tracked item
   <ctrl+d>                                Deactivate task
 `),
-	helpHeaderStyle.Render("Task Logs List View"),
-	helpSectionStyle.Render(`
+		style.helpHeader.Render("Task Logs List View"),
+		style.helpSection.Render(`
   ~ at the end of a task log comment indicates that it has more lines that are not
   visible in the list view
 
@@ -74,17 +75,17 @@ var helpText = fmt.Sprintf(`%s
   <ctrl+s>/u                              Update task log entry
   <ctrl+d>                                Delete task log entry
 `),
-	helpHeaderStyle.Render("Task Log Details View"),
-	helpSectionStyle.Render(`
+		style.helpHeader.Render("Task Log Details View"),
+		style.helpSection.Render(`
   h                                       Go to previous entry
   l                                       Go to next entry
 `),
-	helpHeaderStyle.Render("Inactive Task List View"),
-	helpSectionStyle.Render(`
+		style.helpHeader.Render("Inactive Task List View"),
+		style.helpSection.Render(`
   <ctrl+d>                                Activate task
 `),
-	helpHeaderStyle.Render("Task Log Entry View"),
-	helpSectionStyle.Render(`
+		style.helpHeader.Render("Task Log Entry View"),
+		style.helpSection.Render(`
   enter/<ctrl+s>                          Save entered details for the task log
   k                                       Move timestamp backwards by one minute
   j                                       Move timestamp forwards by one minute
@@ -93,4 +94,5 @@ var helpText = fmt.Sprintf(`%s
   h                                       Move timestamp backwards by a day
   l                                       Move timestamp forwards by a day
 `),
-)
+	)
+}

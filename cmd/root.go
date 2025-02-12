@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"math/rand"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -102,6 +103,8 @@ func NewRootCommand() (*cobra.Command, error) {
 		dbPath              string
 		dbPathFull          string
 		db                  *sql.DB
+		themeName           string
+		style               ui.Style
 		reportAgg           bool
 		recordsInteractive  bool
 		recordsOutputPlain  bool
@@ -110,6 +113,12 @@ func NewRootCommand() (*cobra.Command, error) {
 		genNumTasks         uint8
 		genSkipConfirmation bool
 	)
+
+	var err error
+	userHomeDir, err = os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", errCouldntGetHomeDir, err.Error())
+	}
 
 	rootCmd := &cobra.Command{
 		Use:   "hours",
@@ -186,10 +195,21 @@ Sorry for breaking the upgrade step!
 				return err
 			}
 
+			var theme ui.Theme
+			if themeName == "" {
+				theme = ui.DefaultTheme()
+			} else {
+				themePath := path.Join(userHomeDir, ".config", "hours", "themes", themeName+".json")
+				if theme, err = ui.LoadTheme(themePath); err != nil {
+					return err
+				}
+			}
+			style = ui.NewStyle(theme)
+
 			return nil
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return ui.RenderUI(db)
+			return ui.RenderUI(db, &style)
 		},
 	}
 
@@ -210,7 +230,7 @@ this with a --dbpath/-d flag that points to a throwaway database.
 			}
 
 			if !genSkipConfirmation {
-				fmt.Print(ui.WarningStyle.Render(`
+				fmt.Print(style.Warning.Render(`
 WARNING: You shouldn't run 'gen' on hours' actively used database as it'll
 create dummy entries in it. You can run it on a throwaway database by passing a
 path for it via --dbpath/-d (use it for all further invocations of 'hours' as
@@ -283,7 +303,7 @@ will be reported on the day it ends.
 				period = args[0]
 			}
 
-			return ui.RenderReport(db, os.Stdout, recordsOutputPlain, period, reportAgg, recordsInteractive)
+			return ui.RenderReport(db, &style, os.Stdout, recordsOutputPlain, period, reportAgg, recordsInteractive)
 		},
 	}
 
@@ -313,7 +333,7 @@ appear in the log for the day it ends.
 				period = args[0]
 			}
 
-			return ui.RenderTaskLog(db, os.Stdout, recordsOutputPlain, period, recordsInteractive)
+			return ui.RenderTaskLog(db, &style, os.Stdout, recordsOutputPlain, period, recordsInteractive)
 		},
 	}
 
@@ -344,7 +364,7 @@ be considered in the stats for the day it ends.
 				period = args[0]
 			}
 
-			return ui.RenderStats(db, os.Stdout, recordsOutputPlain, period, recordsInteractive)
+			return ui.RenderStats(db, &style, os.Stdout, recordsOutputPlain, period, recordsInteractive)
 		},
 	}
 
@@ -366,14 +386,9 @@ eg. hours active -t ' {{task}} ({{time}}) '
 		},
 	}
 
-	var err error
-	userHomeDir, err = os.UserHomeDir()
-	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errCouldntGetHomeDir, err.Error())
-	}
-
 	defaultDBPath := filepath.Join(userHomeDir, defaultDBName)
 	rootCmd.PersistentFlags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
+	rootCmd.PersistentFlags().StringVarP(&themeName, "theme", "t", "", "UI theme to use instead of default")
 
 	generateCmd.Flags().Uint8Var(&genNumDays, "num-days", 30, "number of days to generate fake data for")
 	generateCmd.Flags().Uint8Var(&genNumTasks, "num-tasks", 10, "number of tasks to generate fake data for")

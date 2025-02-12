@@ -35,9 +35,9 @@ func (m Model) View() string {
 			}
 		}
 		activeMsg = fmt.Sprintf("%s%s%s",
-			trackingStyle.Render("tracking:"),
-			activeTaskSummaryMsgStyle.Render(taskSummaryMsg),
-			activeTaskBeginTimeStyle.Render(taskStartedSinceMsg),
+			m.style.tracking.Render("tracking:"),
+			m.style.activeTaskSummaryMsg.Render(taskSummaryMsg),
+			m.style.activeTaskBeginTime.Render(taskStartedSinceMsg),
 		)
 	}
 
@@ -68,18 +68,18 @@ func (m Model) View() string {
 
 	switch m.activeView {
 	case taskListView:
-		content = listStyle.Render(m.activeTasksList.View())
+		content = m.style.list.Render(m.activeTasksList.View())
 	case taskLogView:
-		content = listStyle.Render(m.taskLogList.View())
+		content = m.style.list.Render(m.taskLogList.View())
 	case taskLogDetailsView:
 		if !m.helpVPReady {
 			content = "\n  Initializing..."
 		} else {
-			content = viewPortStyle.Render(fmt.Sprintf("%s\n\n%s",
-				tLDetailsViewTitleStyle.Render("Task Log Details"), m.tLDetailsVP.View()))
+			content = m.style.viewPort.Render(fmt.Sprintf("%s\n\n%s",
+				m.style.tLDetailsViewTitle.Render("Task Log Details"), m.tLDetailsVP.View()))
 		}
 	case inactiveTaskListView:
-		content = listStyle.Render(m.inactiveTasksList.View())
+		content = m.style.list.Render(m.inactiveTasksList.View())
 	case taskInputView:
 		var formTitle string
 		switch m.taskMgmtContext {
@@ -96,9 +96,9 @@ func (m Model) View() string {
 
   %s
 `,
-			taskEntryHeadingStyle.Render(formTitle),
+			m.style.taskEntryHeading.Render(formTitle),
 			m.taskInputs[summaryField].View(),
-			formHelpStyle.Render(formSubmitHelp),
+			m.style.formHelp.Render(formSubmitHelp),
 		)
 		for i := 0; i < m.terminalHeight-9; i++ {
 			content += "\n"
@@ -128,18 +128,18 @@ func (m Model) View() string {
 
   %s
 `,
-			taskLogEntryHeadingStyle.Render(taskLogEntryViewHeading),
-			formContextStyle.Render(formHeadingText),
-			formHelpStyle.Render(formHelp),
-			formFieldNameStyle.Render(formBeginTimeHelp),
+			m.style.taskLogEntryHeading.Render(taskLogEntryViewHeading),
+			m.style.formContext.Render(formHeadingText),
+			m.style.formHelp.Render(formHelp),
+			m.style.formFieldName.Render(formBeginTimeHelp),
 			m.tLInputs[entryBeginTS].View(),
-			formHelpStyle.Render(formTimeShiftHelp),
-			formFieldNameStyle.Render(formEndTimeHelp),
+			m.style.formHelp.Render(formTimeShiftHelp),
+			m.style.formFieldName.Render(formEndTimeHelp),
 			m.tLInputs[entryEndTS].View(),
-			formHelpStyle.Render(formTimeShiftHelp),
-			formFieldNameStyle.Render(formCommentHelp),
+			m.style.formHelp.Render(formTimeShiftHelp),
+			m.style.formFieldName.Render(formCommentHelp),
 			m.tLCommentInput.View(),
-			formHelpStyle.Render(formSubmitHelp),
+			m.style.formHelp.Render(formSubmitHelp),
 		)
 		for i := 0; i < m.terminalHeight-32; i++ {
 			content += "\n"
@@ -163,14 +163,14 @@ func (m Model) View() string {
 
   %s
 `,
-			taskLogEntryHeadingStyle.Render(taskLogEntryViewHeading),
-			formContextStyle.Render(formHeadingText),
-			formFieldNameStyle.Render(formBeginTimeHelp),
+			m.style.taskLogEntryHeading.Render(taskLogEntryViewHeading),
+			m.style.formContext.Render(formHeadingText),
+			m.style.formFieldName.Render(formBeginTimeHelp),
 			m.tLInputs[entryBeginTS].View(),
-			formHelpStyle.Render(formTimeShiftHelp),
-			formFieldNameStyle.Render(formCommentHelp),
+			m.style.formHelp.Render(formTimeShiftHelp),
+			m.style.formFieldName.Render(formCommentHelp),
 			m.tLCommentInput.View(),
-			formHelpStyle.Render(formSubmitHelp),
+			m.style.formHelp.Render(formSubmitHelp),
 		)
 		for i := 0; i < m.terminalHeight-26; i++ {
 			content += "\n"
@@ -206,18 +206,18 @@ func (m Model) View() string {
 
   %s
 `,
-			taskLogEntryHeadingStyle.Render(taskLogEntryViewHeading),
-			formContextStyle.Render(formHeadingText),
-			formHelpStyle.Render(formHelp),
-			formFieldNameStyle.Render(formBeginTimeHelp),
+			m.style.taskLogEntryHeading.Render(taskLogEntryViewHeading),
+			m.style.formContext.Render(formHeadingText),
+			m.style.formHelp.Render(formHelp),
+			m.style.formFieldName.Render(formBeginTimeHelp),
 			m.tLInputs[entryBeginTS].View(),
-			formHelpStyle.Render(formTimeShiftHelp),
-			formFieldNameStyle.Render(formEndTimeHelp),
+			m.style.formHelp.Render(formTimeShiftHelp),
+			m.style.formFieldName.Render(formEndTimeHelp),
 			m.tLInputs[entryEndTS].View(),
-			formHelpStyle.Render(formTimeShiftHelp),
-			formFieldNameStyle.Render(formCommentHelp),
+			m.style.formHelp.Render(formTimeShiftHelp),
+			m.style.formFieldName.Render(formCommentHelp),
 			m.tLCommentInput.View(),
-			formHelpStyle.Render(formSubmitHelp),
+			m.style.formHelp.Render(formSubmitHelp),
 		)
 		for i := 0; i < m.terminalHeight-32; i++ {
 			content += "\n"
@@ -226,9 +226,9 @@ func (m Model) View() string {
 		if !m.helpVPReady {
 			content = "\n  Initializing..."
 		} else {
-			content = viewPortStyle.Render(fmt.Sprintf("%s  %s\n\n%s\n",
-				helpTitleStyle.Render("Help"),
-				helpSectionStyle.Render("(scroll with j/k/↓/↑)"),
+			content = m.style.viewPort.Render(fmt.Sprintf("%s  %s\n\n%s\n",
+				m.style.helpTitle.Render("Help"),
+				m.style.helpSection.Render("(scroll with j/k/↓/↑)"),
 				m.helpVP.View()))
 		}
 	case insufficientDimensionsView:
@@ -248,21 +248,21 @@ func (m Model) View() string {
 		// first time directions
 		if m.activeView == taskListView && len(m.activeTasksList.Items()) <= 1 {
 			if len(m.activeTasksList.Items()) == 0 {
-				helpMsg += " " + initialHelpMsgStyle.Render("Press a to add a task")
+				helpMsg += " " + m.style.initialHelpMsg.Render("Press a to add a task")
 			} else if len(m.taskLogList.Items()) == 0 {
 				if m.trackingActive {
-					helpMsg += " " + initialHelpMsgStyle.Render("Press s to stop tracking time")
+					helpMsg += " " + m.style.initialHelpMsg.Render("Press s to stop tracking time")
 				} else {
-					helpMsg += " " + initialHelpMsgStyle.Render("Press s to start tracking time")
+					helpMsg += " " + m.style.initialHelpMsg.Render("Press s to start tracking time")
 				}
 			}
 		}
 
-		helpMsg += " " + helpMsgStyle.Render("Press ? for help")
+		helpMsg += " " + m.style.helpMsg.Render("Press ? for help")
 	}
 
 	footer = fmt.Sprintf("%s%s%s",
-		toolNameStyle.Render("hours"),
+		m.style.toolName.Render("hours"),
 		helpMsg,
 		activeMsg,
 	)
@@ -306,8 +306,8 @@ func (m recordsModel) View() string {
 		help = helpStr
 		dateRange = dateRangeStr
 	} else {
-		help = recordsHelpStyle.Render(helpStr)
-		dateRange = recordsDateRangeStyle.Render(dateRangeStr)
+		help = m.style.recordsHelp.Render(helpStr)
+		dateRange = m.style.recordsDateRange.Render(dateRangeStr)
 	}
 
 	return fmt.Sprintf("%s%s%s", m.report, dateRange, help)
