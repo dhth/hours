@@ -34,7 +34,7 @@ type Style struct {
 	Warning              lipgloss.Style
 }
 
-func NewStyle(theme Theme) Style {
+func NewStyle(theme Theme) *Style {
 	base := lipgloss.NewStyle().
 		PaddingLeft(1).
 		PaddingRight(1).
@@ -63,7 +63,7 @@ func NewStyle(theme Theme) Style {
 		Background(lipgloss.Color(theme.HelpViewTitle)).
 		Align(lipgloss.Left)
 
-	return Style{
+	return &Style{
 		theme: theme,
 
 		helpMsg: helpMsg,

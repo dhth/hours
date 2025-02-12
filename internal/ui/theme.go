@@ -2,38 +2,36 @@ package ui
 
 import (
 	"encoding/json"
-	"fmt"
-	"os"
 )
 
 type Theme struct {
-	DefaultBackground   string   `json:"defaultBackground"`
-	ActiveTaskList      string   `json:"activeTaskList"`
-	InactiveTaskList    string   `json:"inactiveTaskList"`
-	TaskEntry           string   `json:"taskEntry"`
-	TaskLogEntry        string   `json:"taskLogEntry"`
-	TaskLogList         string   `json:"taskLogList"`
-	Tracking            string   `json:"tracking"`
-	ActiveTask          string   `json:"activeTask"`
-	ActiveTaskBeginTime string   `json:"activeTaskBeginTime"`
-	FormFieldName       string   `json:"formFieldName"`
-	FormHelp            string   `json:"formHelp"`
-	FormContext         string   `json:"formContext"`
-	ToolName            string   `json:"toolName"`
-	RecordsHeader       string   `json:"recordsHeader"`
-	RecordsFooter       string   `json:"recordsFooter"`
-	RecordsBorder       string   `json:"recordsBorder"`
-	InitialHelpMsg      string   `json:"initialHelpMsg"`
-	RecordsDateRange    string   `json:"recordsDateRange"`
-	RecordsHelp         string   `json:"recordsHelp"`
-	TLDetailsViewTitle  string   `json:"tLDetailsViewTitle"`
-	HelpMsg             string   `json:"helpMsg"`
-	HelpViewTitle       string   `json:"helpViewTitle"`
-	HelpHeader          string   `json:"helpHeader"`
-	HelpSection         string   `json:"helpSection"`
-	FallbackTask        string   `json:"fallbackTask"`
-	Warning             string   `json:"warning"`
-	Tasks               []string `json:"tasks"`
+	DefaultBackground   string   `json:"defaultBackground,omitempty"`
+	ActiveTaskList      string   `json:"activeTaskList,omitempty"`
+	InactiveTaskList    string   `json:"inactiveTaskList,omitempty"`
+	TaskEntry           string   `json:"taskEntry,omitempty"`
+	TaskLogEntry        string   `json:"taskLogEntry,omitempty"`
+	TaskLogList         string   `json:"taskLogList,omitempty"`
+	Tracking            string   `json:"tracking,omitempty"`
+	ActiveTask          string   `json:"activeTask,omitempty"`
+	ActiveTaskBeginTime string   `json:"activeTaskBeginTime,omitempty"`
+	FormFieldName       string   `json:"formFieldName,omitempty"`
+	FormHelp            string   `json:"formHelp,omitempty"`
+	FormContext         string   `json:"formContext,omitempty"`
+	ToolName            string   `json:"toolName,omitempty"`
+	RecordsHeader       string   `json:"recordsHeader,omitempty"`
+	RecordsFooter       string   `json:"recordsFooter,omitempty"`
+	RecordsBorder       string   `json:"recordsBorder,omitempty"`
+	InitialHelpMsg      string   `json:"initialHelpMsg,omitempty"`
+	RecordsDateRange    string   `json:"recordsDateRange,omitempty"`
+	RecordsHelp         string   `json:"recordsHelp,omitempty"`
+	TLDetailsViewTitle  string   `json:"tLDetailsViewTitle,omitempty"`
+	HelpMsg             string   `json:"helpMsg,omitempty"`
+	HelpViewTitle       string   `json:"helpViewTitle,omitempty"`
+	HelpHeader          string   `json:"helpHeader,omitempty"`
+	HelpSection         string   `json:"helpSection,omitempty"`
+	FallbackTask        string   `json:"fallbackTask,omitempty"`
+	Warning             string   `json:"warning,omitempty"`
+	Tasks               []string `json:"tasks,omitempty"`
 }
 
 func DefaultTheme() Theme {
@@ -83,17 +81,8 @@ func DefaultTheme() Theme {
 	}
 }
 
-func LoadTheme(path string) (Theme, error) {
-	var (
-		err   error
-		theme = DefaultTheme()
-	)
-	themeFile, err := os.ReadFile(path)
-	if err != nil {
-		return theme, fmt.Errorf("failed to read theme file %q: %w", path, err)
-	}
-	if err = json.Unmarshal(themeFile, &theme); err != nil {
-		return theme, fmt.Errorf("failed to parse theme file %q: %w", path, err)
-	}
+func LoadTheme(themeJson []byte) (Theme, error) {
+	theme := DefaultTheme()
+	err := json.Unmarshal(themeJson, &theme)
 	return theme, err
 }

@@ -33,6 +33,8 @@ var (
 	errCouldntCreateDB          = errors.New("couldn't create database")
 	errCouldntInitializeDB      = errors.New("couldn't initialize database")
 	errCouldntOpenDB            = errors.New("couldn't open database")
+	errCouldntReadTheme         = errors.New("couldn't read theme file")
+	errCouldntLoadTheme         = errors.New("couldn't load theme file")
 	errCouldntGenerateData      = errors.New("couldn't generate dummy data")
 	errNumDaysExceedsThreshold  = errors.New("number of days exceeds threshold")
 	errNumTasksExceedsThreshold = errors.New("number of tasks exceeds threshold")
@@ -99,6 +101,23 @@ func setupDB(dbPathFull string) (*sql.DB, error) {
 	return db, nil
 }
 
+func setupTheme(userHomeDir string, themeName string) (*ui.Style, error) {
+	var theme ui.Theme
+	if themeName == "" {
+		theme = ui.DefaultTheme()
+	} else {
+		themePath := path.Join(userHomeDir, ".config", "hours", "themes", themeName+".json")
+		themeFile, err := os.ReadFile(themePath)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %s", errCouldntReadTheme, err.Error())
+		}
+		if theme, err = ui.LoadTheme(themeFile); err != nil {
+			return nil, fmt.Errorf("%w: %s", errCouldntLoadTheme, err.Error())
+		}
+	}
+	return ui.NewStyle(theme), nil
+}
+
 func NewRootCommand() (*cobra.Command, error) {
 	var (
 		userHomeDir         string
@@ -106,7 +125,7 @@ func NewRootCommand() (*cobra.Command, error) {
 		dbPathFull          string
 		db                  *sql.DB
 		themeName           string
-		style               ui.Style
+		style               *ui.Style
 		reportAgg           bool
 		recordsInteractive  bool
 		recordsOutputPlain  bool
@@ -197,21 +216,14 @@ Sorry for breaking the upgrade step!
 				return err
 			}
 
-			var theme ui.Theme
-			if themeName == "" {
-				theme = ui.DefaultTheme()
-			} else {
-				themePath := path.Join(userHomeDir, ".config", "hours", "themes", themeName+".json")
-				if theme, err = ui.LoadTheme(themePath); err != nil {
-					return err
-				}
+			if style, err = setupTheme(userHomeDir, themeName); err != nil {
+				return err
 			}
-			style = ui.NewStyle(theme)
 
 			return nil
 		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return ui.RenderUI(db, &style)
+			return ui.RenderUI(db, style)
 		},
 	}
 
@@ -305,7 +317,7 @@ will be reported on the day it ends.
 				period = args[0]
 			}
 
-			return ui.RenderReport(db, &style, os.Stdout, recordsOutputPlain, period, reportAgg, recordsInteractive)
+			return ui.RenderReport(db, style, os.Stdout, recordsOutputPlain, period, reportAgg, recordsInteractive)
 		},
 	}
 
@@ -335,7 +347,7 @@ appear in the log for the day it ends.
 				period = args[0]
 			}
 
-			return ui.RenderTaskLog(db, &style, os.Stdout, recordsOutputPlain, period, recordsInteractive)
+			return ui.RenderTaskLog(db, style, os.Stdout, recordsOutputPlain, period, recordsInteractive)
 		},
 	}
 
@@ -366,7 +378,7 @@ be considered in the stats for the day it ends.
 				period = args[0]
 			}
 
-			return ui.RenderStats(db, &style, os.Stdout, recordsOutputPlain, period, recordsInteractive)
+			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, period, recordsInteractive)
 		},
 	}
 
