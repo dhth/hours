@@ -388,7 +388,7 @@ eg. hours active -t ' {{task}} ({{time}}) '
 
 	defaultDBPath := filepath.Join(userHomeDir, defaultDBName)
 	rootCmd.PersistentFlags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
-	rootCmd.PersistentFlags().StringVarP(&themeName, "theme", "T", "", "UI theme to use instead of default")
+	rootCmd.PersistentFlags().StringVarP(&themeName, "theme", "T", os.Getenv("HOURS_THEME"), "UI theme to use instead of default")
 
 	generateCmd.Flags().Uint8Var(&genNumDays, "num-days", 30, "number of days to generate fake data for")
 	generateCmd.Flags().Uint8Var(&genNumTasks, "num-tasks", 10, "number of tasks to generate fake data for")
