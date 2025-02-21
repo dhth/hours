@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"database/sql"
+	_ "embed"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -12,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/charmbracelet/lipgloss"
 	c "github.com/dhth/hours/internal/common"
 	pers "github.com/dhth/hours/internal/persistence"
 	"github.com/dhth/hours/internal/ui"
@@ -20,26 +22,38 @@ import (
 
 const (
 	defaultDBName     = "hours.db"
+	configDirName     = "hours"
+	themeDirName      = "themes"
 	numDaysThreshold  = 30
 	numTasksThreshold = 20
 
-	envTheme = "HOURS_THEME"
+	themeEnvVar      = "HOURS_THEME"
+	defaultThemeName = "default"
+	warningColor     = "#fb4934"
 )
 
+//go:embed static/sample-theme.txt
+var sampleThemeConfig string
+
 var (
-	errCouldntGetHomeDir        = errors.New("couldn't get home directory")
-	errDBFileExtIncorrect       = errors.New("db file needs to end with .db")
-	errCouldntCreateDBDirectory = errors.New("couldn't create directory for database")
-	errCouldntCreateDB          = errors.New("couldn't create database")
-	errCouldntInitializeDB      = errors.New("couldn't initialize database")
-	errCouldntOpenDB            = errors.New("couldn't open database")
-	errCouldntReadTheme         = errors.New("couldn't read theme file")
-	errCouldntLoadTheme         = errors.New("couldn't load theme file")
-	errCouldntGenerateData      = errors.New("couldn't generate dummy data")
-	errNumDaysExceedsThreshold  = errors.New("number of days exceeds threshold")
-	errNumTasksExceedsThreshold = errors.New("number of tasks exceeds threshold")
-	errCouldntReadInput         = errors.New("couldn't read input")
-	errIncorrectCodeEntered     = errors.New("incorrect code entered")
+	errCouldntGetHomeDir         = errors.New("couldn't get home directory")
+	errCouldntGetConfigDir       = errors.New("couldn't get config directory")
+	errDBFileExtIncorrect        = errors.New("db file needs to end with .db")
+	errCouldntCreateDBDirectory  = errors.New("couldn't create directory for database")
+	errCouldntCreateDB           = errors.New("couldn't create database")
+	errCouldntInitializeDB       = errors.New("couldn't initialize database")
+	errCouldntOpenDB             = errors.New("couldn't open database")
+	errCouldntReadTheme          = errors.New("couldn't read theme file")
+	errCouldntLoadTheme          = errors.New("couldn't load theme file")
+	errCouldntGenerateData       = errors.New("couldn't generate dummy data")
+	errNumDaysExceedsThreshold   = errors.New("number of days exceeds threshold")
+	errNumTasksExceedsThreshold  = errors.New("number of tasks exceeds threshold")
+	errCouldntReadInput          = errors.New("couldn't read input")
+	errIncorrectCodeEntered      = errors.New("incorrect code entered")
+	errCouldntListThemes         = errors.New("couldn't list themes in config directory")
+	errCouldntCheckIfThemeExists = errors.New("couldn't check if theme already exists")
+	errThemeAlreadyExists        = errors.New("theme already exists")
+	ErrThemeDoesntExist          = errors.New("theme doesn't exist")
 
 	msgReportIssue = fmt.Sprintf("This isn't supposed to happen; let %s know about this error via \n%s.", c.Author, c.RepoIssuesURL)
 )
@@ -55,8 +69,8 @@ func Execute() error {
 	}
 
 	err = rootCmd.Execute()
-	if errors.Is(err, errCouldntGenerateData) {
-		fmt.Printf("\n%s\n", msgReportIssue)
+	if err != nil {
+		handleErrors(err)
 	}
 	return err
 }
@@ -101,31 +115,38 @@ func setupDB(dbPathFull string) (*sql.DB, error) {
 	return db, nil
 }
 
-func setupTheme(userHomeDir string, themeName string) (*ui.Style, error) {
+func getTheme(themesDir string, themeName string) (ui.Style, error) {
+	var zero ui.Style
 	var theme ui.Theme
-	if themeName == "" {
-		theme = ui.DefaultTheme()
-	} else {
-		themePath := path.Join(userHomeDir, ".config", "hours", "themes", themeName+".json")
-		themeFile, err := os.ReadFile(themePath)
-		if err != nil {
-			return nil, fmt.Errorf("%w: %s", errCouldntReadTheme, err.Error())
-		}
-		if theme, err = ui.LoadTheme(themeFile); err != nil {
-			return nil, fmt.Errorf("%w: %s", errCouldntLoadTheme, err.Error())
-		}
+	if themeName == defaultThemeName {
+		return ui.NewStyle(ui.DefaultTheme()), nil
 	}
+
+	themeFilePath := path.Join(themesDir, fmt.Sprintf("%s.json", themeName))
+	themeBytes, err := os.ReadFile(themeFilePath)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return zero, fmt.Errorf("%w: %s", ErrThemeDoesntExist, themeName)
+		}
+		return zero, fmt.Errorf("%w: %s", errCouldntReadTheme, err.Error())
+	}
+	if theme, err = ui.LoadTheme(themeBytes); err != nil {
+		return zero, fmt.Errorf("%w: %w", errCouldntLoadTheme, err)
+	}
+
 	return ui.NewStyle(theme), nil
 }
 
 func NewRootCommand() (*cobra.Command, error) {
 	var (
 		userHomeDir         string
+		userConfigDir       string
+		themesDir           string
 		dbPath              string
 		dbPathFull          string
 		db                  *sql.DB
 		themeName           string
-		style               *ui.Style
+		style               ui.Style
 		reportAgg           bool
 		recordsInteractive  bool
 		recordsOutputPlain  bool
@@ -135,69 +156,50 @@ func NewRootCommand() (*cobra.Command, error) {
 		genSkipConfirmation bool
 	)
 
-	var err error
-	userHomeDir, err = os.UserHomeDir()
-	if err != nil {
-		return nil, fmt.Errorf("%w: %s", errCouldntGetHomeDir, err.Error())
-	}
+	preRun := func(cmd *cobra.Command, _ []string) error {
+		dbPathFull = expandTilde(dbPath, userHomeDir)
+		if filepath.Ext(dbPathFull) != ".db" {
+			return errDBFileExtIncorrect
+		}
 
-	rootCmd := &cobra.Command{
-		Use:   "hours",
-		Short: "\"hours\" is a no-frills time tracking toolkit for the command line",
-		Long: `"hours" is a no-frills time tracking toolkit for the command line.
-
-You can use "hours" to track time on your tasks, or view logs, reports, and
-summary statistics for your tracked time.
-`,
-		SilenceUsage: true,
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			if cmd.CalledAs() == "updates" {
-				return nil
-			}
-
-			dbPathFull = expandTilde(dbPath, userHomeDir)
-			if filepath.Ext(dbPathFull) != ".db" {
-				return errDBFileExtIncorrect
-			}
-
-			var err error
-			db, err = setupDB(dbPathFull)
-			switch {
-			case errors.Is(err, errCouldntCreateDB):
-				fmt.Fprintf(os.Stderr, `Couldn't create hours' local database.
+		var err error
+		db, err = setupDB(dbPathFull)
+		switch {
+		case errors.Is(err, errCouldntCreateDB):
+			fmt.Fprintf(os.Stderr, `Couldn't create hours' local database.
 %s
 
 `, msgReportIssue)
-			case errors.Is(err, errCouldntInitializeDB):
-				fmt.Fprintf(os.Stderr, `Couldn't initialise hours' local database.
+		case errors.Is(err, errCouldntInitializeDB):
+			fmt.Fprintf(os.Stderr, `Couldn't initialise hours' local database.
 %s
 
 `, msgReportIssue)
-				// cleanup
-				cleanupErr := os.Remove(dbPathFull)
-				if cleanupErr != nil {
-					fmt.Fprintf(os.Stderr, `Failed to remove hours' database file as well (at %s). Remove it manually.
+			// cleanup
+			cleanupErr := os.Remove(dbPathFull)
+			if cleanupErr != nil {
+				fmt.Fprintf(os.Stderr, `Failed to remove hours' database file as well (at %s). Remove it manually.
 Clean up error: %s
 
 `, dbPathFull, cleanupErr.Error())
-				}
-			case errors.Is(err, errCouldntOpenDB):
-				fmt.Fprintf(os.Stderr, `Couldn't open hours' local database.
+			}
+		case errors.Is(err, errCouldntOpenDB):
+			fmt.Fprintf(os.Stderr, `Couldn't open hours' local database.
 %s
 
 `, msgReportIssue)
-			case errors.Is(err, pers.ErrCouldntFetchDBVersion):
-				fmt.Fprintf(os.Stderr, `Couldn't get hours' latest database version.
+		case errors.Is(err, pers.ErrCouldntFetchDBVersion):
+			fmt.Fprintf(os.Stderr, `Couldn't get hours' latest database version.
 %s
 
 `, msgReportIssue)
-			case errors.Is(err, pers.ErrDBDowngraded):
-				fmt.Fprintf(os.Stderr, `Looks like you downgraded hours. You should either delete hours' database file (you
+		case errors.Is(err, pers.ErrDBDowngraded):
+			fmt.Fprintf(os.Stderr, `Looks like you downgraded hours. You should either delete hours' database file (you
 will lose data by doing that), or upgrade hours to the latest version.
 
 `)
-			case errors.Is(err, pers.ErrDBMigrationFailed):
-				fmt.Fprintf(os.Stderr, `Something went wrong migrating hours' database.
+		case errors.Is(err, pers.ErrDBMigrationFailed):
+			fmt.Fprintf(os.Stderr, `Something went wrong migrating hours' database.
 
 You can try running hours by passing it a custom database file path (using
 --db-path; this will create a new database) to see if that fixes things. If that
@@ -210,18 +212,36 @@ Sorry for breaking the upgrade step!
 ---
 
 `, msgReportIssue)
-			}
+		}
 
-			if err != nil {
-				return err
-			}
+		if err != nil {
+			return err
+		}
 
-			if style, err = setupTheme(userHomeDir, themeName); err != nil {
-				return err
+		if !cmd.Flags().Changed("theme") {
+			themeFromEnv := strings.TrimSpace(os.Getenv(themeEnvVar))
+			if themeFromEnv != "" {
+				themeName = themeFromEnv
 			}
+		}
 
-			return nil
-		},
+		if style, err = getTheme(themesDir, themeName); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	rootCmd := &cobra.Command{
+		Use:   "hours",
+		Short: "\"hours\" is a no-frills time tracking toolkit for the command line",
+		Long: `"hours" is a no-frills time tracking toolkit for the command line.
+
+You can use "hours" to track time on your tasks, or view logs, reports, and
+summary statistics for your tracked time.
+`,
+		SilenceUsage: true,
+		PreRunE:      preRun,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return ui.RenderUI(db, style)
 		},
@@ -235,6 +255,7 @@ This is intended for new users of 'hours' so they can get a sense of its
 capabilities without actually tracking any time. It's recommended to always use
 this with a --dbpath/-d flag that points to a throwaway database.
 `,
+		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			if genNumDays > numDaysThreshold {
 				return fmt.Errorf("%w (%d)", errNumDaysExceedsThreshold, numDaysThreshold)
@@ -244,7 +265,7 @@ this with a --dbpath/-d flag that points to a throwaway database.
 			}
 
 			if !genSkipConfirmation {
-				fmt.Print(style.Warning.Render(`
+				fmt.Print(lipgloss.NewStyle().Foreground(lipgloss.Color(warningColor)).Render(`
 WARNING: You shouldn't run 'gen' on hours' actively used database as it'll
 create dummy entries in it. You can run it on a throwaway database by passing a
 path for it via --dbpath/-d (use it for all further invocations of 'hours' as
@@ -308,7 +329,8 @@ Accepts an argument, which can be one of the following:
 Note: If a task log continues past midnight in your local timezone, it
 will be reported on the day it ends.
 `,
-		Args: cobra.MaximumNArgs(1),
+		Args:    cobra.MaximumNArgs(1),
+		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, args []string) error {
 			var period string
 			if len(args) == 0 {
@@ -338,7 +360,8 @@ Accepts an argument, which can be one of the following:
 Note: If a task log continues past midnight in your local timezone, it'll
 appear in the log for the day it ends.
 `,
-		Args: cobra.MaximumNArgs(1),
+		Args:    cobra.MaximumNArgs(1),
+		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, args []string) error {
 			var period string
 			if len(args) == 0 {
@@ -369,7 +392,8 @@ Accepts an argument, which can be one of the following:
 Note: If a task log continues past midnight in your local timezone, it'll
 be considered in the stats for the day it ends.
 `,
-		Args: cobra.MaximumNArgs(1),
+		Args:    cobra.MaximumNArgs(1),
+		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, args []string) error {
 			var period string
 			if len(args) == 0 {
@@ -379,6 +403,87 @@ be considered in the stats for the day it ends.
 			}
 
 			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, period, recordsInteractive)
+		},
+	}
+
+	themesCmd := &cobra.Command{
+		Use:   "themes",
+		Short: "Generate or view hours' themes",
+	}
+
+	addThemeCmd := &cobra.Command{
+		Use:   "add <THEME_NAME>",
+		Short: "Add a UI theme for hours",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(_ *cobra.Command, args []string) error {
+			themeToCreate := args[0]
+			themePath := filepath.Join(themesDir, fmt.Sprintf("%s.json", themeToCreate))
+			fileInfo, err := os.Stat(themePath)
+			if err == nil && !fileInfo.IsDir() {
+				return fmt.Errorf("%w (at %q)", errThemeAlreadyExists, themePath)
+			} else if !errors.Is(err, fs.ErrNotExist) {
+				return errCouldntCheckIfThemeExists
+			}
+
+			themeFilePath, err := addTheme(themeToCreate, themesDir)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf(`Theme file with default values created at: %s
+
+You can edit it as per your liking.
+`, themeFilePath)
+
+			return nil
+		},
+	}
+
+	listThemesCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List themes set up for hours",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			var themes []string
+			walkErr := filepath.Walk(themesDir, func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					if errors.Is(err, fs.ErrNotExist) {
+						return nil
+					}
+
+					return err
+				}
+				ext := filepath.Ext(path)
+				if !info.IsDir() && ext == ".json" {
+					base := filepath.Base(path)
+					themes = append(themes, strings.TrimSuffix(base, ext))
+				}
+				return nil
+			})
+
+			if walkErr != nil {
+				return fmt.Errorf("%w: %s", errCouldntListThemes, walkErr.Error())
+			}
+
+			if len(themes) == 0 {
+				fmt.Println("no themes configured (run \"hours theme add\" to add one)")
+				return nil
+			}
+
+			fmt.Printf("%s\n", strings.Join(themes, "\n"))
+			return nil
+		},
+	}
+
+	sampleThemeCmd := &cobra.Command{
+		Use:   "show-sample",
+		Short: "Show a sample theme config",
+		Run: func(_ *cobra.Command, _ []string) {
+			fmt.Printf(`A sample theme config looks like the following.
+You can choose to provide only the attributes you want to change.
+
+%s
+`,
+				sampleThemeConfig)
 		},
 	}
 
@@ -395,37 +500,66 @@ following placeholders:
 
 eg. hours active -t ' {{task}} ({{time}}) '
 `,
+		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return ui.ShowActiveTask(db, os.Stdout, activeTemplate)
 		},
 	}
 
+	var err error
+	userHomeDir, err = os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", errCouldntGetHomeDir, err.Error())
+	}
+
+	userConfigDir, err = os.UserConfigDir()
+	if err != nil {
+		return nil, fmt.Errorf("%w: %s", errCouldntGetConfigDir, err.Error())
+	}
+
+	themesDir = filepath.Join(userConfigDir, configDirName, themeDirName)
+
 	defaultDBPath := filepath.Join(userHomeDir, defaultDBName)
-	rootCmd.PersistentFlags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
-	rootCmd.PersistentFlags().StringVarP(&themeName, "theme", "T", os.Getenv(envTheme),
-		fmt.Sprintf("UI theme to use instead of default;\nuse environment variable %s to override default", envTheme))
+	rootCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
+	rootCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName, "UI theme to use")
 
 	generateCmd.Flags().Uint8Var(&genNumDays, "num-days", 30, "number of days to generate fake data for")
 	generateCmd.Flags().Uint8Var(&genNumTasks, "num-tasks", 10, "number of tasks to generate fake data for")
 	generateCmd.Flags().BoolVarP(&genSkipConfirmation, "yes", "y", false, "to skip confirmation")
+	generateCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 
 	reportCmd.Flags().BoolVarP(&reportAgg, "agg", "a", false, "whether to aggregate data by task for each day in report")
 	reportCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view report interactively")
 	reportCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output report without any formatting")
+	reportCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
+	reportCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
+		fmt.Sprintf("UI theme to use; themes live in %s", themesDir))
 
 	logCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output logs without any formatting")
 	logCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view logs interactively")
+	logCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
+	logCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
+		fmt.Sprintf("UI theme to use; themes live in %s", themesDir))
 
 	statsCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output stats without any formatting")
 	statsCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view stats interactively")
+	statsCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
+	statsCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
+		fmt.Sprintf("UI theme to use; themes live in %s", themesDir))
 
 	activeCmd.Flags().StringVarP(&activeTemplate, "template", "t", ui.ActiveTaskPlaceholder, "string template to use for outputting active task")
+	activeCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
+
+	themesCmd.AddCommand(addThemeCmd)
+	themesCmd.AddCommand(listThemesCmd)
+	themesCmd.AddCommand(sampleThemeCmd)
 
 	rootCmd.AddCommand(generateCmd)
 	rootCmd.AddCommand(reportCmd)
 	rootCmd.AddCommand(logCmd)
 	rootCmd.AddCommand(statsCmd)
 	rootCmd.AddCommand(activeCmd)
+	rootCmd.AddCommand(themesCmd)
 
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
 

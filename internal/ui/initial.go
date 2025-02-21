@@ -16,7 +16,7 @@ const (
 	textInputWidth       = 80
 )
 
-func InitialModel(db *sql.DB, style *Style) Model {
+func InitialModel(db *sql.DB, style Style) Model {
 	var activeTaskItems []list.Item
 	var inactiveTaskItems []list.Item
 	var tasklogListItems []list.Item
@@ -50,28 +50,40 @@ This can be used to record details about your work on this task.`
 	taskInputs[entryBeginTS].Width = textInputWidth
 
 	m := Model{
-		db:                db,
-		style:             style,
-		activeTasksList:   list.New(activeTaskItems, newItemDelegate(lipgloss.Color(style.theme.ActiveTaskList)), listWidth, 0),
-		inactiveTasksList: list.New(inactiveTaskItems, newItemDelegate(lipgloss.Color(style.theme.InactiveTaskList)), listWidth, 0),
-		taskMap:           make(map[int]*types.Task),
-		taskIndexMap:      make(map[int]int),
-		taskLogList:       list.New(tasklogListItems, newItemDelegate(lipgloss.Color(style.theme.TaskLogList)), listWidth, 0),
+		db:    db,
+		style: style,
+		activeTasks: list.New(activeTaskItems,
+			newItemDelegate(style.listItemTitleColor,
+				style.listItemDescColor,
+				lipgloss.Color(style.theme.ActiveTasks),
+			), listWidth, 0),
+		inactiveTasks: list.New(inactiveTaskItems,
+			newItemDelegate(style.listItemTitleColor,
+				style.listItemDescColor,
+				lipgloss.Color(style.theme.InactiveTasks),
+			), listWidth, 0),
+		taskMap:      make(map[int]*types.Task),
+		taskIndexMap: make(map[int]int),
+		taskLogList: list.New(tasklogListItems,
+			newItemDelegate(style.listItemTitleColor,
+				style.listItemDescColor,
+				lipgloss.Color(style.theme.TaskLogList),
+			), listWidth, 0),
 		showHelpIndicator: true,
 		tLInputs:          tLInputs,
 		tLCommentInput:    tLCommentInput,
 		taskInputs:        taskInputs,
 	}
-	m.activeTasksList.Title = "Tasks"
-	m.activeTasksList.SetStatusBarItemName("task", "tasks")
-	m.activeTasksList.DisableQuitKeybindings()
-	m.activeTasksList.SetShowHelp(false)
-	m.activeTasksList.Styles.Title = m.activeTasksList.Styles.Title.
-		Foreground(lipgloss.Color(style.theme.DefaultBackground)).
-		Background(lipgloss.Color(style.theme.ActiveTaskList)).
+	m.activeTasks.Title = "Tasks"
+	m.activeTasks.SetStatusBarItemName("task", "tasks")
+	m.activeTasks.DisableQuitKeybindings()
+	m.activeTasks.SetShowHelp(false)
+	m.activeTasks.Styles.Title = m.activeTasks.Styles.Title.
+		Foreground(lipgloss.Color(style.theme.TitleForeground)).
+		Background(lipgloss.Color(style.theme.ActiveTasks)).
 		Bold(true)
-	m.activeTasksList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
-	m.activeTasksList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
+	m.activeTasks.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
+	m.activeTasks.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
 	m.taskLogList.Title = "Task Logs (last 50)"
 	m.taskLogList.SetStatusBarItemName("entry", "entries")
@@ -79,27 +91,27 @@ This can be used to record details about your work on this task.`
 	m.taskLogList.DisableQuitKeybindings()
 	m.taskLogList.SetShowHelp(false)
 	m.taskLogList.Styles.Title = m.taskLogList.Styles.Title.
-		Foreground(lipgloss.Color(style.theme.DefaultBackground)).
+		Foreground(lipgloss.Color(style.theme.TitleForeground)).
 		Background(lipgloss.Color(style.theme.TaskLogList)).
 		Bold(true)
 	m.taskLogList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
 	m.taskLogList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
-	m.inactiveTasksList.Title = "Inactive Tasks"
-	m.inactiveTasksList.SetStatusBarItemName("task", "tasks")
-	m.inactiveTasksList.DisableQuitKeybindings()
-	m.inactiveTasksList.SetShowHelp(false)
-	m.inactiveTasksList.Styles.Title = m.inactiveTasksList.Styles.Title.
-		Foreground(lipgloss.Color(style.theme.DefaultBackground)).
-		Background(lipgloss.Color(style.theme.InactiveTaskList)).
+	m.inactiveTasks.Title = "Inactive Tasks"
+	m.inactiveTasks.SetStatusBarItemName("task", "tasks")
+	m.inactiveTasks.DisableQuitKeybindings()
+	m.inactiveTasks.SetShowHelp(false)
+	m.inactiveTasks.Styles.Title = m.inactiveTasks.Styles.Title.
+		Foreground(lipgloss.Color(style.theme.TitleForeground)).
+		Background(lipgloss.Color(style.theme.InactiveTasks)).
 		Bold(true)
-	m.inactiveTasksList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
-	m.inactiveTasksList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
+	m.inactiveTasks.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
+	m.inactiveTasks.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
 	return m
 }
 
-func initialRecordsModel(typ recordsType, db *sql.DB, style *Style, start, end time.Time, plain bool, period string, numDays int, initialData string) recordsModel {
+func initialRecordsModel(typ recordsType, db *sql.DB, style Style, start, end time.Time, plain bool, period string, numDays int, initialData string) recordsModel {
 	return recordsModel{
 		typ:     typ,
 		db:      db,

@@ -25,7 +25,7 @@ const (
 	taskListView stateView = iota
 	taskLogView
 	taskLogDetailsView
-	inactiveTaskListView
+	inactiveTasksView
 	editActiveTLView
 	finishActiveTLView
 	manualTasklogEntryView
@@ -85,9 +85,9 @@ type Model struct {
 	lastView                       stateView
 	lastViewBeforeInsufficientDims stateView
 	db                             *sql.DB
-	style                          *Style
-	activeTasksList                list.Model
-	inactiveTasksList              list.Model
+	style                          Style
+	activeTasks                    list.Model
+	inactiveTasks                  list.Model
 	taskMap                        map[int]*types.Task
 	taskIndexMap                   map[int]int
 	activeTLBeginTS                time.Time
@@ -134,7 +134,7 @@ func (m Model) Init() tea.Cmd {
 
 type recordsModel struct {
 	db       *sql.DB
-	style    *Style
+	style    Style
 	typ      recordsType
 	start    time.Time
 	end      time.Time

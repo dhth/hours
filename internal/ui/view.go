@@ -68,7 +68,7 @@ func (m Model) View() string {
 
 	switch m.activeView {
 	case taskListView:
-		content = m.style.list.Render(m.activeTasksList.View())
+		content = m.style.list.Render(m.activeTasks.View())
 	case taskLogView:
 		content = m.style.list.Render(m.taskLogList.View())
 	case taskLogDetailsView:
@@ -76,10 +76,10 @@ func (m Model) View() string {
 			content = "\n  Initializing..."
 		} else {
 			content = m.style.viewPort.Render(fmt.Sprintf("%s\n\n%s",
-				m.style.tLDetailsViewTitle.Render("Task Log Details"), m.tLDetailsVP.View()))
+				m.style.taskLogDetails.Render("Task Log Details"), m.tLDetailsVP.View()))
 		}
-	case inactiveTaskListView:
-		content = m.style.list.Render(m.inactiveTasksList.View())
+	case inactiveTasksView:
+		content = m.style.list.Render(m.inactiveTasks.View())
 	case taskInputView:
 		var formTitle string
 		switch m.taskMgmtContext {
@@ -228,7 +228,7 @@ func (m Model) View() string {
 		} else {
 			content = m.style.viewPort.Render(fmt.Sprintf("%s  %s\n\n%s\n",
 				m.style.helpTitle.Render("Help"),
-				m.style.helpSection.Render("(scroll with j/k/↓/↑)"),
+				m.style.helpSecondary.Render("(scroll with j/k/↓/↑)"),
 				m.helpVP.View()))
 		}
 	case insufficientDimensionsView:
@@ -246,8 +246,8 @@ func (m Model) View() string {
 	var helpMsg string
 	if m.showHelpIndicator {
 		// first time directions
-		if m.activeView == taskListView && len(m.activeTasksList.Items()) <= 1 {
-			if len(m.activeTasksList.Items()) == 0 {
+		if m.activeView == taskListView && len(m.activeTasks.Items()) <= 1 {
+			if len(m.activeTasks.Items()) == 0 {
 				helpMsg += " " + m.style.initialHelpMsg.Render("Press a to add a task")
 			} else if len(m.taskLogList.Items()) == 0 {
 				if m.trackingActive {

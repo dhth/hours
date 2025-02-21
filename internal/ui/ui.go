@@ -11,7 +11,7 @@ import (
 
 var errFailedToConfigureDebugging = errors.New("failed to configure debugging")
 
-func RenderUI(db *sql.DB, style *Style) error {
+func RenderUI(db *sql.DB, style Style) error {
 	if len(os.Getenv("DEBUG")) > 0 {
 		f, err := tea.LogToFile("debug.log", "debug")
 		if err != nil {

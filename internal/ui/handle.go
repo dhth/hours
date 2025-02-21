@@ -33,7 +33,7 @@ func (m *Model) getCmdToCreateOrUpdateTask() tea.Cmd {
 		cmd = createTask(m.db, m.taskInputs[summaryField].Value())
 		m.taskInputs[summaryField].SetValue("")
 	case taskUpdateCxt:
-		selectedTask, ok := m.activeTasksList.SelectedItem().(*types.Task)
+		selectedTask, ok := m.activeTasks.SelectedItem().(*types.Task)
 		if !ok {
 			m.message = "Something went wrong"
 			return nil
@@ -159,7 +159,7 @@ func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
 	switch m.tasklogSaveType {
 	case tasklogInsert:
 		m.activeView = taskListView
-		task, ok := m.activeTasksList.SelectedItem().(*types.Task)
+		task, ok := m.activeTasks.SelectedItem().(*types.Task)
 		if !ok {
 			m.message = genericErrorMsg
 			return nil
@@ -209,8 +209,8 @@ func (m *Model) goForwardInView() {
 	case taskListView:
 		m.activeView = taskLogView
 	case taskLogView:
-		m.activeView = inactiveTaskListView
-	case inactiveTaskListView:
+		m.activeView = inactiveTasksView
+	case inactiveTasksView:
 		m.activeView = taskListView
 	case editActiveTLView:
 		switch m.trackingFocussedField {
@@ -246,8 +246,8 @@ func (m *Model) goBackwardInView() {
 	case taskLogView:
 		m.activeView = taskListView
 	case taskListView:
-		m.activeView = inactiveTaskListView
-	case inactiveTaskListView:
+		m.activeView = inactiveTasksView
+	case inactiveTasksView:
 		m.activeView = taskLogView
 	case editActiveTLView:
 		switch m.trackingFocussedField {
@@ -298,9 +298,9 @@ func (m *Model) handleRequestToGoBackOrQuit() bool {
 	var shouldQuit bool
 	switch m.activeView {
 	case taskListView:
-		fs := m.activeTasksList.FilterState()
+		fs := m.activeTasks.FilterState()
 		if fs == list.Filtering || fs == list.FilterApplied {
-			m.activeTasksList.ResetFilter()
+			m.activeTasks.ResetFilter()
 		} else {
 			shouldQuit = true
 		}
@@ -313,10 +313,10 @@ func (m *Model) handleRequestToGoBackOrQuit() bool {
 		}
 	case taskLogDetailsView:
 		m.activeView = taskLogView
-	case inactiveTaskListView:
-		fs := m.inactiveTasksList.FilterState()
+	case inactiveTasksView:
+		fs := m.inactiveTasks.FilterState()
 		if fs == list.Filtering || fs == list.FilterApplied {
-			m.inactiveTasksList.ResetFilter()
+			m.inactiveTasks.ResetFilter()
 		} else {
 			m.activeView = taskListView
 		}
@@ -335,9 +335,9 @@ func (m *Model) getCmdToReloadData() tea.Cmd {
 	case taskLogView:
 		cmd = fetchTLS(m.db, nil)
 		m.taskLogList.ResetSelected()
-	case inactiveTaskListView:
+	case inactiveTasksView:
 		cmd = fetchTasks(m.db, false)
-		m.inactiveTasksList.ResetSelected()
+		m.inactiveTasks.ResetSelected()
 	}
 
 	return cmd
@@ -353,8 +353,8 @@ func (m *Model) goToActiveTask() {
 		return
 	}
 
-	if m.activeTasksList.IsFiltered() {
-		m.activeTasksList.ResetFilter()
+	if m.activeTasks.IsFiltered() {
+		m.activeTasks.ResetFilter()
 	}
 	activeIndex, ok := m.taskIndexMap[m.activeTaskID]
 	if !ok {
@@ -362,7 +362,7 @@ func (m *Model) goToActiveTask() {
 		return
 	}
 
-	m.activeTasksList.Select(activeIndex)
+	m.activeTasks.Select(activeIndex)
 }
 
 func (m *Model) handleRequestToEditActiveTL() {
@@ -425,7 +425,7 @@ func (m *Model) handleRequestToEditSavedTL() {
 }
 
 func (m *Model) getCmdToDeactivateTask() tea.Cmd {
-	if m.activeTasksList.IsFiltered() {
+	if m.activeTasks.IsFiltered() {
 		m.message = removeFilterMsg
 		return nil
 	}
@@ -435,7 +435,7 @@ func (m *Model) getCmdToDeactivateTask() tea.Cmd {
 		return nil
 	}
 
-	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
+	task, ok := m.activeTasks.SelectedItem().(*types.Task)
 	if !ok {
 		m.message = msgCouldntSelectATask
 		return nil
@@ -454,12 +454,12 @@ func (m *Model) getCmdToDeleteTL() tea.Cmd {
 }
 
 func (m *Model) getCmdToActivateDeactivatedTask() tea.Cmd {
-	if m.inactiveTasksList.IsFiltered() {
+	if m.inactiveTasks.IsFiltered() {
 		m.message = removeFilterMsg
 		return nil
 	}
 
-	task, ok := m.inactiveTasksList.SelectedItem().(*types.Task)
+	task, ok := m.inactiveTasks.SelectedItem().(*types.Task)
 	if !ok {
 		m.message = genericErrorMsg
 		return nil
@@ -469,7 +469,7 @@ func (m *Model) getCmdToActivateDeactivatedTask() tea.Cmd {
 }
 
 func (m *Model) getCmdToStartTracking() tea.Cmd {
-	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
+	task, ok := m.activeTasks.SelectedItem().(*types.Task)
 	if !ok {
 		m.message = genericErrorMsg
 		return nil
@@ -499,7 +499,7 @@ func (m *Model) handleRequestToStopTracking() {
 }
 
 func (m *Model) getCmdToQuickSwitchTracking() tea.Cmd {
-	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
+	task, ok := m.activeTasks.SelectedItem().(*types.Task)
 	if !ok {
 		m.message = genericErrorMsg
 		return nil
@@ -524,7 +524,7 @@ func (m *Model) getCmdToQuickSwitchTracking() tea.Cmd {
 }
 
 func (m *Model) handleRequestToCreateTask() {
-	if m.activeTasksList.IsFiltered() {
+	if m.activeTasks.IsFiltered() {
 		m.message = removeFilterMsg
 		return
 	}
@@ -536,12 +536,12 @@ func (m *Model) handleRequestToCreateTask() {
 }
 
 func (m *Model) handleRequestToUpdateTask() {
-	if m.activeTasksList.IsFiltered() {
+	if m.activeTasks.IsFiltered() {
 		m.message = removeFilterMsg
 		return
 	}
 
-	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
+	task, ok := m.activeTasks.SelectedItem().(*types.Task)
 	if !ok {
 		m.message = genericErrorMsg
 		return
@@ -645,11 +645,11 @@ func (m *Model) handleWindowResizing(msg tea.WindowSizeMsg) {
 	m.taskLogList.SetWidth(msg.Width - w)
 	m.taskLogList.SetHeight(msg.Height - h - 2)
 
-	m.activeTasksList.SetWidth(msg.Width - w)
-	m.activeTasksList.SetHeight(msg.Height - h - 2)
+	m.activeTasks.SetWidth(msg.Width - w)
+	m.activeTasks.SetHeight(msg.Height - h - 2)
 
-	m.inactiveTasksList.SetWidth(msg.Width - w)
-	m.inactiveTasksList.SetHeight(msg.Height - h - 2)
+	m.inactiveTasks.SetWidth(msg.Width - w)
+	m.inactiveTasks.SetHeight(msg.Height - h - 2)
 
 	if !m.helpVPReady {
 		m.helpVP = viewport.New(msg.Width-4, m.terminalHeight-7)
@@ -692,8 +692,8 @@ func (m *Model) handleTasksFetchedMsg(msg tasksFetchedMsg) tea.Cmd {
 			m.taskMap[task.ID] = &task
 			m.taskIndexMap[task.ID] = i
 		}
-		m.activeTasksList.SetItems(tasks)
-		m.activeTasksList.Title = "Tasks"
+		m.activeTasks.SetItems(tasks)
+		m.activeTasks.Title = "Tasks"
 		m.tasksFetched = true
 		cmd = fetchActiveTask(m.db)
 
@@ -704,7 +704,7 @@ func (m *Model) handleTasksFetchedMsg(msg tasksFetchedMsg) tea.Cmd {
 			inactiveTask.UpdateListDesc()
 			inactiveTasks[i] = &inactiveTask
 		}
-		m.inactiveTasksList.SetItems(inactiveTasks)
+		m.inactiveTasks.SetItems(inactiveTasks)
 	}
 
 	return cmd
@@ -795,7 +795,7 @@ func (m *Model) handleActiveTaskFetchedMsg(msg activeTaskFetchedMsg) {
 		// go to tracked item on startup
 		activeIndex, aOk := m.taskIndexMap[msg.activeTask.TaskID]
 		if aOk {
-			m.activeTasksList.Select(activeIndex)
+			m.activeTasks.Select(activeIndex)
 		}
 	}
 	m.trackingActive = true

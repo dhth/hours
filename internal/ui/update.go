@@ -40,8 +40,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.activeView == insufficientDimensionsView {
 			return m, tea.Batch(cmds...)
 		}
-		if m.activeTasksList.FilterState() == list.Filtering {
-			m.activeTasksList, cmd = m.activeTasksList.Update(msg)
+		if m.activeTasks.FilterState() == list.Filtering {
+			m.activeTasks, cmd = m.activeTasks.Update(msg)
 			cmds = append(cmds, cmd)
 			return m, tea.Batch(cmds...)
 		}
@@ -178,8 +178,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.activeView = taskLogView
 			}
 		case "3":
-			if m.activeView != inactiveTaskListView {
-				m.activeView = inactiveTaskListView
+			if m.activeView != inactiveTasksView {
+				m.activeView = inactiveTasksView
 			}
 		case "ctrl+r":
 			reloadCmd := m.getCmdToReloadData()
@@ -214,7 +214,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				handleCmd = m.getCmdToDeactivateTask()
 			case taskLogView:
 				handleCmd = m.getCmdToDeleteTL()
-			case inactiveTaskListView:
+			case inactiveTasksView:
 				handleCmd = m.getCmdToActivateDeactivatedTask()
 			}
 			if handleCmd != nil {
@@ -335,13 +335,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch m.activeView {
 	case taskListView:
-		m.activeTasksList, cmd = m.activeTasksList.Update(msg)
+		m.activeTasks, cmd = m.activeTasks.Update(msg)
 		cmds = append(cmds, cmd)
 	case taskLogView:
 		m.taskLogList, cmd = m.taskLogList.Update(msg)
 		cmds = append(cmds, cmd)
-	case inactiveTaskListView:
-		m.inactiveTasksList, cmd = m.inactiveTasksList.Update(msg)
+	case inactiveTasksView:
+		m.inactiveTasks, cmd = m.inactiveTasks.Update(msg)
 		cmds = append(cmds, cmd)
 	case helpView:
 		m.helpVP, cmd = m.helpVP.Update(msg)
@@ -430,12 +430,12 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = msg.err
 			m.quitting = true
 			return m, tea.Quit
-		} else {
-			m.start = msg.start
-			m.end = msg.end
-			m.report = msg.report
-			m.busy = false
 		}
+
+		m.start = msg.start
+		m.end = msg.end
+		m.report = msg.report
+		m.busy = false
 	}
 	return m, tea.Batch(cmds...)
 }

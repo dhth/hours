@@ -27,7 +27,7 @@ var (
 	errCouldntGenerateLogs          = errors.New("couldn't generate logs")
 )
 
-func RenderTaskLog(db *sql.DB, style *Style, writer io.Writer, plain bool, period string, interactive bool) error {
+func RenderTaskLog(db *sql.DB, style Style, writer io.Writer, plain bool, period string, interactive bool) error {
 	if period == "" {
 		return nil
 	}
@@ -58,7 +58,7 @@ func RenderTaskLog(db *sql.DB, style *Style, writer io.Writer, plain bool, perio
 	return nil
 }
 
-func getTaskLog(db *sql.DB, style *Style, start, end time.Time, limit int, plain bool) (string, error) {
+func getTaskLog(db *sql.DB, style Style, start, end time.Time, limit int, plain bool) (string, error) {
 	entries, err := pers.FetchTLEntriesBetweenTS(db, start, end, limit)
 	if err != nil {
 		return "", err

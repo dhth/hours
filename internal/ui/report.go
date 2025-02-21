@@ -22,7 +22,7 @@ const (
 	reportTimeCharsBudget = 6
 )
 
-func RenderReport(db *sql.DB, style *Style, writer io.Writer, plain bool, period string, agg bool, interactive bool) error {
+func RenderReport(db *sql.DB, style Style, writer io.Writer, plain bool, period string, agg bool, interactive bool) error {
 	if period == "" {
 		return nil
 	}
@@ -62,7 +62,7 @@ func RenderReport(db *sql.DB, style *Style, writer io.Writer, plain bool, period
 	return nil
 }
 
-func getReport(db *sql.DB, style *Style, start time.Time, numDays int, plain bool) (string, error) {
+func getReport(db *sql.DB, style Style, start time.Time, numDays int, plain bool) (string, error) {
 	day := start
 	var nextDay time.Time
 
@@ -195,7 +195,7 @@ func getReport(db *sql.DB, style *Style, start time.Time, numDays int, plain boo
 	return b.String(), nil
 }
 
-func getReportAgg(db *sql.DB, style *Style, start time.Time, numDays int, plain bool) (string, error) {
+func getReportAgg(db *sql.DB, style Style, start time.Time, numDays int, plain bool) (string, error) {
 	day := start
 	var nextDay time.Time
 

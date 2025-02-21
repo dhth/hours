@@ -25,7 +25,7 @@ const (
 	periodAll              = "all"
 )
 
-func RenderStats(db *sql.DB, style *Style, writer io.Writer, plain bool, period string, interactive bool) error {
+func RenderStats(db *sql.DB, style Style, writer io.Writer, plain bool, period string, interactive bool) error {
 	if period == "" {
 		return nil
 	}
@@ -73,7 +73,7 @@ func RenderStats(db *sql.DB, style *Style, writer io.Writer, plain bool, period 
 	return nil
 }
 
-func getStats(db *sql.DB, style *Style, period string, start, end time.Time, plain bool) (string, error) {
+func getStats(db *sql.DB, style Style, period string, start, end time.Time, plain bool) (string, error) {
 	var entries []types.TaskReportEntry
 	var err error
 
