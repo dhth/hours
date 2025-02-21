@@ -25,7 +25,7 @@ const (
 	taskListView stateView = iota
 	taskLogView
 	taskLogDetailsView
-	inactiveTasksView
+	inactiveTaskListView
 	editActiveTLView
 	finishActiveTLView
 	manualTasklogEntryView
@@ -86,8 +86,8 @@ type Model struct {
 	lastViewBeforeInsufficientDims stateView
 	db                             *sql.DB
 	style                          Style
-	activeTasks                    list.Model
-	inactiveTasks                  list.Model
+	activeTasksList                list.Model
+	inactiveTasksList              list.Model
 	taskMap                        map[int]*types.Task
 	taskIndexMap                   map[int]int
 	activeTLBeginTS                time.Time

@@ -52,12 +52,12 @@ This can be used to record details about your work on this task.`
 	m := Model{
 		db:    db,
 		style: style,
-		activeTasks: list.New(activeTaskItems,
+		activeTasksList: list.New(activeTaskItems,
 			newItemDelegate(style.listItemTitleColor,
 				style.listItemDescColor,
 				lipgloss.Color(style.theme.ActiveTasks),
 			), listWidth, 0),
-		inactiveTasks: list.New(inactiveTaskItems,
+		inactiveTasksList: list.New(inactiveTaskItems,
 			newItemDelegate(style.listItemTitleColor,
 				style.listItemDescColor,
 				lipgloss.Color(style.theme.InactiveTasks),
@@ -74,16 +74,16 @@ This can be used to record details about your work on this task.`
 		tLCommentInput:    tLCommentInput,
 		taskInputs:        taskInputs,
 	}
-	m.activeTasks.Title = "Tasks"
-	m.activeTasks.SetStatusBarItemName("task", "tasks")
-	m.activeTasks.DisableQuitKeybindings()
-	m.activeTasks.SetShowHelp(false)
-	m.activeTasks.Styles.Title = m.activeTasks.Styles.Title.
+	m.activeTasksList.Title = "Tasks"
+	m.activeTasksList.SetStatusBarItemName("task", "tasks")
+	m.activeTasksList.DisableQuitKeybindings()
+	m.activeTasksList.SetShowHelp(false)
+	m.activeTasksList.Styles.Title = m.activeTasksList.Styles.Title.
 		Foreground(lipgloss.Color(style.theme.TitleForeground)).
 		Background(lipgloss.Color(style.theme.ActiveTasks)).
 		Bold(true)
-	m.activeTasks.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
-	m.activeTasks.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
+	m.activeTasksList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
+	m.activeTasksList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
 	m.taskLogList.Title = "Task Logs (last 50)"
 	m.taskLogList.SetStatusBarItemName("entry", "entries")
@@ -97,16 +97,16 @@ This can be used to record details about your work on this task.`
 	m.taskLogList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
 	m.taskLogList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
-	m.inactiveTasks.Title = "Inactive Tasks"
-	m.inactiveTasks.SetStatusBarItemName("task", "tasks")
-	m.inactiveTasks.DisableQuitKeybindings()
-	m.inactiveTasks.SetShowHelp(false)
-	m.inactiveTasks.Styles.Title = m.inactiveTasks.Styles.Title.
+	m.inactiveTasksList.Title = "Inactive Tasks"
+	m.inactiveTasksList.SetStatusBarItemName("task", "tasks")
+	m.inactiveTasksList.DisableQuitKeybindings()
+	m.inactiveTasksList.SetShowHelp(false)
+	m.inactiveTasksList.Styles.Title = m.inactiveTasksList.Styles.Title.
 		Foreground(lipgloss.Color(style.theme.TitleForeground)).
 		Background(lipgloss.Color(style.theme.InactiveTasks)).
 		Bold(true)
-	m.inactiveTasks.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
-	m.inactiveTasks.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
+	m.inactiveTasksList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
+	m.inactiveTasksList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
 	return m
 }
