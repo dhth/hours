@@ -194,8 +194,9 @@ output of the `logs`, `report`, and `stats` commands. New themes can be added
 using `hours themes add`, which will create a JSON file in `hours`' config
 directory. You can then tweak this file as per your liking.
 
-A sample theme file looks like the following. You can choose to provide only the
-attributes you want to change.
+A sample theme config looks like the following. Colors codes can be provided in
+ANSI 16, ANSI 256, or HEX formats. You can choose to provide only the attributes
+you want to change.
 
 ```text
 {

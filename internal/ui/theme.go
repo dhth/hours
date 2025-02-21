@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
+	"strings"
 )
 
 var (
 	errThemeFileIsInvalidJSON    = errors.New("theme file is not valid JSON")
 	ErrThemeFileHasInvalidSchema = errors.New("theme file's schema is incorrect")
-	errThemeDataIsInvalid        = errors.New("theme data is invalid")
+	ErrThemeColorsAreInvalid     = errors.New("invalid colors provided")
 )
 
 var hexCodeRegex = regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`)
@@ -102,98 +104,119 @@ func LoadTheme(themeJSON []byte) (Theme, error) {
 		return theme, ErrThemeFileHasInvalidSchema
 	}
 
-	invalidColors := getInvalidHEXColors(theme)
+	invalidColors := getInvalidColors(theme)
 	if len(invalidColors) > 0 {
-		return theme, fmt.Errorf("%w: invalid HEX colors: %v", errThemeDataIsInvalid, invalidColors)
+		return theme, fmt.Errorf("%w: %q", ErrThemeColorsAreInvalid, invalidColors)
 	}
 
 	return theme, err
 }
 
-func getInvalidHEXColors(theme Theme) []string {
+func getInvalidColors(theme Theme) []string {
 	var invalidColors []string
 
-	if !hexCodeRegex.MatchString(theme.ActiveTask) {
+	if !isValidColor(theme.ActiveTask) {
 		invalidColors = append(invalidColors, "activeTask")
 	}
-	if !hexCodeRegex.MatchString(theme.ActiveTaskBeginTime) {
+	if !isValidColor(theme.ActiveTaskBeginTime) {
 		invalidColors = append(invalidColors, "activeTaskBeginTime")
 	}
-	if !hexCodeRegex.MatchString(theme.ActiveTasks) {
+	if !isValidColor(theme.ActiveTasks) {
 		invalidColors = append(invalidColors, "activeTasks")
 	}
-	if !hexCodeRegex.MatchString(theme.FormContext) {
+	if !isValidColor(theme.FormContext) {
 		invalidColors = append(invalidColors, "formContext")
 	}
-	if !hexCodeRegex.MatchString(theme.FormFieldName) {
+	if !isValidColor(theme.FormFieldName) {
 		invalidColors = append(invalidColors, "formFieldName")
 	}
-	if !hexCodeRegex.MatchString(theme.FormHelp) {
+	if !isValidColor(theme.FormHelp) {
 		invalidColors = append(invalidColors, "formHelp")
 	}
-	if !hexCodeRegex.MatchString(theme.HelpMsg) {
+	if !isValidColor(theme.HelpMsg) {
 		invalidColors = append(invalidColors, "helpMsg")
 	}
-	if !hexCodeRegex.MatchString(theme.HelpPrimary) {
+	if !isValidColor(theme.HelpPrimary) {
 		invalidColors = append(invalidColors, "helpPrimary")
 	}
-	if !hexCodeRegex.MatchString(theme.HelpSecondary) {
+	if !isValidColor(theme.HelpSecondary) {
 		invalidColors = append(invalidColors, "helpSecondary")
 	}
-	if !hexCodeRegex.MatchString(theme.InactiveTasks) {
+	if !isValidColor(theme.InactiveTasks) {
 		invalidColors = append(invalidColors, "inactiveTasks")
 	}
-	if !hexCodeRegex.MatchString(theme.InitialHelpMsg) {
+	if !isValidColor(theme.InitialHelpMsg) {
 		invalidColors = append(invalidColors, "initialHelpMsg")
 	}
-	if !hexCodeRegex.MatchString(theme.ListItemDesc) {
+	if !isValidColor(theme.ListItemDesc) {
 		invalidColors = append(invalidColors, "ListItemDesc")
 	}
-	if !hexCodeRegex.MatchString(theme.ListItemTitle) {
+	if !isValidColor(theme.ListItemTitle) {
 		invalidColors = append(invalidColors, "ListItemTitle")
 	}
-	if !hexCodeRegex.MatchString(theme.RecordsBorder) {
+	if !isValidColor(theme.RecordsBorder) {
 		invalidColors = append(invalidColors, "recordsBorder")
 	}
-	if !hexCodeRegex.MatchString(theme.RecordsDateRange) {
+	if !isValidColor(theme.RecordsDateRange) {
 		invalidColors = append(invalidColors, "recordsDateRange")
 	}
-	if !hexCodeRegex.MatchString(theme.RecordsFooter) {
+	if !isValidColor(theme.RecordsFooter) {
 		invalidColors = append(invalidColors, "recordsFooter")
 	}
-	if !hexCodeRegex.MatchString(theme.RecordsHeader) {
+	if !isValidColor(theme.RecordsHeader) {
 		invalidColors = append(invalidColors, "recordsHeader")
 	}
-	if !hexCodeRegex.MatchString(theme.RecordsHelp) {
+	if !isValidColor(theme.RecordsHelp) {
 		invalidColors = append(invalidColors, "recordsHelp")
 	}
-	if !hexCodeRegex.MatchString(theme.TaskEntry) {
+	if !isValidColor(theme.TaskEntry) {
 		invalidColors = append(invalidColors, "taskEntry")
 	}
-	if !hexCodeRegex.MatchString(theme.TaskLogDetailsViewTitle) {
+	if !isValidColor(theme.TaskLogDetailsViewTitle) {
 		invalidColors = append(invalidColors, "taskLogDetails")
 	}
-	if !hexCodeRegex.MatchString(theme.TaskLogEntry) {
+	if !isValidColor(theme.TaskLogEntry) {
 		invalidColors = append(invalidColors, "taskLogEntry")
 	}
-	if !hexCodeRegex.MatchString(theme.TaskLogList) {
+	if !isValidColor(theme.TaskLogList) {
 		invalidColors = append(invalidColors, "taskLogList")
 	}
-	if !hexCodeRegex.MatchString(theme.TitleForeground) {
+	if !isValidColor(theme.TitleForeground) {
 		invalidColors = append(invalidColors, "titleForeground")
 	}
-	if !hexCodeRegex.MatchString(theme.ToolName) {
+	if !isValidColor(theme.ToolName) {
 		invalidColors = append(invalidColors, "toolName")
 	}
-	if !hexCodeRegex.MatchString(theme.Tracking) {
+	if !isValidColor(theme.Tracking) {
 		invalidColors = append(invalidColors, "tracking")
 	}
 
 	for i, color := range theme.Tasks {
-		if !hexCodeRegex.MatchString(color) {
+		if !isValidColor(color) {
 			invalidColors = append(invalidColors, fmt.Sprintf("tasks[%d]", i+1))
 		}
 	}
 
 	return invalidColors
+}
+
+func isValidColor(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+
+	if strings.HasPrefix(s, "#") {
+		return hexCodeRegex.MatchString(s)
+	}
+
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return false
+	}
+
+	if i < 0 || i > 255 {
+		return false
+	}
+
+	return true
 }

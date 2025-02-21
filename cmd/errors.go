@@ -33,5 +33,21 @@ A valid theme file looks like this:
 
 %s
 `, defaultThemeBytes)
+		return
+	}
+
+	if errors.Is(err, ui.ErrThemeColorsAreInvalid) {
+		fmt.Printf(`
+Colors codes can only be provided in ANSI 16, ANSI 256, or HEX formats.
+
+For example:
+
+"activeTask": "9"           # red in ANSI 16
+"activeTask": "201"         # hot pink in ANSI 256
+"activeTask": "#0000FF"     # blue in HEX (true color)
+
+Fun fact: There are 16,777,216 true color choices. Go nuts.
+`)
+		return
 	}
 }

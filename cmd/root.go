@@ -479,6 +479,8 @@ You can edit it as per your liking.
 		Short: "Show a sample theme config",
 		Run: func(_ *cobra.Command, _ []string) {
 			fmt.Printf(`A sample theme config looks like the following.
+Colors codes can be provided in ANSI 16, ANSI 256, or HEX formats.
+
 You can choose to provide only the attributes you want to change.
 
 %s

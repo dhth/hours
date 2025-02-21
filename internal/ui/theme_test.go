@@ -24,6 +24,41 @@ var invalidSchemaTheme []byte
 //go:embed static/invalid-data-theme.json
 var invalidDataTheme []byte
 
+func TestGetInvalidColors(t *testing.T) {
+	testCases := []struct {
+		name               string
+		themeBytes         []byte
+		expectedNumInvalid int
+	}{
+		// success
+		{
+			name:               "valid json with all key-values provided",
+			themeBytes:         validThemeJSONWithEntireConfig,
+			expectedNumInvalid: 0,
+		},
+		// failures
+		{
+			name:               "invalid data",
+			themeBytes:         invalidDataTheme,
+			expectedNumInvalid: 5,
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			// GIVEN
+			theme := DefaultTheme()
+			err := json.Unmarshal(tt.themeBytes, &theme)
+			require.NoError(t, err)
+			// WHEN
+			invalidColors := getInvalidColors(theme)
+
+			// THEN
+			assert.Len(t, invalidColors, tt.expectedNumInvalid)
+		})
+	}
+}
+
 func TestLoadTheme(t *testing.T) {
 	testCases := []struct {
 		name  string
@@ -53,7 +88,7 @@ func TestLoadTheme(t *testing.T) {
 		{
 			name:  "invalid data",
 			input: invalidDataTheme,
-			err:   errThemeDataIsInvalid,
+			err:   ErrThemeColorsAreInvalid,
 		},
 	}
 
