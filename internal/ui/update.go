@@ -430,12 +430,11 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = msg.err
 			m.quitting = true
 			return m, tea.Quit
-		} else {
-			m.start = msg.start
-			m.end = msg.end
-			m.report = msg.report
-			m.busy = false
 		}
+		m.start = msg.start
+		m.end = msg.end
+		m.report = msg.report
+		m.busy = false
 	}
 	return m, tea.Batch(cmds...)
 }
