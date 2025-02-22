@@ -16,7 +16,7 @@ const (
 	textInputWidth       = 80
 )
 
-func InitialModel(db *sql.DB) Model {
+func InitialModel(db *sql.DB, style Style) Model {
 	var activeTaskItems []list.Item
 	var inactiveTaskItems []list.Item
 	var tasklogListItems []list.Item
@@ -50,12 +50,25 @@ This can be used to record details about your work on this task.`
 	taskInputs[entryBeginTS].Width = textInputWidth
 
 	m := Model{
-		db:                db,
-		activeTasksList:   list.New(activeTaskItems, newItemDelegate(lipgloss.Color(activeTaskListColor)), listWidth, 0),
-		inactiveTasksList: list.New(inactiveTaskItems, newItemDelegate(lipgloss.Color(inactiveTaskListColor)), listWidth, 0),
-		taskMap:           make(map[int]*types.Task),
-		taskIndexMap:      make(map[int]int),
-		taskLogList:       list.New(tasklogListItems, newItemDelegate(lipgloss.Color(taskLogListColor)), listWidth, 0),
+		db:    db,
+		style: style,
+		activeTasksList: list.New(activeTaskItems,
+			newItemDelegate(style.listItemTitleColor,
+				style.listItemDescColor,
+				lipgloss.Color(style.theme.ActiveTasks),
+			), listWidth, 0),
+		inactiveTasksList: list.New(inactiveTaskItems,
+			newItemDelegate(style.listItemTitleColor,
+				style.listItemDescColor,
+				lipgloss.Color(style.theme.InactiveTasks),
+			), listWidth, 0),
+		taskMap:      make(map[int]*types.Task),
+		taskIndexMap: make(map[int]int),
+		taskLogList: list.New(tasklogListItems,
+			newItemDelegate(style.listItemTitleColor,
+				style.listItemDescColor,
+				lipgloss.Color(style.theme.TaskLogList),
+			), listWidth, 0),
 		showHelpIndicator: true,
 		tLInputs:          tLInputs,
 		tLCommentInput:    tLCommentInput,
@@ -65,7 +78,10 @@ This can be used to record details about your work on this task.`
 	m.activeTasksList.SetStatusBarItemName("task", "tasks")
 	m.activeTasksList.DisableQuitKeybindings()
 	m.activeTasksList.SetShowHelp(false)
-	m.activeTasksList.Styles.Title = m.activeTasksList.Styles.Title.Foreground(lipgloss.Color(defaultBackgroundColor)).Background(lipgloss.Color(activeTaskListColor)).Bold(true)
+	m.activeTasksList.Styles.Title = m.activeTasksList.Styles.Title.
+		Foreground(lipgloss.Color(style.theme.TitleForeground)).
+		Background(lipgloss.Color(style.theme.ActiveTasks)).
+		Bold(true)
 	m.activeTasksList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
 	m.activeTasksList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
@@ -74,7 +90,10 @@ This can be used to record details about your work on this task.`
 	m.taskLogList.SetFilteringEnabled(false)
 	m.taskLogList.DisableQuitKeybindings()
 	m.taskLogList.SetShowHelp(false)
-	m.taskLogList.Styles.Title = m.taskLogList.Styles.Title.Foreground(lipgloss.Color(defaultBackgroundColor)).Background(lipgloss.Color(taskLogListColor)).Bold(true)
+	m.taskLogList.Styles.Title = m.taskLogList.Styles.Title.
+		Foreground(lipgloss.Color(style.theme.TitleForeground)).
+		Background(lipgloss.Color(style.theme.TaskLogList)).
+		Bold(true)
 	m.taskLogList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
 	m.taskLogList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
@@ -82,17 +101,21 @@ This can be used to record details about your work on this task.`
 	m.inactiveTasksList.SetStatusBarItemName("task", "tasks")
 	m.inactiveTasksList.DisableQuitKeybindings()
 	m.inactiveTasksList.SetShowHelp(false)
-	m.inactiveTasksList.Styles.Title = m.inactiveTasksList.Styles.Title.Foreground(lipgloss.Color(defaultBackgroundColor)).Background(lipgloss.Color(inactiveTaskListColor)).Bold(true)
+	m.inactiveTasksList.Styles.Title = m.inactiveTasksList.Styles.Title.
+		Foreground(lipgloss.Color(style.theme.TitleForeground)).
+		Background(lipgloss.Color(style.theme.InactiveTasks)).
+		Bold(true)
 	m.inactiveTasksList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
 	m.inactiveTasksList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
 	return m
 }
 
-func initialRecordsModel(typ recordsType, db *sql.DB, start, end time.Time, plain bool, period string, numDays int, initialData string) recordsModel {
+func initialRecordsModel(typ recordsType, db *sql.DB, style Style, start, end time.Time, plain bool, period string, numDays int, initialData string) recordsModel {
 	return recordsModel{
 		typ:     typ,
 		db:      db,
+		style:   style,
 		start:   start,
 		end:     end,
 		period:  period,

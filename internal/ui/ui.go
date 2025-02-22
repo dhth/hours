@@ -11,7 +11,7 @@ import (
 
 var errFailedToConfigureDebugging = errors.New("failed to configure debugging")
 
-func RenderUI(db *sql.DB) error {
+func RenderUI(db *sql.DB, style Style) error {
 	if len(os.Getenv("DEBUG")) > 0 {
 		f, err := tea.LogToFile("debug.log", "debug")
 		if err != nil {
@@ -20,7 +20,7 @@ func RenderUI(db *sql.DB) error {
 		defer f.Close()
 	}
 
-	p := tea.NewProgram(InitialModel(db), tea.WithAltScreen())
+	p := tea.NewProgram(InitialModel(db, style), tea.WithAltScreen())
 	_, err := p.Run()
 	if err != nil {
 		return err

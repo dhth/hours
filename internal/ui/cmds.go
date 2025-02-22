@@ -180,20 +180,20 @@ func hideHelp(interval time.Duration) tea.Cmd {
 	})
 }
 
-func getRecordsData(analyticsType recordsType, db *sql.DB, period string, start, end time.Time, numDays int, plain bool) tea.Cmd {
+func getRecordsData(analyticsType recordsType, db *sql.DB, style Style, period string, start, end time.Time, numDays int, plain bool) tea.Cmd {
 	return func() tea.Msg {
 		var data string
 		var err error
 
 		switch analyticsType {
 		case reportRecords:
-			data, err = getReport(db, start, numDays, plain)
+			data, err = getReport(db, style, start, numDays, plain)
 		case reportAggRecords:
-			data, err = getReportAgg(db, start, numDays, plain)
+			data, err = getReportAgg(db, style, start, numDays, plain)
 		case reportLogs:
-			data, err = getTaskLog(db, start, end, 20, plain)
+			data, err = getTaskLog(db, style, start, end, 20, plain)
 		case reportStats:
-			data, err = getStats(db, period, start, end, plain)
+			data, err = getStats(db, style, period, start, end, plain)
 		}
 
 		return recordsDataFetchedMsg{

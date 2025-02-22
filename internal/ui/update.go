@@ -376,7 +376,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					numDays = m.numDays
 				}
 				newEnd = newStart.AddDate(0, 0, numDays)
-				cmds = append(cmds, getRecordsData(m.typ, m.db, m.period, newStart, newEnd, numDays, m.plain))
+				cmds = append(cmds, getRecordsData(m.typ, m.db, m.style, m.period, newStart, newEnd, numDays, m.plain))
 				m.busy = true
 			}
 		case "right", "l":
@@ -397,7 +397,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					numDays = m.numDays
 				}
 				newEnd = newStart.AddDate(0, 0, numDays)
-				cmds = append(cmds, getRecordsData(m.typ, m.db, m.period, newStart, newEnd, numDays, m.plain))
+				cmds = append(cmds, getRecordsData(m.typ, m.db, m.style, m.period, newStart, newEnd, numDays, m.plain))
 				m.busy = true
 			}
 		case "ctrl+t":
@@ -421,7 +421,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					numDays = m.numDays
 				}
 				end = start.AddDate(0, 0, numDays)
-				cmds = append(cmds, getRecordsData(m.typ, m.db, m.period, start, end, numDays, m.plain))
+				cmds = append(cmds, getRecordsData(m.typ, m.db, m.style, m.period, start, end, numDays, m.plain))
 				m.busy = true
 			}
 		}
@@ -431,6 +431,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.quitting = true
 			return m, tea.Quit
 		}
+
 		m.start = msg.start
 		m.end = msg.end
 		m.report = msg.report

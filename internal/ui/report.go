@@ -22,7 +22,7 @@ const (
 	reportTimeCharsBudget = 6
 )
 
-func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg bool, interactive bool) error {
+func RenderReport(db *sql.DB, style Style, writer io.Writer, plain bool, period string, agg bool, interactive bool) error {
 	if period == "" {
 		return nil
 	}
@@ -41,17 +41,17 @@ func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg b
 
 	if agg {
 		analyticsType = reportAggRecords
-		report, err = getReportAgg(db, ts.Start, ts.NumDays, plain)
+		report, err = getReportAgg(db, style, ts.Start, ts.NumDays, plain)
 	} else {
 		analyticsType = reportRecords
-		report, err = getReport(db, ts.Start, ts.NumDays, plain)
+		report, err = getReport(db, style, ts.Start, ts.NumDays, plain)
 	}
 	if err != nil {
 		return fmt.Errorf("%w: %s", errCouldntGenerateReport, err.Error())
 	}
 
 	if interactive {
-		p := tea.NewProgram(initialRecordsModel(analyticsType, db, ts.Start, ts.End, plain, period, ts.NumDays, report))
+		p := tea.NewProgram(initialRecordsModel(analyticsType, db, style, ts.Start, ts.End, plain, period, ts.NumDays, report))
 		_, err := p.Run()
 		if err != nil {
 			return err
@@ -62,7 +62,7 @@ func RenderReport(db *sql.DB, writer io.Writer, plain bool, period string, agg b
 	return nil
 }
 
-func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, error) {
+func getReport(db *sql.DB, style Style, start time.Time, numDays int, plain bool) (string, error) {
 	day := start
 	var nextDay time.Time
 
@@ -99,7 +99,7 @@ func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, er
 		totalSecsPerDay[j] = 0
 	}
 
-	rs := getReportStyles(plain)
+	rs := style.getReportStyles(plain)
 
 	var summaryBudget int
 	switch numDays {
@@ -137,7 +137,7 @@ func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, er
 				rowStyle, ok := styleCache[tr.TaskSummary]
 
 				if !ok {
-					rowStyle = getDynamicStyle(tr.TaskSummary)
+					rowStyle = style.getDynamicStyle(tr.TaskSummary)
 					styleCache[tr.TaskSummary] = rowStyle
 				}
 
@@ -195,7 +195,7 @@ func getReport(db *sql.DB, start time.Time, numDays int, plain bool) (string, er
 	return b.String(), nil
 }
 
-func getReportAgg(db *sql.DB, start time.Time, numDays int, plain bool) (string, error) {
+func getReportAgg(db *sql.DB, style Style, start time.Time, numDays int, plain bool) (string, error) {
 	day := start
 	var nextDay time.Time
 
@@ -231,7 +231,7 @@ func getReportAgg(db *sql.DB, start time.Time, numDays int, plain bool) (string,
 		totalSecsPerDay[j] = 0
 	}
 
-	rs := getReportStyles(plain)
+	rs := style.getReportStyles(plain)
 
 	var summaryBudget int
 	switch numDays {
@@ -268,7 +268,7 @@ func getReportAgg(db *sql.DB, start time.Time, numDays int, plain bool) (string,
 			} else {
 				rowStyle, ok := styleCache[tr.TaskSummary]
 				if !ok {
-					rowStyle = getDynamicStyle(tr.TaskSummary)
+					rowStyle = style.getDynamicStyle(tr.TaskSummary)
 					styleCache[tr.TaskSummary] = rowStyle
 				}
 

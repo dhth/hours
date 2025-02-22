@@ -186,6 +186,69 @@ do so using the `gen` subcommand.
 hours gen --dbpath=/var/tmp/throwaway.db
 ```
 
+🎨 Custom Themes
+---
+
+`hours` supports custom themes for its user interface (for the TUI and the
+output of the `logs`, `report`, and `stats` commands. New themes can be added
+using `hours themes add`, which will create a JSON file in `hours`' config
+directory. You can then tweak this file as per your liking.
+
+A sample theme config looks like the following. Colors codes can be provided in
+ANSI 16, ANSI 256, or HEX formats. You can choose to provide only the attributes
+you want to change.
+
+```text
+{
+  "activeTask": "#8ec07c",                   # color for the active task in the footer
+  "activeTaskBeginTime": "#d3869b",          # color for the active task begin time in the footer
+  "activeTasks": "#fe8019",                  # primary color for the active task list view
+  "formContext": "#fabd2f",                  # color for the context message in all forms
+  "formFieldName": "#8ec07c",                # color for field names in all forms
+  "formHelp": "#928374",                     # color for the help text in all forms
+  "helpMsg": "#83a598",                      # color for help messages in the footer
+  "helpPrimary": "#83a598",                  # primary color for the help view
+  "helpSecondary": "#bdae93",                # secondary color for the help view
+  "inactiveTasks": "#928374",                # primary color for the inactive task list view
+  "initialHelpMsg": "#a58390",               # color of the initial help message in the footer
+  "listItemDesc": "#777777",                 # color to be used for the title of list items (when they're not selected)
+  "listItemTitle": "#dddddd",                # color to be used for the title of list items (when they're not selected)
+  "recordsBorder": "#665c54",                # color for the table border in the output of logs, reports, stats
+  "recordsDateRange": "#fabd2f",             # color for the data range picker in the output of logs, reports, stats
+  "recordsFooter": "#ef8f62",                # color for the footer row in the output of logs, reports, stats
+  "recordsHeader": "#d85d5d",                # color for the header row in the output of logs, reports, stats
+  "recordsHelp": "#928374",                  # color for the help message in the output of logs, reports, stats
+  "taskLogDetails": "#d3869b",               # primary color for the task log details view
+  "taskEntry": "#8ec07c",                    # primary color for the task entry view
+  "taskLogEntry": "#fabd2f",                 # primary color for the task log entry view
+  "taskLogList": "#b8bb26",                  # primary color for the task log list view
+  "tasks": [                                 # colors to be used for tasks in the output of logs, report, stats
+    "#d3869b",
+    "#b5e48c",
+    "#90e0ef",
+    "#ca7df9",
+    "#ada7ff",
+    "#bbd0ff",
+    "#48cae4",
+    "#8187dc",
+    "#ffb4a2",
+    "#b8bb26",
+    "#ffc6ff",
+    "#4895ef",
+    "#83a598",
+    "#fabd2f"
+  ],
+  "titleForeground": "#282828",              # foreground color to use for the title of all views
+  "toolName": "#fe8019",                     # color for the tool name in the footer
+  "tracking": "#fabd2f"                      # color for the tracking message in the footer
+}
+```
+
+You can view configured themes using `hours themes list`.
+
+Running hours with the `--theme <THEME_NAME>` flag will load up that theme.
+Alternatively, you can set `$HOURS_THEME` to the theme name so you don't have to
+pass the flag every time.
 
 📋 TUI Reference Manual
 ---

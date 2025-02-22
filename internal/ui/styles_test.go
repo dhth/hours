@@ -7,9 +7,11 @@ import (
 )
 
 func TestGetDynamicStyle(t *testing.T) {
+	theme := DefaultTheme()
+	style := NewStyle(theme)
 	input := "abcdefghi"
-	gota := getDynamicStyle(input)
-	gotb := getDynamicStyle(input)
+	gota := style.getDynamicStyle(input)
+	gotb := style.getDynamicStyle(input)
 	// assert same style returned for the same string
 	assert.Equal(t, gota.GetForeground(), gotb.GetForeground())
 }

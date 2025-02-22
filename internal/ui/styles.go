@@ -7,161 +7,131 @@ import (
 )
 
 const (
-	defaultBackgroundColor   = "#282828"
-	activeTaskListColor      = "#fe8019"
-	inactiveTaskListColor    = "#928374"
-	taskEntryColor           = "#8ec07c"
-	taskLogEntryColor        = "#fabd2f"
-	taskLogListColor         = "#b8bb26"
-	trackingColor            = "#fabd2f"
-	activeTaskColor          = "#8ec07c"
-	activeTaskBeginTimeColor = "#d3869b"
-	formFieldNameColor       = "#8ec07c"
-	formHelpColor            = "#928374"
-	formContextColor         = "#fabd2f"
-	toolNameColor            = "#fe8019"
-	recordsHeaderColor       = "#d85d5d"
-	recordsFooterColor       = "#ef8f62"
-	recordsBorderColor       = "#665c54"
-	initialHelpMsgColor      = "#a58390"
-	recordsDateRangeColor    = "#fabd2f"
-	recordsHelpColor         = "#928374"
-	helpMsgColor             = "#83a598"
-	tLDetailsViewTitleColor  = "#d3869b"
-	helpViewTitleColor       = "#83a598"
-	helpHeaderColor          = "#83a598"
-	helpSectionColor         = "#bdae93"
-	warningColor             = "#fb4934"
-	fallbackTaskColor        = "#ada7ff"
+	fallbackTaskColor = "#ada7ff"
 )
 
-var (
-	baseStyle = lipgloss.NewStyle().
-			PaddingLeft(1).
-			PaddingRight(1).
-			Foreground(lipgloss.Color(defaultBackgroundColor))
+type Style struct {
+	activeTaskBeginTime  lipgloss.Style
+	activeTaskSummaryMsg lipgloss.Style
+	empty                lipgloss.Style
+	formContext          lipgloss.Style
+	formFieldName        lipgloss.Style
+	formHelp             lipgloss.Style
+	helpMsg              lipgloss.Style
+	helpPrimary          lipgloss.Style
+	helpSecondary        lipgloss.Style
+	helpTitle            lipgloss.Style
+	initialHelpMsg       lipgloss.Style
+	list                 lipgloss.Style
+	listItemDescColor    lipgloss.Color
+	listItemTitleColor   lipgloss.Color
+	recordsBorder        lipgloss.Style
+	recordsDateRange     lipgloss.Style
+	recordsFooter        lipgloss.Style
+	recordsHeader        lipgloss.Style
+	recordsHelp          lipgloss.Style
+	taskEntryHeading     lipgloss.Style
+	taskLogDetails       lipgloss.Style
+	taskLogEntryHeading  lipgloss.Style
+	theme                Theme
+	titleForegroundColor lipgloss.Color
+	toolName             lipgloss.Style
+	tracking             lipgloss.Style
+	viewPort             lipgloss.Style
+}
 
-	helpMsgStyle = lipgloss.NewStyle().
-			PaddingLeft(1).
-			Bold(true).
-			Foreground(lipgloss.Color(helpMsgColor))
+func NewStyle(theme Theme) Style {
+	base := lipgloss.NewStyle().
+		PaddingLeft(1).
+		PaddingRight(1).
+		Foreground(lipgloss.Color(theme.TitleForeground))
 
-	initialHelpMsgStyle = helpMsgStyle.
-				Foreground(lipgloss.Color(initialHelpMsgColor))
+	baseList := lipgloss.NewStyle().PaddingTop(1).PaddingRight(2).PaddingBottom(1)
 
-	baseListStyle = lipgloss.NewStyle().PaddingTop(1).PaddingRight(2).PaddingBottom(1)
+	baseHeading := lipgloss.NewStyle().
+		Bold(true).
+		PaddingLeft(1).
+		PaddingRight(1).
+		Foreground(lipgloss.Color(theme.TitleForeground))
 
-	baseHeadingStyle = lipgloss.NewStyle().
-				Bold(true).
-				PaddingLeft(1).
-				PaddingRight(1).
-				Foreground(lipgloss.Color(defaultBackgroundColor))
+	helpMsg := lipgloss.NewStyle().
+		PaddingLeft(1).
+		Bold(true).
+		Foreground(lipgloss.Color(theme.HelpMsg))
 
-	viewPortStyle = lipgloss.NewStyle().
-			PaddingTop(1).
-			PaddingLeft(2).
-			PaddingRight(2).
-			PaddingBottom(1)
+	tracking := lipgloss.NewStyle().
+		PaddingLeft(2).
+		Bold(true).
+		Foreground(lipgloss.Color(theme.Tracking))
 
-	listStyle = baseListStyle
+	helpTitle := base.
+		Bold(true).
+		Background(lipgloss.Color(theme.HelpPrimary)).
+		Align(lipgloss.Left)
 
-	toolNameStyle = baseStyle.
-			Align(lipgloss.Center).
-			Bold(true).
-			Background(lipgloss.Color(toolNameColor))
-
-	taskEntryHeadingStyle = baseHeadingStyle.
-				Background(lipgloss.Color(taskEntryColor))
-
-	taskLogEntryHeadingStyle = baseHeadingStyle.
-					Background(lipgloss.Color(taskLogEntryColor))
-
-	formContextStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color(formContextColor))
-
-	formFieldNameStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color(formFieldNameColor))
-
-	formHelpStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color(formHelpColor))
-
-	trackingStyle = lipgloss.NewStyle().
-			PaddingLeft(2).
-			Bold(true).
-			Foreground(lipgloss.Color(trackingColor))
-
-	activeTaskSummaryMsgStyle = trackingStyle.
-					PaddingLeft(1).
-					Foreground(lipgloss.Color(activeTaskColor))
-
-	activeTaskBeginTimeStyle = lipgloss.NewStyle().
-					PaddingLeft(1).
-					Foreground(lipgloss.Color(activeTaskBeginTimeColor))
-
-	recordsHeaderStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color(recordsHeaderColor))
-
-	recordsFooterStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color(recordsFooterColor))
-
-	recordsBorderStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color(recordsBorderColor))
-
-	recordsDateRangeStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color(recordsDateRangeColor))
-
-	recordsHelpStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color(recordsHelpColor))
-
-	helpTitleStyle = baseStyle.
-			Bold(true).
-			Background(lipgloss.Color(helpViewTitleColor)).
-			Align(lipgloss.Left)
-
-	tLDetailsViewTitleStyle = helpTitleStyle.
-				Background(lipgloss.Color(tLDetailsViewTitleColor))
-
-	helpHeaderStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color(helpHeaderColor))
-
-	helpSectionStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color(helpSectionColor))
-
-	taskColors = []string{
-		"#d3869b",
-		"#b5e48c",
-		"#90e0ef",
-		"#ca7df9",
-		"#ada7ff",
-		"#bbd0ff",
-		"#48cae4",
-		"#8187dc",
-		"#ffb4a2",
-		"#b8bb26",
-		"#ffc6ff",
-		"#4895ef",
-		"#83a598",
-		"#fabd2f",
+	return Style{
+		activeTaskBeginTime:  lipgloss.NewStyle().PaddingLeft(1).Foreground(lipgloss.Color(theme.ActiveTaskBeginTime)),
+		activeTaskSummaryMsg: tracking.PaddingLeft(1).Foreground(lipgloss.Color(theme.ActiveTask)),
+		empty:                lipgloss.NewStyle(),
+		formContext:          lipgloss.NewStyle().Foreground(lipgloss.Color(theme.FormContext)),
+		formFieldName:        lipgloss.NewStyle().Foreground(lipgloss.Color(theme.FormFieldName)),
+		formHelp:             lipgloss.NewStyle().Foreground(lipgloss.Color(theme.FormHelp)),
+		helpMsg:              helpMsg,
+		helpPrimary:          lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(theme.HelpPrimary)),
+		helpSecondary:        lipgloss.NewStyle().Foreground(lipgloss.Color(theme.HelpSecondary)),
+		helpTitle:            helpTitle,
+		initialHelpMsg:       helpMsg.Foreground(lipgloss.Color(theme.InitialHelpMsg)),
+		list:                 baseList,
+		listItemDescColor:    lipgloss.Color(theme.ListItemDesc),
+		listItemTitleColor:   lipgloss.Color(theme.ListItemTitle),
+		recordsBorder:        lipgloss.NewStyle().Foreground(lipgloss.Color(theme.RecordsBorder)),
+		recordsDateRange:     lipgloss.NewStyle().Foreground(lipgloss.Color(theme.RecordsDateRange)),
+		recordsFooter:        lipgloss.NewStyle().Foreground(lipgloss.Color(theme.RecordsFooter)),
+		recordsHeader:        lipgloss.NewStyle().Foreground(lipgloss.Color(theme.RecordsHeader)),
+		recordsHelp:          lipgloss.NewStyle().Foreground(lipgloss.Color(theme.RecordsHelp)),
+		taskEntryHeading:     baseHeading.Background(lipgloss.Color(theme.TaskEntry)),
+		taskLogDetails:       helpTitle.Background(lipgloss.Color(theme.TaskLogDetailsViewTitle)),
+		taskLogEntryHeading:  baseHeading.Background(lipgloss.Color(theme.TaskLogEntry)),
+		theme:                theme,
+		titleForegroundColor: lipgloss.Color(theme.TitleForeground),
+		toolName:             base.Align(lipgloss.Center).Bold(true).Background(lipgloss.Color(theme.ToolName)),
+		tracking:             tracking,
+		viewPort:             lipgloss.NewStyle().PaddingTop(1).PaddingLeft(2).PaddingRight(2).PaddingBottom(1),
 	}
+}
 
-	getDynamicStyle = func(str string) lipgloss.Style {
-		h := fnv.New32()
-		_, err := h.Write([]byte(str))
-		if err != nil {
-			return lipgloss.NewStyle().
-				Foreground(lipgloss.Color(fallbackTaskColor))
-		}
-
-		hash := h.Sum32()
-
-		color := taskColors[hash%uint32(len(taskColors))]
+func (s *Style) getDynamicStyle(str string) lipgloss.Style {
+	h := fnv.New32()
+	_, err := h.Write([]byte(str))
+	if err != nil {
 		return lipgloss.NewStyle().
-			Foreground(lipgloss.Color(color))
+			Foreground(lipgloss.Color(fallbackTaskColor))
 	}
 
-	emptyStyle = lipgloss.NewStyle()
+	hash := h.Sum32()
 
-	WarningStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color(warningColor))
-)
+	color := s.theme.Tasks[hash%uint32(len(s.theme.Tasks))]
+	return lipgloss.NewStyle().
+		Foreground(lipgloss.Color(color))
+}
+
+type reportStyles struct {
+	headerStyle lipgloss.Style
+	footerStyle lipgloss.Style
+	borderStyle lipgloss.Style
+}
+
+func (s *Style) getReportStyles(plain bool) reportStyles {
+	if plain {
+		return reportStyles{
+			s.empty,
+			s.empty,
+			s.empty,
+		}
+	}
+	return reportStyles{
+		s.recordsHeader,
+		s.recordsFooter,
+		s.recordsBorder,
+	}
+}

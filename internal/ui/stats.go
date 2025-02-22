@@ -25,7 +25,7 @@ const (
 	periodAll              = "all"
 )
 
-func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string, interactive bool) error {
+func RenderStats(db *sql.DB, style Style, writer io.Writer, plain bool, period string, interactive bool) error {
 	if period == "" {
 		return nil
 	}
@@ -39,7 +39,7 @@ func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string, intera
 
 	if period == periodAll {
 		// TODO: find a better way for this, passing start, end for "all" doesn't make sense
-		stats, err = getStats(db, period, time.Now(), time.Now(), plain)
+		stats, err = getStats(db, style, period, time.Now(), time.Now(), plain)
 		if err != nil {
 			return fmt.Errorf("%w: %s", errCouldntGenerateStats, err.Error())
 		}
@@ -56,13 +56,13 @@ func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string, intera
 		return err
 	}
 
-	stats, err = getStats(db, period, ts.Start, ts.End, plain)
+	stats, err = getStats(db, style, period, ts.Start, ts.End, plain)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errCouldntGenerateStats, err.Error())
 	}
 
 	if interactive {
-		p := tea.NewProgram(initialRecordsModel(reportStats, db, ts.Start, ts.End, plain, period, ts.NumDays, stats))
+		p := tea.NewProgram(initialRecordsModel(reportStats, db, style, ts.Start, ts.End, plain, period, ts.NumDays, stats))
 		_, err := p.Run()
 		if err != nil {
 			return err
@@ -73,7 +73,7 @@ func RenderStats(db *sql.DB, writer io.Writer, plain bool, period string, intera
 	return nil
 }
 
-func getStats(db *sql.DB, period string, start, end time.Time, plain bool) (string, error) {
+func getStats(db *sql.DB, style Style, period string, start, end time.Time, plain bool) (string, error) {
 	var entries []types.TaskReportEntry
 	var err error
 
@@ -105,7 +105,7 @@ func getStats(db *sql.DB, period string, start, end time.Time, plain bool) (stri
 
 	var timeSpentStr string
 
-	rs := getReportStyles(plain)
+	rs := style.getReportStyles(plain)
 	styleCache := make(map[string]lipgloss.Style)
 
 	for i, entry := range entries {
@@ -120,7 +120,7 @@ func getStats(db *sql.DB, period string, start, end time.Time, plain bool) (stri
 		} else {
 			rowStyle, ok := styleCache[entry.TaskSummary]
 			if !ok {
-				rowStyle = getDynamicStyle(entry.TaskSummary)
+				rowStyle = style.getDynamicStyle(entry.TaskSummary)
 				styleCache[entry.TaskSummary] = rowStyle
 			}
 			data[i] = []string{

@@ -85,6 +85,7 @@ type Model struct {
 	lastView                       stateView
 	lastViewBeforeInsufficientDims stateView
 	db                             *sql.DB
+	style                          Style
 	activeTasksList                list.Model
 	inactiveTasksList              list.Model
 	taskMap                        map[int]*types.Task
@@ -133,6 +134,7 @@ func (m Model) Init() tea.Cmd {
 
 type recordsModel struct {
 	db       *sql.DB
+	style    Style
 	typ      recordsType
 	start    time.Time
 	end      time.Time
