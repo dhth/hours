@@ -250,6 +250,18 @@ Running hours with the `--theme <THEME_NAME>` flag will load up that theme.
 Alternatively, you can set `$HOURS_THEME` to the theme name so you don't have to
 pass the flag every time.
 
+Here's a sampling of custom themes in action.
+
+| Theme          | Preview                                                                                            |
+|----------------|----------------------------------------------------------------------------------------------------|
+| Solarized Dark | ![solarized-dark](https://github.com/user-attachments/assets/f68c0863-c45f-41d9-be2a-395f768b43ea) |
+| Monokai        | ![monokai](https://github.com/user-attachments/assets/42e1ed59-b9be-42c3-953c-553bd94ff8e2)        |
+| Nord           | ![nord](https://github.com/user-attachments/assets/407d54f3-e48a-4c08-8688-f19058e4c373)           |
+| Dracula        | ![dracula](https://github.com/user-attachments/assets/854273e9-be0c-4457-bb19-86a9e1a04434)        |
+| Gruvbox        | ![gruvbox](https://github.com/user-attachments/assets/b15982fb-0597-4457-940f-0e90b0d2cc06)        |
+| Catppuccin     | ![catppuccin](https://github.com/user-attachments/assets/2dfdd9ec-7a87-4d18-819f-f5135b77fb23)     |
+| Tokyonight     | ![tokyonight](https://github.com/user-attachments/assets/21ebe806-3159-4c5d-abbc-5405ef75087b)     |
+
 📋 TUI Reference Manual
 ---
 
