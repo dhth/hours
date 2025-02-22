@@ -43,18 +43,16 @@ LIMIT 1
 			_, err = pers.InsertNewTL(db, taskID, beginTs)
 			if err != nil {
 				return trackingToggledMsg{err: err}
-			} else {
-				return trackingToggledMsg{taskID: taskID}
 			}
+			return trackingToggledMsg{taskID: taskID}
 
 		default:
 			secsSpent := int(endTs.Sub(beginTs).Seconds())
 			err := pers.FinishActiveTL(db, activeTaskLogID, activeTaskID, beginTs, endTs, secsSpent, comment)
 			if err != nil {
 				return trackingToggledMsg{err: err}
-			} else {
-				return trackingToggledMsg{taskID: taskID, finished: true, secsSpent: secsSpent}
 			}
+			return trackingToggledMsg{taskID: taskID, finished: true, secsSpent: secsSpent}
 		}
 	}
 }
