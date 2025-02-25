@@ -16,6 +16,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	c "github.com/dhth/hours/internal/common"
 	pers "github.com/dhth/hours/internal/persistence"
+	"github.com/dhth/hours/internal/types"
 	"github.com/dhth/hours/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -150,6 +151,8 @@ func NewRootCommand() (*cobra.Command, error) {
 		reportAgg           bool
 		recordsInteractive  bool
 		recordsOutputPlain  bool
+		recordsActive       bool
+		recordsInactive     bool
 		activeTemplate      string
 		genNumDays          uint8
 		genNumTasks         uint8
@@ -402,7 +405,15 @@ be considered in the stats for the day it ends.
 				period = args[0]
 			}
 
-			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, period, recordsInteractive)
+			var activeFilter types.TaskActiveStatusFilter
+			if recordsActive {
+				activeFilter |= types.TaskFilterActive
+			}
+			if recordsInactive {
+				activeFilter |= types.TaskFilterInactive
+			}
+
+			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, period, activeFilter, recordsInteractive)
 		},
 	}
 
@@ -545,6 +556,8 @@ eg. hours active -t ' {{task}} ({{time}}) '
 
 	statsCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output stats without any formatting")
 	statsCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view stats interactively")
+	statsCmd.Flags().BoolVarP(&recordsActive, "active", "A", false, "whether to view active tasks")
+	statsCmd.Flags().BoolVarP(&recordsInactive, "inactive", "I", false, "whether to view inactive tasks")
 	statsCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 	statsCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
 		fmt.Sprintf("UI theme to use; themes live in %s", themesDir))

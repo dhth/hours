@@ -513,7 +513,7 @@ func TestRepository(t *testing.T) {
 		require.NoError(t, err, "failed to insert task log")
 
 		// WHEN
-		entries, err := FetchStats(testDB, 100)
+		entries, err := FetchStats(testDB, 100, types.TaskFilterActiveInactive)
 
 		// THEN
 		require.NoError(t, err, "failed to fetch report entries")
@@ -546,7 +546,7 @@ func TestRepository(t *testing.T) {
 
 		// WHEN
 		reportBeginTS := referenceTS.Add(time.Hour * 24 * 7 * -2)
-		entries, err := FetchStatsBetweenTS(testDB, reportBeginTS, referenceTS, 100)
+		entries, err := FetchStatsBetweenTS(testDB, reportBeginTS, referenceTS, 100, types.TaskFilterActiveInactive)
 
 		// THEN
 		require.NoError(t, err, "failed to fetch report entries")

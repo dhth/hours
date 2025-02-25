@@ -111,16 +111,27 @@ This can be used to record details about your work on this task.`
 	return m
 }
 
-func initialRecordsModel(typ recordsType, db *sql.DB, style Style, start, end time.Time, plain bool, period string, numDays int, initialData string) recordsModel {
+func initialRecordsModel(
+	typ recordsType,
+	db *sql.DB,
+	style Style,
+	start, end time.Time,
+	activeFilter types.TaskActiveStatusFilter,
+	plain bool,
+	period string,
+	numDays int,
+	initialData string,
+) recordsModel {
 	return recordsModel{
-		typ:     typ,
-		db:      db,
-		style:   style,
-		start:   start,
-		end:     end,
-		period:  period,
-		numDays: numDays,
-		plain:   plain,
-		report:  initialData,
+		typ:          typ,
+		db:           db,
+		style:        style,
+		start:        start,
+		end:          end,
+		activeFilter: activeFilter,
+		period:       period,
+		numDays:      numDays,
+		plain:        plain,
+		report:       initialData,
 	}
 }

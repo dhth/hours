@@ -176,3 +176,16 @@ const (
 	ShiftHour
 	ShiftDay
 )
+
+type TaskActiveStatusFilter uint8
+
+const (
+	TaskFilterActive TaskActiveStatusFilter = 1 << iota
+	TaskFilterInactive
+	TaskFilterActiveInactive TaskActiveStatusFilter = (1 << iota) - 1
+)
+
+func (f TaskActiveStatusFilter) Active() bool       { return (f & TaskFilterActive) != 0 }
+func (f TaskActiveStatusFilter) Inactive() bool     { return (f & TaskFilterInactive) != 0 }
+func (f TaskActiveStatusFilter) OnlyActive() bool   { return f == TaskFilterActive }
+func (f TaskActiveStatusFilter) OnlyInactive() bool { return f == TaskFilterInactive }

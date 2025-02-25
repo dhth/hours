@@ -51,7 +51,18 @@ func RenderReport(db *sql.DB, style Style, writer io.Writer, plain bool, period 
 	}
 
 	if interactive {
-		p := tea.NewProgram(initialRecordsModel(analyticsType, db, style, ts.Start, ts.End, plain, period, ts.NumDays, report))
+		p := tea.NewProgram(initialRecordsModel(
+			analyticsType,
+			db,
+			style,
+			ts.Start,
+			ts.End,
+			types.TaskFilterActiveInactive,
+			plain,
+			period,
+			ts.NumDays,
+			report,
+		))
 		_, err := p.Run()
 		if err != nil {
 			return err

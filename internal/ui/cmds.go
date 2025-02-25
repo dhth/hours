@@ -180,7 +180,16 @@ func hideHelp(interval time.Duration) tea.Cmd {
 	})
 }
 
-func getRecordsData(analyticsType recordsType, db *sql.DB, style Style, period string, start, end time.Time, numDays int, plain bool) tea.Cmd {
+func getRecordsData(
+	analyticsType recordsType,
+	db *sql.DB,
+	style Style,
+	period string,
+	start, end time.Time,
+	activeFilter types.TaskActiveStatusFilter,
+	numDays int,
+	plain bool,
+) tea.Cmd {
 	return func() tea.Msg {
 		var data string
 		var err error
@@ -193,7 +202,8 @@ func getRecordsData(analyticsType recordsType, db *sql.DB, style Style, period s
 		case reportLogs:
 			data, err = getTaskLog(db, style, start, end, 20, plain)
 		case reportStats:
-			data, err = getStats(db, style, period, start, end, plain)
+			fetcher := newStatsFetcherFromPeriod(period, activeFilter, start, end)
+			data, err = getStats(db, style, fetcher, plain)
 		}
 
 		return recordsDataFetchedMsg{

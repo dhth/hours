@@ -47,7 +47,18 @@ func RenderTaskLog(db *sql.DB, style Style, writer io.Writer, plain bool, period
 	}
 
 	if interactive {
-		p := tea.NewProgram(initialRecordsModel(reportLogs, db, style, ts.Start, ts.End, plain, period, ts.NumDays, log))
+		p := tea.NewProgram(initialRecordsModel(
+			reportLogs,
+			db,
+			style,
+			ts.Start,
+			ts.End,
+			types.TaskFilterActiveInactive,
+			plain,
+			period,
+			ts.NumDays,
+			log,
+		))
 		_, err := p.Run()
 		if err != nil {
 			return err
