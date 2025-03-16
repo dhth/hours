@@ -202,7 +202,7 @@ func TestGetTimePeriod(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetTimePeriod(tt.period, tt.now, tt.fullWeek)
+			got, err := GetDateRange(tt.period, tt.now, tt.fullWeek)
 
 			startStr := got.Start.Format(timeFormat)
 			endStr := got.End.Format(timeFormat)

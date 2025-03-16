@@ -208,3 +208,9 @@ func ParseTaskStatus(value string) (TaskStatus, error) {
 }
 
 var ValidTaskStatusValues = []string{TSValueActive, TSValueInactive, TSValueAny}
+
+type DateRange struct {
+	Start   time.Time
+	End     time.Time
+	NumDays int
+}

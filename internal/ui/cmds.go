@@ -181,13 +181,11 @@ func hideHelp(interval time.Duration) tea.Cmd {
 }
 
 func getRecordsData(
-	analyticsType recordsType,
+	analyticsType recordsKind,
 	db *sql.DB,
 	style Style,
-	period string,
-	start, end time.Time,
+	period types.DateRange,
 	taskStatus types.TaskStatus,
-	numDays int,
 	plain bool,
 ) tea.Cmd {
 	return func() tea.Msg {
@@ -196,18 +194,17 @@ func getRecordsData(
 
 		switch analyticsType {
 		case reportRecords:
-			data, err = getReport(db, style, start, numDays, plain)
+			data, err = getReport(db, style, period.Start, period.NumDays, plain)
 		case reportAggRecords:
-			data, err = getReportAgg(db, style, start, numDays, plain)
+			data, err = getReportAgg(db, style, period.Start, period.NumDays, plain)
 		case reportLogs:
-			data, err = getTaskLog(db, style, start, end, 20, plain)
+			data, err = getTaskLog(db, style, period.Start, period.End, 20, plain)
 		case reportStats:
-			data, err = getStats(db, style, period, start, end, taskStatus, plain)
+			data, err = getStats(db, style, &period, taskStatus, plain)
 		}
 
 		return recordsDataFetchedMsg{
-			start:  start,
-			end:    end,
+			period: period,
 			report: data,
 			err:    err,
 		}

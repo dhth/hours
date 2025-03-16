@@ -22,29 +22,17 @@ const (
 	reportTimeCharsBudget = 6
 )
 
-func RenderReport(db *sql.DB, style Style, writer io.Writer, plain bool, period string, agg bool, interactive bool) error {
-	if period == "" {
-		return nil
-	}
-
-	var fullWeek bool
-	if interactive {
-		fullWeek = true
-	}
-	ts, err := types.GetTimePeriod(period, time.Now(), fullWeek)
-	if err != nil {
-		return err
-	}
-
+func RenderReport(db *sql.DB, style Style, writer io.Writer, plain bool, period types.DateRange, periodStr string, agg bool, interactive bool) error {
 	var report string
-	var analyticsType recordsType
+	var analyticsType recordsKind
+	var err error
 
 	if agg {
 		analyticsType = reportAggRecords
-		report, err = getReportAgg(db, style, ts.Start, ts.NumDays, plain)
+		report, err = getReportAgg(db, style, period.Start, period.NumDays, plain)
 	} else {
 		analyticsType = reportRecords
-		report, err = getReport(db, style, ts.Start, ts.NumDays, plain)
+		report, err = getReport(db, style, period.Start, period.NumDays, plain)
 	}
 	if err != nil {
 		return fmt.Errorf("%w: %s", errCouldntGenerateReport, err.Error())
@@ -55,12 +43,10 @@ func RenderReport(db *sql.DB, style Style, writer io.Writer, plain bool, period 
 			analyticsType,
 			db,
 			style,
-			ts.Start,
-			ts.End,
+			period,
+			periodStr,
 			types.TaskStatusAny,
 			plain,
-			period,
-			ts.NumDays,
 			report,
 		))
 		_, err := p.Run()
