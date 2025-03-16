@@ -12,6 +12,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	c "github.com/dhth/hours/internal/common"
@@ -310,7 +311,7 @@ hours --dbpath=%s stats today -i
 	}
 
 	reportCmd := &cobra.Command{
-		Use:   "report",
+		Use:   "report [PERIOD]",
 		Short: "Output a report based on task log entries",
 		Long: `Output a report based on task log entries.
 
@@ -320,12 +321,12 @@ cumulative time spent on each task per day.
 
 Accepts an argument, which can be one of the following:
 
-  today:     for today's report
-  yest:      for yesterday's report
-  3d:        for a report on the last 3 days (default)
-  week:      for a report on the current week
-  date:      for a report for a specific date (eg. "2024/06/08")
-  range:     for a report for a date range (eg. "2024/06/08...2024/06/12")
+  today      for today's report
+  yest       for yesterday's report
+  3d         for a report on the last 3 days (default)
+  week       for a report on the current week
+  date       for a report for a specific date (eg. "2024/06/08")
+  range      for a report for a date range (eg. "2024/06/08...2024/06/12")
 
 Note: If a task log continues past midnight in your local timezone, it
 will be reported on the day it ends.
@@ -340,23 +341,32 @@ will be reported on the day it ends.
 				period = args[0]
 			}
 
-			return ui.RenderReport(db, style, os.Stdout, recordsOutputPlain, period, reportAgg, recordsInteractive)
+			var fullWeek bool
+			if recordsInteractive {
+				fullWeek = true
+			}
+			dateRange, err := types.GetDateRange(period, time.Now(), fullWeek)
+			if err != nil {
+				return err
+			}
+
+			return ui.RenderReport(db, style, os.Stdout, recordsOutputPlain, dateRange, period, reportAgg, recordsInteractive)
 		},
 	}
 
 	logCmd := &cobra.Command{
-		Use:   "log",
+		Use:   "log [PERIOD]",
 		Short: "Output task log entries",
 		Long: `Output task log entries.
 
 Accepts an argument, which can be one of the following:
 
-  today:     for log entries from today (default)
-  yest:      for log entries from yesterday
-  3d:        for log entries from the last 3 days
-  week:      for log entries from the current week
-  date:      for log entries from a specific date (eg. "2024/06/08")
-  range:     for log entries from a specific date range (eg. "2024/06/08...2024/06/12")
+  today      for log entries from today (default)
+  yest       for log entries from yesterday
+  3d         for log entries from the last 3 days
+  week       for log entries from the current week
+  date       for log entries from a specific date (eg. "2024/06/08")
+  range      for log entries from a specific date range (eg. "2024/06/08...2024/06/12")
 
 Note: If a task log continues past midnight in your local timezone, it'll
 appear in the log for the day it ends.
@@ -371,24 +381,29 @@ appear in the log for the day it ends.
 				period = args[0]
 			}
 
-			return ui.RenderTaskLog(db, style, os.Stdout, recordsOutputPlain, period, recordsInteractive)
+			dateRange, err := types.GetDateRange(period, time.Now(), false)
+			if err != nil {
+				return err
+			}
+
+			return ui.RenderTaskLog(db, style, os.Stdout, recordsOutputPlain, dateRange, period, recordsInteractive)
 		},
 	}
 
 	statsCmd := &cobra.Command{
-		Use:   "stats",
+		Use:   "stats [PERIOD]",
 		Short: "Output statistics for tracked time",
 		Long: `Output statistics for tracked time.
 
 Accepts an argument, which can be one of the following:
 
-  today:     show stats for today
-  yest:      show stats for yesterday
-  3d:        show stats for the last 3 days (default)
-  week:      show stats for the current week
-  date:      show stats for a specific date (eg. "2024/06/08")
-  range:     show stats for a specific date range (eg. "2024/06/08...2024/06/12")
-  all:       show stats for all log entries
+  today      show stats for today
+  yest       show stats for yesterday
+  3d         show stats for the last 3 days (default)
+  week       show stats for the current week
+  date       show stats for a specific date (eg. "2024/06/08")
+  range      show stats for a specific date range (eg. "2024/06/08...2024/06/12")
+  all        show stats for all log entries
 
 Note: If a task log continues past midnight in your local timezone, it'll
 be considered in the stats for the day it ends.
@@ -408,7 +423,20 @@ be considered in the stats for the day it ends.
 				return err
 			}
 
-			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, period, taskStatus, recordsInteractive)
+			var fullWeek bool
+			if recordsInteractive {
+				fullWeek = true
+			}
+			var dateRange types.DateRange
+			if period != "all" {
+				dateRange, err = types.GetDateRange(period, time.Now(), fullWeek)
+				if err != nil {
+					return err
+				}
+
+			}
+
+			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, &dateRange, period, taskStatus, recordsInteractive)
 		},
 	}
 

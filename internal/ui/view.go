@@ -282,16 +282,16 @@ func (m recordsModel) View() string {
 
 	var dateRangeStr string
 	var dateRange string
-	if m.numDays > 1 {
+	if m.period.NumDays > 1 {
 		dateRangeStr = fmt.Sprintf(`
  range:             %s...%s
  `,
-			m.start.Format(dateFormat), m.end.AddDate(0, 0, -1).Format(dateFormat))
+			m.period.Start.Format(dateFormat), m.period.End.AddDate(0, 0, -1).Format(dateFormat))
 	} else {
 		dateRangeStr = fmt.Sprintf(`
  date:              %s
 `,
-			m.start.Format(dateFormat))
+			m.period.Start.Format(dateFormat))
 	}
 
 	helpStr := `

@@ -2,7 +2,6 @@ package ui
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textarea"
@@ -112,25 +111,22 @@ This can be used to record details about your work on this task.`
 }
 
 func initialRecordsModel(
-	typ recordsType,
+	kind recordsKind,
 	db *sql.DB,
 	style Style,
-	start, end time.Time,
+	period types.DateRange,
+	periodStr string,
 	taskStatus types.TaskStatus,
 	plain bool,
-	period string,
-	numDays int,
 	initialData string,
 ) recordsModel {
 	return recordsModel{
-		typ:        typ,
+		kind:       kind,
 		db:         db,
 		style:      style,
-		start:      start,
-		end:        end,
-		taskStatus: taskStatus,
 		period:     period,
-		numDays:    numDays,
+		periodStr:  periodStr,
+		taskStatus: taskStatus,
 		plain:      plain,
 		report:     initialData,
 	}

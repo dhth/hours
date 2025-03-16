@@ -8,13 +8,13 @@ import (
 )
 
 const (
-	timePeriodDaysUpperBound = 7
-	TimePeriodWeek           = "week"
-	timeFormat               = "2006/01/02 15:04"
-	timeOnlyFormat           = "15:04"
-	dayFormat                = "Monday"
-	friendlyTimeFormat       = "Mon, 15:04"
-	dateFormat               = "2006/01/02"
+	dateRangeDaysUpperBound = 7
+	TimePeriodWeek          = "week"
+	timeFormat              = "2006/01/02 15:04"
+	timeOnlyFormat          = "15:04"
+	dayFormat               = "Monday"
+	friendlyTimeFormat      = "Mon, 15:04"
+	dateFormat              = "2006/01/02"
 )
 
 var (
@@ -26,42 +26,36 @@ var (
 	errTimePeriodTooLarge         = errors.New("time period is too large")
 )
 
-type TimePeriod struct {
-	Start   time.Time
-	End     time.Time
-	NumDays int
-}
+func parseDateDuration(dateRangeStr string) (DateRange, error) {
+	var dr DateRange
 
-func parseDateDuration(dateRange string) (TimePeriod, error) {
-	var tp TimePeriod
-
-	elements := strings.Split(dateRange, "...")
+	elements := strings.Split(dateRangeStr, "...")
 	if len(elements) != 2 {
-		return tp, fmt.Errorf("%w: date range needs to be of the format: %s...%s", errDateRangeIncorrect, dateFormat, dateFormat)
+		return dr, fmt.Errorf("%w: date range needs to be of the format: %s...%s", errDateRangeIncorrect, dateFormat, dateFormat)
 	}
 
 	start, err := time.ParseInLocation(string(dateFormat), elements[0], time.Local)
 	if err != nil {
-		return tp, fmt.Errorf("%w: %s", errStartDateIncorrect, err.Error())
+		return dr, fmt.Errorf("%w: %s", errStartDateIncorrect, err.Error())
 	}
 
 	end, err := time.ParseInLocation(string(dateFormat), elements[1], time.Local)
 	if err != nil {
-		return tp, fmt.Errorf("%w: %s", errEndDateIncorrect, err.Error())
+		return dr, fmt.Errorf("%w: %s", errEndDateIncorrect, err.Error())
 	}
 
 	if end.Sub(start) <= 0 {
-		return tp, fmt.Errorf("%w", errEndDateIsNotAfterStartDate)
+		return dr, fmt.Errorf("%w", errEndDateIsNotAfterStartDate)
 	}
 
-	tp.Start = start
-	tp.End = end
-	tp.NumDays = int(end.Sub(start).Hours()/24) + 1
+	dr.Start = start
+	dr.End = end
+	dr.NumDays = int(end.Sub(start).Hours()/24) + 1
 
-	return tp, nil
+	return dr, nil
 }
 
-func GetTimePeriod(period string, now time.Time, fullWeek bool) (TimePeriod, error) {
+func GetDateRange(period string, now time.Time, fullWeek bool) (DateRange, error) {
 	var start, end time.Time
 	var numDays int
 
@@ -102,14 +96,14 @@ func GetTimePeriod(period string, now time.Time, fullWeek bool) (TimePeriod, err
 		var err error
 
 		if strings.Contains(period, "...") {
-			var ts TimePeriod
+			var ts DateRange
 			ts, err = parseDateDuration(period)
 			if err != nil {
 				return ts, fmt.Errorf("%w: %s", errTimePeriodNotValid, err.Error())
 			}
 
-			if ts.NumDays > timePeriodDaysUpperBound {
-				return ts, fmt.Errorf("%w: maximum number of days allowed (both inclusive): %d", errTimePeriodTooLarge, timePeriodDaysUpperBound)
+			if ts.NumDays > dateRangeDaysUpperBound {
+				return ts, fmt.Errorf("%w: maximum number of days allowed (both inclusive): %d", errTimePeriodTooLarge, dateRangeDaysUpperBound)
 			}
 
 			start = ts.Start
@@ -118,14 +112,14 @@ func GetTimePeriod(period string, now time.Time, fullWeek bool) (TimePeriod, err
 		} else {
 			start, err = time.ParseInLocation(string(dateFormat), period, time.Local)
 			if err != nil {
-				return TimePeriod{}, fmt.Errorf("%w: %s", errTimePeriodNotValid, err.Error())
+				return DateRange{}, fmt.Errorf("%w: %s", errTimePeriodNotValid, err.Error())
 			}
 			end = start.AddDate(0, 0, 1)
 			numDays = 1
 		}
 	}
 
-	return TimePeriod{
+	return DateRange{
 		Start:   start,
 		End:     end,
 		NumDays: numDays,
