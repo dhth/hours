@@ -53,7 +53,7 @@ func RenderTaskLog(db *sql.DB, style Style, writer io.Writer, plain bool, period
 			style,
 			ts.Start,
 			ts.End,
-			types.TaskFilterActiveInactive,
+			types.TaskStatusAny,
 			plain,
 			period,
 			ts.NumDays,

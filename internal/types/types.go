@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"time"
@@ -10,6 +11,8 @@ import (
 )
 
 const emptyCommentIndicator = "∅"
+
+var ErrIncorrectTaskStatusProvided = errors.New("incorrect task status provided")
 
 type Task struct {
 	ID             int
@@ -177,15 +180,31 @@ const (
 	ShiftDay
 )
 
-type TaskActiveStatusFilter uint8
+type TaskStatus uint8
 
 const (
-	TaskFilterActive TaskActiveStatusFilter = 1 << iota
-	TaskFilterInactive
-	TaskFilterActiveInactive TaskActiveStatusFilter = (1 << iota) - 1
+	TSValueActive   = "active"
+	TSValueInactive = "inactive"
+	TSValueAny      = "any"
 )
 
-func (f TaskActiveStatusFilter) Active() bool       { return (f & TaskFilterActive) != 0 }
-func (f TaskActiveStatusFilter) Inactive() bool     { return (f & TaskFilterInactive) != 0 }
-func (f TaskActiveStatusFilter) OnlyActive() bool   { return f == TaskFilterActive }
-func (f TaskActiveStatusFilter) OnlyInactive() bool { return f == TaskFilterInactive }
+const (
+	TaskStatusActive TaskStatus = iota
+	TaskStatusInactive
+	TaskStatusAny
+)
+
+func ParseTaskStatus(value string) (TaskStatus, error) {
+	switch value {
+	case TSValueActive:
+		return TaskStatusActive, nil
+	case TSValueInactive:
+		return TaskStatusInactive, nil
+	case TSValueAny:
+		return TaskStatusAny, nil
+	default:
+		return TaskStatusAny, ErrIncorrectTaskStatusProvided
+	}
+}
+
+var ValidTaskStatusValues = []string{TSValueActive, TSValueInactive, TSValueAny}

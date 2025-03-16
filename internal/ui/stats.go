@@ -25,13 +25,12 @@ const (
 	periodAll              = "all"
 )
 
-func RenderStats(
-	db *sql.DB,
+func RenderStats(db *sql.DB,
 	style Style,
 	writer io.Writer,
 	plain bool,
 	period string,
-	activeFilter types.TaskActiveStatusFilter,
+	taskStatus types.TaskStatus,
 	interactive bool,
 ) error {
 	if period == "" {
@@ -45,10 +44,9 @@ func RenderStats(
 		return fmt.Errorf("%w when period=all", errInteractiveModeNotApplicable)
 	}
 
-	fetcher := newStatsFetcher(activeFilter)
-
 	if period == periodAll {
-		stats, err = getStats(db, style, fetcher, plain)
+		// TODO: find a better way for this, passing start, end for "all" doesn't make sense
+		stats, err = getStats(db, style, period, time.Now(), time.Now(), taskStatus, plain)
 		if err != nil {
 			return fmt.Errorf("%w: %s", errCouldntGenerateStats, err.Error())
 		}
@@ -65,24 +63,13 @@ func RenderStats(
 		return err
 	}
 
-	stats, err = getStats(db, style, fetcher.ts(ts.Start, ts.End), plain)
+	stats, err = getStats(db, style, period, ts.Start, ts.End, taskStatus, plain)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errCouldntGenerateStats, err.Error())
 	}
 
 	if interactive {
-		p := tea.NewProgram(initialRecordsModel(
-			reportStats,
-			db,
-			style,
-			ts.Start,
-			ts.End,
-			activeFilter,
-			plain,
-			period,
-			ts.NumDays,
-			stats,
-		))
+		p := tea.NewProgram(initialRecordsModel(reportStats, db, style, ts.Start, ts.End, taskStatus, plain, period, ts.NumDays, stats))
 		_, err := p.Run()
 		if err != nil {
 			return err
@@ -93,52 +80,17 @@ func RenderStats(
 	return nil
 }
 
-type statsFetcher struct {
-	all          bool
-	start, end   time.Time
-	activeFilter types.TaskActiveStatusFilter
-}
-
-func newStatsFetcher(activeFilter types.TaskActiveStatusFilter) statsFetcher {
-	return statsFetcher{
-		all:          true,
-		activeFilter: activeFilter,
-	}
-}
-
-func newStatsFetcherFromPeriod(
-	period string,
-	activeFilter types.TaskActiveStatusFilter,
-	start, end time.Time,
-) statsFetcher {
-	f := newStatsFetcher(activeFilter)
-	if period == periodAll {
-		return f
-	}
-	return f.ts(start, end)
-}
-
-func (f statsFetcher) ts(start, end time.Time) statsFetcher {
-	return statsFetcher{
-		all:          false,
-		start:        start,
-		end:          end,
-		activeFilter: f.activeFilter,
-	}
-}
-
-func (f statsFetcher) fetch(db *sql.DB) ([]types.TaskReportEntry, error) {
-	if f.all {
-		return pers.FetchStats(db, statsLogEntriesLimit, f.activeFilter)
-	}
-	return pers.FetchStatsBetweenTS(db, f.start, f.end, statsLogEntriesLimit, f.activeFilter)
-}
-
-func getStats(db *sql.DB, style Style, fetcher statsFetcher, plain bool) (string, error) {
+func getStats(db *sql.DB, style Style, period string, start, end time.Time, taskStatus types.TaskStatus, plain bool) (string, error) {
 	var entries []types.TaskReportEntry
 	var err error
 
-	if entries, err = fetcher.fetch(db); err != nil {
+	if period == periodAll {
+		entries, err = pers.FetchStats(db, taskStatus, statsLogEntriesLimit)
+	} else {
+		entries, err = pers.FetchStatsBetweenTS(db, start, end, taskStatus, statsLogEntriesLimit)
+	}
+
+	if err != nil {
 		return "", err
 	}
 

@@ -555,13 +555,15 @@ ORDER by tl.begin_ts ASC LIMIT ?;
 	return logEntries, nil
 }
 
-func FetchStats(db *sql.DB, limit int, filter types.TaskActiveStatusFilter) ([]types.TaskReportEntry, error) {
+func FetchStats(db *sql.DB, taskStatus types.TaskStatus, limit int) ([]types.TaskReportEntry, error) {
 	var activeFilter string
-	if filter.OnlyActive() {
-		activeFilter = "WHERE t.active = true"
-	} else if filter.OnlyInactive() {
-		activeFilter = "WHERE t.active = false"
+	switch taskStatus {
+	case types.TaskStatusActive:
+		activeFilter = "WHERE t.active is true"
+	case types.TaskStatusInactive:
+		activeFilter = "WHERE t.active is false"
 	}
+
 	rows, err := db.Query(`
 SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries, t.secs_spent
 from task_log tl
@@ -598,13 +600,15 @@ limit ?;
 	return tLE, nil
 }
 
-func FetchStatsBetweenTS(db *sql.DB, beginTs, endTs time.Time, limit int, filter types.TaskActiveStatusFilter) ([]types.TaskReportEntry, error) {
+func FetchStatsBetweenTS(db *sql.DB, beginTs, endTs time.Time, taskStatus types.TaskStatus, limit int) ([]types.TaskReportEntry, error) {
 	var activeFilter string
-	if filter.OnlyActive() {
-		activeFilter = " AND t.active = true"
-	} else if filter.OnlyInactive() {
-		activeFilter = " AND t.active = false"
+	switch taskStatus {
+	case types.TaskStatusActive:
+		activeFilter = " AND t.active is true"
+	case types.TaskStatusInactive:
+		activeFilter = " AND t.active is false"
 	}
+
 	rows, err := db.Query(`
 SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries,  SUM(tl.secs_spent) AS secs_spent
 FROM task_log tl 
