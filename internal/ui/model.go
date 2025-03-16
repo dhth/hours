@@ -133,19 +133,19 @@ func (m Model) Init() tea.Cmd {
 }
 
 type recordsModel struct {
-	db           *sql.DB
-	style        Style
-	typ          recordsType
-	start        time.Time
-	end          time.Time
-	period       string
-	numDays      int
-	plain        bool
-	activeFilter types.TaskActiveStatusFilter
-	report       string
-	quitting     bool
-	busy         bool
-	err          error
+	db         *sql.DB
+	style      Style
+	typ        recordsType
+	start      time.Time
+	end        time.Time
+	period     string
+	numDays    int
+	plain      bool
+	taskStatus types.TaskStatus
+	report     string
+	quitting   bool
+	busy       bool
+	err        error
 }
 
 func (recordsModel) Init() tea.Cmd {

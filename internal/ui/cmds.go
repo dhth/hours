@@ -186,7 +186,7 @@ func getRecordsData(
 	style Style,
 	period string,
 	start, end time.Time,
-	activeFilter types.TaskActiveStatusFilter,
+	taskStatus types.TaskStatus,
 	numDays int,
 	plain bool,
 ) tea.Cmd {
@@ -202,8 +202,7 @@ func getRecordsData(
 		case reportLogs:
 			data, err = getTaskLog(db, style, start, end, 20, plain)
 		case reportStats:
-			fetcher := newStatsFetcherFromPeriod(period, activeFilter, start, end)
-			data, err = getStats(db, style, fetcher, plain)
+			data, err = getStats(db, style, period, start, end, taskStatus, plain)
 		}
 
 		return recordsDataFetchedMsg{

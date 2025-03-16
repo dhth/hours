@@ -151,8 +151,7 @@ func NewRootCommand() (*cobra.Command, error) {
 		reportAgg           bool
 		recordsInteractive  bool
 		recordsOutputPlain  bool
-		recordsActive       bool
-		recordsInactive     bool
+		taskStatusStr       string
 		activeTemplate      string
 		genNumDays          uint8
 		genNumTasks         uint8
@@ -274,13 +273,15 @@ create dummy entries in it. You can run it on a throwaway database by passing a
 path for it via --dbpath/-d (use it for all further invocations of 'hours' as
 well).
 `))
-				fmt.Print(`
+				fmt.Printf(`
 The 'gen' subcommand is intended for new users of 'hours' so they can get a
 sense of its capabilities without actually tracking any time.
 
+Running with --dbpath set to: %q
+
 ---
 
-`)
+`, dbPathFull)
 				confirm, err := getConfirmation()
 				if err != nil {
 					return err
@@ -296,9 +297,6 @@ sense of its capabilities without actually tracking any time.
 			}
 			fmt.Printf(`
 Successfully generated dummy data in the database file: %s
-
-If this is not the default database file path, use --dbpath/-d with 'hours' when
-you want to access the dummy data.
 
 Go ahead and try the following!
 
@@ -405,15 +403,12 @@ be considered in the stats for the day it ends.
 				period = args[0]
 			}
 
-			var activeFilter types.TaskActiveStatusFilter
-			if recordsActive {
-				activeFilter |= types.TaskFilterActive
-			}
-			if recordsInactive {
-				activeFilter |= types.TaskFilterInactive
+			taskStatus, err := types.ParseTaskStatus(taskStatusStr)
+			if err != nil {
+				return err
 			}
 
-			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, period, activeFilter, recordsInteractive)
+			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, period, taskStatus, recordsInteractive)
 		},
 	}
 
@@ -546,21 +541,20 @@ eg. hours active -t ' {{task}} ({{time}}) '
 	reportCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output report without any formatting")
 	reportCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 	reportCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
-		fmt.Sprintf("UI theme to use; themes live in %s", themesDir))
+		fmt.Sprintf("UI theme to use (themes live in %q)", themesDir))
 
 	logCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output logs without any formatting")
 	logCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view logs interactively")
 	logCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 	logCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
-		fmt.Sprintf("UI theme to use; themes live in %s", themesDir))
+		fmt.Sprintf("UI theme to use (themes live in %q)", themesDir))
 
 	statsCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output stats without any formatting")
 	statsCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view stats interactively")
-	statsCmd.Flags().BoolVarP(&recordsActive, "active", "A", false, "whether to view active tasks")
-	statsCmd.Flags().BoolVarP(&recordsInactive, "inactive", "I", false, "whether to view inactive tasks")
+	statsCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
 	statsCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 	statsCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
-		fmt.Sprintf("UI theme to use; themes live in %s", themesDir))
+		fmt.Sprintf("UI theme to use (themes live in %q)", themesDir))
 
 	activeCmd.Flags().StringVarP(&activeTemplate, "template", "t", ui.ActiveTaskPlaceholder, "string template to use for outputting active task")
 	activeCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
@@ -585,7 +579,7 @@ func getRandomChars(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyz"
 
 	var code string
-	for i := 0; i < length; i++ {
+	for range length {
 		code += string(charset[rand.Intn(len(charset))])
 	}
 	return code
