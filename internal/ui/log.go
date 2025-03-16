@@ -20,6 +20,7 @@ const (
 	logNumDaysUpperBound   = 7
 	logTimeCharsBudget     = 6
 	interactiveLogDayLimit = 1
+	logLimit               = 100
 )
 
 var (
@@ -27,12 +28,20 @@ var (
 	errCouldntGenerateLogs          = errors.New("couldn't generate logs")
 )
 
-func RenderTaskLog(db *sql.DB, style Style, writer io.Writer, plain bool, period types.DateRange, periodStr string, interactive bool) error {
+func RenderTaskLog(db *sql.DB,
+	style Style,
+	writer io.Writer,
+	plain bool,
+	period types.DateRange,
+	periodStr string,
+	taskStatus types.TaskStatus,
+	interactive bool,
+) error {
 	if interactive && period.NumDays > interactiveLogDayLimit {
 		return fmt.Errorf("%w (limited to %d day); use non-interactive mode to see logs for a larger time period", errInteractiveModeNotApplicable, interactiveLogDayLimit)
 	}
 
-	log, err := getTaskLog(db, style, period.Start, period.End, 100, plain)
+	log, err := getTaskLog(db, style, period.Start, period.End, taskStatus, logLimit, plain)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errCouldntGenerateLogs, err.Error())
 	}
@@ -44,7 +53,7 @@ func RenderTaskLog(db *sql.DB, style Style, writer io.Writer, plain bool, period
 			style,
 			period,
 			periodStr,
-			types.TaskStatusAny,
+			taskStatus,
 			plain,
 			log,
 		))
@@ -58,8 +67,16 @@ func RenderTaskLog(db *sql.DB, style Style, writer io.Writer, plain bool, period
 	return nil
 }
 
-func getTaskLog(db *sql.DB, style Style, start, end time.Time, limit int, plain bool) (string, error) {
-	entries, err := pers.FetchTLEntriesBetweenTS(db, start, end, limit)
+func getTaskLog(db *sql.DB,
+	style Style,
+	start,
+	end time.Time,
+	taskStatus types.TaskStatus,
+	limit int,
+	plain bool) (string,
+	error,
+) {
+	entries, err := pers.FetchTLEntriesBetweenTS(db, start, end, taskStatus, limit)
 	if err != nil {
 		return "", err
 	}

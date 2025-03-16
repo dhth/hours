@@ -334,6 +334,11 @@ will be reported on the day it ends.
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, args []string) error {
+			taskStatus, err := types.ParseTaskStatus(taskStatusStr)
+			if err != nil {
+				return err
+			}
+
 			var period string
 			if len(args) == 0 {
 				period = "3d"
@@ -350,7 +355,7 @@ will be reported on the day it ends.
 				return err
 			}
 
-			return ui.RenderReport(db, style, os.Stdout, recordsOutputPlain, dateRange, period, reportAgg, recordsInteractive)
+			return ui.RenderReport(db, style, os.Stdout, recordsOutputPlain, dateRange, period, taskStatus, reportAgg, recordsInteractive)
 		},
 	}
 
@@ -374,6 +379,11 @@ appear in the log for the day it ends.
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, args []string) error {
+			taskStatus, err := types.ParseTaskStatus(taskStatusStr)
+			if err != nil {
+				return err
+			}
+
 			var period string
 			if len(args) == 0 {
 				period = "today"
@@ -386,7 +396,7 @@ appear in the log for the day it ends.
 				return err
 			}
 
-			return ui.RenderTaskLog(db, style, os.Stdout, recordsOutputPlain, dateRange, period, recordsInteractive)
+			return ui.RenderTaskLog(db, style, os.Stdout, recordsOutputPlain, dateRange, period, taskStatus, recordsInteractive)
 		},
 	}
 
@@ -411,16 +421,16 @@ be considered in the stats for the day it ends.
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, args []string) error {
+			taskStatus, err := types.ParseTaskStatus(taskStatusStr)
+			if err != nil {
+				return err
+			}
+
 			var period string
 			if len(args) == 0 {
 				period = "3d"
 			} else {
 				period = args[0]
-			}
-
-			taskStatus, err := types.ParseTaskStatus(taskStatusStr)
-			if err != nil {
-				return err
 			}
 
 			var fullWeek bool
@@ -568,19 +578,21 @@ eg. hours active -t ' {{task}} ({{time}}) '
 	reportCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view report interactively")
 	reportCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output report without any formatting")
 	reportCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
+	reportCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
 	reportCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
 		fmt.Sprintf("UI theme to use (themes live in %q)", themesDir))
 
 	logCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output logs without any formatting")
 	logCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view logs interactively")
 	logCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
+	logCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
 	logCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
 		fmt.Sprintf("UI theme to use (themes live in %q)", themesDir))
 
 	statsCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output stats without any formatting")
 	statsCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view stats interactively")
-	statsCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
 	statsCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
+	statsCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
 	statsCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
 		fmt.Sprintf("UI theme to use (themes live in %q)", themesDir))
 

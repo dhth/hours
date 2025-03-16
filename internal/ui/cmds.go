@@ -194,11 +194,11 @@ func getRecordsData(
 
 		switch analyticsType {
 		case reportRecords:
-			data, err = getReport(db, style, period.Start, period.NumDays, plain)
+			data, err = getReport(db, style, period.Start, period.NumDays, taskStatus, plain)
 		case reportAggRecords:
-			data, err = getReportAgg(db, style, period.Start, period.NumDays, plain)
+			data, err = getReportAgg(db, style, period.Start, period.NumDays, taskStatus, plain)
 		case reportLogs:
-			data, err = getTaskLog(db, style, period.Start, period.End, 20, plain)
+			data, err = getTaskLog(db, style, period.Start, period.End, taskStatus, 20, plain)
 		case reportStats:
 			data, err = getStats(db, style, &period, taskStatus, plain)
 		}
