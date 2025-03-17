@@ -26,7 +26,7 @@ var (
 	errTimePeriodTooLarge         = errors.New("time period is too large")
 )
 
-func parseDateDuration(dateRangeStr string) (DateRange, error) {
+func parseDateRange(dateRangeStr string) (DateRange, error) {
 	var dr DateRange
 
 	elements := strings.Split(dateRangeStr, "...")
@@ -55,7 +55,7 @@ func parseDateDuration(dateRangeStr string) (DateRange, error) {
 	return dr, nil
 }
 
-func GetDateRange(period string, now time.Time, fullWeek bool) (DateRange, error) {
+func GetDateRangeFromPeriod(period string, now time.Time, fullWeek bool) (DateRange, error) {
 	var start, end time.Time
 	var numDays int
 
@@ -68,14 +68,12 @@ func GetDateRange(period string, now time.Time, fullWeek bool) (DateRange, error
 
 	case "yest":
 		aDayBefore := now.AddDate(0, 0, -1)
-
 		start = time.Date(aDayBefore.Year(), aDayBefore.Month(), aDayBefore.Day(), 0, 0, 0, 0, aDayBefore.Location())
 		end = start.AddDate(0, 0, 1)
 		numDays = 1
 
 	case "3d":
 		threeDaysBefore := now.AddDate(0, 0, -2)
-
 		start = time.Date(threeDaysBefore.Year(), threeDaysBefore.Month(), threeDaysBefore.Day(), 0, 0, 0, 0, threeDaysBefore.Location())
 		end = start.AddDate(0, 0, 3)
 		numDays = 3
@@ -96,19 +94,19 @@ func GetDateRange(period string, now time.Time, fullWeek bool) (DateRange, error
 		var err error
 
 		if strings.Contains(period, "...") {
-			var ts DateRange
-			ts, err = parseDateDuration(period)
+			var dr DateRange
+			dr, err = parseDateRange(period)
 			if err != nil {
-				return ts, fmt.Errorf("%w: %s", errTimePeriodNotValid, err.Error())
+				return dr, fmt.Errorf("%w: %s", errTimePeriodNotValid, err.Error())
 			}
 
-			if ts.NumDays > dateRangeDaysUpperBound {
-				return ts, fmt.Errorf("%w: maximum number of days allowed (both inclusive): %d", errTimePeriodTooLarge, dateRangeDaysUpperBound)
+			if dr.NumDays > dateRangeDaysUpperBound {
+				return dr, fmt.Errorf("%w: maximum number of days allowed (both inclusive): %d", errTimePeriodTooLarge, dateRangeDaysUpperBound)
 			}
 
-			start = ts.Start
-			end = ts.End.AddDate(0, 0, 1)
-			numDays = ts.NumDays
+			start = dr.Start
+			end = dr.End.AddDate(0, 0, 1)
+			numDays = dr.NumDays
 		} else {
 			start, err = time.ParseInLocation(string(dateFormat), period, time.Local)
 			if err != nil {
