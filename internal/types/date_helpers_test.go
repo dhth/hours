@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestParseDateDuration(t *testing.T) {
+func TestParseDateRange(t *testing.T) {
 	testCases := []struct {
 		name             string
 		input            string
@@ -74,7 +74,7 @@ func TestParseDateDuration(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseDateDuration(tt.input)
+			got, err := parseDateRange(tt.input)
 
 			if tt.err != nil {
 				assert.ErrorIs(t, err, tt.err)
@@ -92,7 +92,7 @@ func TestParseDateDuration(t *testing.T) {
 	}
 }
 
-func TestGetDateRange(t *testing.T) {
+func TestGetDateRangeFromPeriod(t *testing.T) {
 	now, err := time.ParseInLocation(timeFormat, "2024/06/20 20:00", time.Local)
 	if err != nil {
 		t.Fatalf("error setting up the test: time is not valid: %s", err)
@@ -202,7 +202,7 @@ func TestGetDateRange(t *testing.T) {
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetDateRange(tt.period, tt.now, tt.fullWeek)
+			got, err := GetDateRangeFromPeriod(tt.period, tt.now, tt.fullWeek)
 
 			startStr := got.Start.Format(timeFormat)
 			endStr := got.End.Format(timeFormat)

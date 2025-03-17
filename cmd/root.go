@@ -350,7 +350,7 @@ will be reported on the day it ends.
 			if recordsInteractive {
 				fullWeek = true
 			}
-			dateRange, err := types.GetDateRange(period, time.Now(), fullWeek)
+			dateRange, err := types.GetDateRangeFromPeriod(period, time.Now(), fullWeek)
 			if err != nil {
 				return err
 			}
@@ -391,7 +391,7 @@ appear in the log for the day it ends.
 				period = args[0]
 			}
 
-			dateRange, err := types.GetDateRange(period, time.Now(), false)
+			dateRange, err := types.GetDateRangeFromPeriod(period, time.Now(), false)
 			if err != nil {
 				return err
 			}
@@ -439,7 +439,7 @@ be considered in the stats for the day it ends.
 			}
 			var dateRange types.DateRange
 			if period != "all" {
-				dateRange, err = types.GetDateRange(period, time.Now(), fullWeek)
+				dateRange, err = types.GetDateRangeFromPeriod(period, time.Now(), fullWeek)
 				if err != nil {
 					return err
 				}
