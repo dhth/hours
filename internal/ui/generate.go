@@ -111,14 +111,14 @@ var (
 )
 
 func GenerateData(db *sql.DB, numDays, numTasks uint8) error {
-	for i := uint8(0); i < numTasks; i++ {
+	for i := range numTasks {
 		summary := tasks[rand.Intn(len(tasks))]
 		_, err := pers.InsertTask(db, summary)
 		if err != nil {
 			return err
 		}
 		numLogs := int(numDays/2) + rand.Intn(int(numDays/2))
-		for j := 0; j < numLogs; j++ {
+		for range numLogs {
 			beginTs := randomTimestamp(int(numDays))
 			numMinutes := 30 + rand.Intn(60)
 			endTs := beginTs.Add(time.Minute * time.Duration(numMinutes))

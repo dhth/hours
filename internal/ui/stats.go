@@ -28,20 +28,20 @@ func RenderStats(db *sql.DB,
 	style Style,
 	writer io.Writer,
 	plain bool,
-	period *types.DateRange,
-	periodStr string,
+	dateRange *types.DateRange,
+	period string,
 	taskStatus types.TaskStatus,
 	interactive bool,
 ) error {
 	var stats string
 	var err error
 
-	if interactive && period == nil {
+	if interactive && dateRange == nil {
 		return fmt.Errorf("%w when period=all", errInteractiveModeNotApplicable)
 	}
 
-	if period == nil {
-		stats, err = getStats(db, style, period, taskStatus, plain)
+	if dateRange == nil {
+		stats, err = getStats(db, style, dateRange, taskStatus, plain)
 		if err != nil {
 			return fmt.Errorf("%w: %s", errCouldntGenerateStats, err.Error())
 		}
@@ -50,7 +50,7 @@ func RenderStats(db *sql.DB,
 		return nil
 	}
 
-	stats, err = getStats(db, style, period, taskStatus, plain)
+	stats, err = getStats(db, style, dateRange, taskStatus, plain)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errCouldntGenerateStats, err.Error())
 	}
@@ -60,8 +60,8 @@ func RenderStats(db *sql.DB,
 			reportStats,
 			db,
 			style,
-			*period,
-			periodStr,
+			*dateRange,
+			period,
 			taskStatus,
 			plain,
 			stats,
@@ -78,7 +78,7 @@ func RenderStats(db *sql.DB,
 
 func getStats(db *sql.DB,
 	style Style,
-	period *types.DateRange,
+	dateRange *types.DateRange,
 	taskStatus types.TaskStatus,
 	plain bool) (string,
 	error,
@@ -86,10 +86,10 @@ func getStats(db *sql.DB,
 	var entries []types.TaskReportEntry
 	var err error
 
-	if period == nil {
+	if dateRange == nil {
 		entries, err = pers.FetchStats(db, taskStatus, statsLogEntriesLimit)
 	} else {
-		entries, err = pers.FetchStatsBetweenTS(db, period.Start, period.End, taskStatus, statsLogEntriesLimit)
+		entries, err = pers.FetchStatsBetweenTS(db, dateRange.Start, dateRange.End, taskStatus, statsLogEntriesLimit)
 	}
 
 	if err != nil {

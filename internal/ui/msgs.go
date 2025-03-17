@@ -89,7 +89,7 @@ type tasksFetchedMsg struct {
 }
 
 type recordsDataFetchedMsg struct {
-	period types.DateRange
-	report string
-	err    error
+	dateRange types.DateRange
+	report    string
+	err       error
 }
