@@ -136,8 +136,8 @@ type recordsModel struct {
 	db         *sql.DB
 	style      Style
 	kind       recordsKind
-	period     types.DateRange
-	periodStr  string
+	dateRange  types.DateRange
+	period     string
 	plain      bool
 	taskStatus types.TaskStatus
 	report     string

@@ -32,16 +32,16 @@ func RenderTaskLog(db *sql.DB,
 	style Style,
 	writer io.Writer,
 	plain bool,
-	period types.DateRange,
-	periodStr string,
+	dateRange types.DateRange,
+	period string,
 	taskStatus types.TaskStatus,
 	interactive bool,
 ) error {
-	if interactive && period.NumDays > interactiveLogDayLimit {
+	if interactive && dateRange.NumDays > interactiveLogDayLimit {
 		return fmt.Errorf("%w (limited to %d day); use non-interactive mode to see logs for a larger time period", errInteractiveModeNotApplicable, interactiveLogDayLimit)
 	}
 
-	log, err := getTaskLog(db, style, period.Start, period.End, taskStatus, logLimit, plain)
+	log, err := getTaskLog(db, style, dateRange.Start, dateRange.End, taskStatus, logLimit, plain)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errCouldntGenerateLogs, err.Error())
 	}
@@ -51,8 +51,8 @@ func RenderTaskLog(db *sql.DB,
 			reportLogs,
 			db,
 			style,
+			dateRange,
 			period,
-			periodStr,
 			taskStatus,
 			plain,
 			log,

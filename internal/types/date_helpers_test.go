@@ -92,7 +92,7 @@ func TestParseDateDuration(t *testing.T) {
 	}
 }
 
-func TestGetTimePeriod(t *testing.T) {
+func TestGetDateRange(t *testing.T) {
 	now, err := time.ParseInLocation(timeFormat, "2024/06/20 20:00", time.Local)
 	if err != nil {
 		t.Fatalf("error setting up the test: time is not valid: %s", err)

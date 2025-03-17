@@ -26,8 +26,8 @@ func RenderReport(db *sql.DB,
 	style Style,
 	writer io.Writer,
 	plain bool,
-	period types.DateRange,
-	periodStr string,
+	dateRange types.DateRange,
+	period string,
 	taskStatus types.TaskStatus,
 	agg bool,
 	interactive bool,
@@ -38,10 +38,10 @@ func RenderReport(db *sql.DB,
 
 	if agg {
 		analyticsType = reportAggRecords
-		report, err = getReportAgg(db, style, period.Start, period.NumDays, taskStatus, plain)
+		report, err = getReportAgg(db, style, dateRange.Start, dateRange.NumDays, taskStatus, plain)
 	} else {
 		analyticsType = reportRecords
-		report, err = getReport(db, style, period.Start, period.NumDays, taskStatus, plain)
+		report, err = getReport(db, style, dateRange.Start, dateRange.NumDays, taskStatus, plain)
 	}
 	if err != nil {
 		return fmt.Errorf("%w: %s", errCouldntGenerateReport, err.Error())
@@ -52,8 +52,8 @@ func RenderReport(db *sql.DB,
 			analyticsType,
 			db,
 			style,
+			dateRange,
 			period,
-			periodStr,
 			taskStatus,
 			plain,
 			report,
@@ -101,7 +101,7 @@ func getReport(db *sql.DB, style Style, start time.Time, numDays int, taskStatus
 	data := make([][]string, maxEntryForADay)
 	totalSecsPerDay := make(map[int]int)
 
-	for j := 0; j < numDays; j++ {
+	for j := range numDays {
 		totalSecsPerDay[j] = 0
 	}
 
@@ -120,9 +120,9 @@ func getReport(db *sql.DB, style Style, start time.Time, numDays int, taskStatus
 	}
 
 	styleCache := make(map[string]lipgloss.Style)
-	for rowIndex := 0; rowIndex < maxEntryForADay; rowIndex++ {
+	for rowIndex := range maxEntryForADay {
 		row := make([]string, numDays)
-		for colIndex := 0; colIndex < numDays; colIndex++ {
+		for colIndex := range numDays {
 			if rowIndex >= len(reportData[colIndex]) {
 				row[colIndex] = fmt.Sprintf("%s  %s",
 					utils.RightPadTrim("", summaryBudget, false),
@@ -182,7 +182,7 @@ func getReport(db *sql.DB, style Style, start time.Time, numDays int, taskStatus
 	}
 
 	headers := make([]string, numDays)
-	for i := 0; i < numDays; i++ {
+	for i := range numDays {
 		headers[i] = rs.headerStyle.Render(headersValues[i])
 	}
 
@@ -216,7 +216,7 @@ func getReportAgg(db *sql.DB,
 	reportData := make(map[int][]types.TaskReportEntry)
 
 	noEntriesFound := true
-	for i := 0; i < numDays; i++ {
+	for i := range numDays {
 		nextDay = day.AddDate(0, 0, 1)
 		taskLogEntries, err := pers.FetchReportBetweenTS(db, day, nextDay, taskStatus, 100)
 		if err != nil {
@@ -240,7 +240,7 @@ func getReportAgg(db *sql.DB,
 	data := make([][]string, maxEntryForADay)
 	totalSecsPerDay := make(map[int]int)
 
-	for j := 0; j < numDays; j++ {
+	for j := range numDays {
 		totalSecsPerDay[j] = 0
 	}
 
@@ -259,9 +259,9 @@ func getReportAgg(db *sql.DB,
 	}
 
 	styleCache := make(map[string]lipgloss.Style)
-	for rowIndex := 0; rowIndex < maxEntryForADay; rowIndex++ {
+	for rowIndex := range maxEntryForADay {
 		row := make([]string, numDays)
-		for colIndex := 0; colIndex < numDays; colIndex++ {
+		for colIndex := range numDays {
 			if rowIndex >= len(reportData[colIndex]) {
 				row[colIndex] = fmt.Sprintf("%s  %s",
 					utils.RightPadTrim("", summaryBudget, false),

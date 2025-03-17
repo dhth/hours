@@ -184,7 +184,7 @@ func getRecordsData(
 	analyticsType recordsKind,
 	db *sql.DB,
 	style Style,
-	period types.DateRange,
+	dateRange types.DateRange,
 	taskStatus types.TaskStatus,
 	plain bool,
 ) tea.Cmd {
@@ -194,19 +194,19 @@ func getRecordsData(
 
 		switch analyticsType {
 		case reportRecords:
-			data, err = getReport(db, style, period.Start, period.NumDays, taskStatus, plain)
+			data, err = getReport(db, style, dateRange.Start, dateRange.NumDays, taskStatus, plain)
 		case reportAggRecords:
-			data, err = getReportAgg(db, style, period.Start, period.NumDays, taskStatus, plain)
+			data, err = getReportAgg(db, style, dateRange.Start, dateRange.NumDays, taskStatus, plain)
 		case reportLogs:
-			data, err = getTaskLog(db, style, period.Start, period.End, taskStatus, 20, plain)
+			data, err = getTaskLog(db, style, dateRange.Start, dateRange.End, taskStatus, 20, plain)
 		case reportStats:
-			data, err = getStats(db, style, &period, taskStatus, plain)
+			data, err = getStats(db, style, &dateRange, taskStatus, plain)
 		}
 
 		return recordsDataFetchedMsg{
-			period: period,
-			report: data,
-			err:    err,
+			dateRange: dateRange,
+			report:    data,
+			err:       err,
 		}
 	}
 }

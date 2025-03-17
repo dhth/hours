@@ -8,6 +8,7 @@ linters:
     - gosimple
     - govet
     - ineffassign
+    - intrange
     - nilerr
     - prealloc
     - predeclared
