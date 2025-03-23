@@ -2,7 +2,6 @@ package ui
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textarea"
@@ -111,16 +110,24 @@ This can be used to record details about your work on this task.`
 	return m
 }
 
-func initialRecordsModel(typ recordsType, db *sql.DB, style Style, start, end time.Time, plain bool, period string, numDays int, initialData string) recordsModel {
+func initialRecordsModel(
+	kind recordsKind,
+	db *sql.DB,
+	style Style,
+	dateRange types.DateRange,
+	period string,
+	taskStatus types.TaskStatus,
+	plain bool,
+	initialData string,
+) recordsModel {
 	return recordsModel{
-		typ:     typ,
-		db:      db,
-		style:   style,
-		start:   start,
-		end:     end,
-		period:  period,
-		numDays: numDays,
-		plain:   plain,
-		report:  initialData,
+		kind:       kind,
+		db:         db,
+		style:      style,
+		dateRange:  dateRange,
+		period:     period,
+		taskStatus: taskStatus,
+		plain:      plain,
+		report:     initialData,
 	}
 }

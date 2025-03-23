@@ -361,49 +361,47 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "left", "h":
 			if !m.busy {
-				var newStart, newEnd time.Time
-				var numDays int
+				var dr types.DateRange
 
 				switch m.period {
 				case types.TimePeriodWeek:
-					weekday := m.start.Weekday()
+					weekday := m.dateRange.Start.Weekday()
 					offset := (7 + weekday - time.Monday) % 7
-					startOfPrevWeek := m.start.AddDate(0, 0, -int(offset+7))
-					newStart = time.Date(startOfPrevWeek.Year(), startOfPrevWeek.Month(), startOfPrevWeek.Day(), 0, 0, 0, 0, startOfPrevWeek.Location())
-					numDays = 7
+					startOfPrevWeek := m.dateRange.Start.AddDate(0, 0, -int(offset+7))
+					dr.Start = time.Date(startOfPrevWeek.Year(), startOfPrevWeek.Month(), startOfPrevWeek.Day(), 0, 0, 0, 0, startOfPrevWeek.Location())
 				default:
-					newStart = m.start.AddDate(0, 0, -m.numDays)
-					numDays = m.numDays
+					dr.Start = m.dateRange.Start.AddDate(0, 0, -m.dateRange.NumDays)
 				}
-				newEnd = newStart.AddDate(0, 0, numDays)
-				cmds = append(cmds, getRecordsData(m.typ, m.db, m.style, m.period, newStart, newEnd, numDays, m.plain))
+
+				dr.NumDays = m.dateRange.NumDays
+				dr.End = dr.Start.AddDate(0, 0, m.dateRange.NumDays)
+				cmds = append(cmds, getRecordsData(m.kind, m.db, m.style, dr, m.taskStatus, m.plain))
 				m.busy = true
 			}
 		case "right", "l":
 			if !m.busy {
-				var newStart, newEnd time.Time
-				var numDays int
+				var dr types.DateRange
 
 				switch m.period {
 				case types.TimePeriodWeek:
-					weekday := m.start.Weekday()
+					weekday := m.dateRange.Start.Weekday()
 					offset := (7 + weekday - time.Monday) % 7
-					startOfNextWeek := m.start.AddDate(0, 0, 7-int(offset))
-					newStart = time.Date(startOfNextWeek.Year(), startOfNextWeek.Month(), startOfNextWeek.Day(), 0, 0, 0, 0, startOfNextWeek.Location())
-					numDays = 7
+					startOfNextWeek := m.dateRange.Start.AddDate(0, 0, 7-int(offset))
+					dr.Start = time.Date(startOfNextWeek.Year(), startOfNextWeek.Month(), startOfNextWeek.Day(), 0, 0, 0, 0, startOfNextWeek.Location())
+					dr.NumDays = 7
 
 				default:
-					newStart = m.start.AddDate(0, 0, 1*(m.numDays))
-					numDays = m.numDays
+					dr.Start = m.dateRange.Start.AddDate(0, 0, 1*(m.dateRange.NumDays))
 				}
-				newEnd = newStart.AddDate(0, 0, numDays)
-				cmds = append(cmds, getRecordsData(m.typ, m.db, m.style, m.period, newStart, newEnd, numDays, m.plain))
+
+				dr.NumDays = m.dateRange.NumDays
+				dr.End = dr.Start.AddDate(0, 0, dr.NumDays)
+				cmds = append(cmds, getRecordsData(m.kind, m.db, m.style, dr, m.taskStatus, m.plain))
 				m.busy = true
 			}
 		case "ctrl+t":
 			if !m.busy {
-				var start, end time.Time
-				var numDays int
+				var dr types.DateRange
 
 				switch m.period {
 				case types.TimePeriodWeek:
@@ -411,17 +409,18 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					weekday := now.Weekday()
 					offset := (7 + weekday - time.Monday) % 7
 					startOfWeek := now.AddDate(0, 0, -int(offset))
-					start = time.Date(startOfWeek.Year(), startOfWeek.Month(), startOfWeek.Day(), 0, 0, 0, 0, startOfWeek.Location())
-					numDays = 7
+					dr.Start = time.Date(startOfWeek.Year(), startOfWeek.Month(), startOfWeek.Day(), 0, 0, 0, 0, startOfWeek.Location())
+					dr.NumDays = 7
 				default:
 					now := time.Now()
-					nDaysBack := now.AddDate(0, 0, -1*(m.numDays-1))
+					nDaysBack := now.AddDate(0, 0, -1*(m.dateRange.NumDays-1))
 
-					start = time.Date(nDaysBack.Year(), nDaysBack.Month(), nDaysBack.Day(), 0, 0, 0, 0, nDaysBack.Location())
-					numDays = m.numDays
+					dr.Start = time.Date(nDaysBack.Year(), nDaysBack.Month(), nDaysBack.Day(), 0, 0, 0, 0, nDaysBack.Location())
 				}
-				end = start.AddDate(0, 0, numDays)
-				cmds = append(cmds, getRecordsData(m.typ, m.db, m.style, m.period, start, end, numDays, m.plain))
+
+				dr.NumDays = m.dateRange.NumDays
+				dr.End = dr.Start.AddDate(0, 0, dr.NumDays)
+				cmds = append(cmds, getRecordsData(m.kind, m.db, m.style, dr, m.taskStatus, m.plain))
 				m.busy = true
 			}
 		}
@@ -432,8 +431,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
-		m.start = msg.start
-		m.end = msg.end
+		m.dateRange = msg.dateRange
 		m.report = msg.report
 		m.busy = false
 	}

@@ -20,6 +20,7 @@ const (
 	logNumDaysUpperBound   = 7
 	logTimeCharsBudget     = 6
 	interactiveLogDayLimit = 1
+	logLimit               = 100
 )
 
 var (
@@ -27,27 +28,35 @@ var (
 	errCouldntGenerateLogs          = errors.New("couldn't generate logs")
 )
 
-func RenderTaskLog(db *sql.DB, style Style, writer io.Writer, plain bool, period string, interactive bool) error {
-	if period == "" {
-		return nil
-	}
-
-	ts, err := types.GetTimePeriod(period, time.Now(), false)
-	if err != nil {
-		return err
-	}
-
-	if interactive && ts.NumDays > interactiveLogDayLimit {
+func RenderTaskLog(db *sql.DB,
+	style Style,
+	writer io.Writer,
+	plain bool,
+	dateRange types.DateRange,
+	period string,
+	taskStatus types.TaskStatus,
+	interactive bool,
+) error {
+	if interactive && dateRange.NumDays > interactiveLogDayLimit {
 		return fmt.Errorf("%w (limited to %d day); use non-interactive mode to see logs for a larger time period", errInteractiveModeNotApplicable, interactiveLogDayLimit)
 	}
 
-	log, err := getTaskLog(db, style, ts.Start, ts.End, 100, plain)
+	log, err := getTaskLog(db, style, dateRange.Start, dateRange.End, taskStatus, logLimit, plain)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errCouldntGenerateLogs, err.Error())
 	}
 
 	if interactive {
-		p := tea.NewProgram(initialRecordsModel(reportLogs, db, style, ts.Start, ts.End, plain, period, ts.NumDays, log))
+		p := tea.NewProgram(initialRecordsModel(
+			reportLogs,
+			db,
+			style,
+			dateRange,
+			period,
+			taskStatus,
+			plain,
+			log,
+		))
 		_, err := p.Run()
 		if err != nil {
 			return err
@@ -58,8 +67,16 @@ func RenderTaskLog(db *sql.DB, style Style, writer io.Writer, plain bool, period
 	return nil
 }
 
-func getTaskLog(db *sql.DB, style Style, start, end time.Time, limit int, plain bool) (string, error) {
-	entries, err := pers.FetchTLEntriesBetweenTS(db, start, end, limit)
+func getTaskLog(db *sql.DB,
+	style Style,
+	start,
+	end time.Time,
+	taskStatus types.TaskStatus,
+	limit int,
+	plain bool) (string,
+	error,
+) {
+	entries, err := pers.FetchTLEntriesBetweenTS(db, start, end, taskStatus, limit)
 	if err != nil {
 		return "", err
 	}

@@ -100,7 +100,7 @@ func (m Model) View() string {
 			m.taskInputs[summaryField].View(),
 			m.style.formHelp.Render(formSubmitHelp),
 		)
-		for i := 0; i < m.terminalHeight-9; i++ {
+		for range m.terminalHeight - 9 {
 			content += "\n"
 		}
 	case finishActiveTLView:
@@ -141,7 +141,7 @@ func (m Model) View() string {
 			m.tLCommentInput.View(),
 			m.style.formHelp.Render(formSubmitHelp),
 		)
-		for i := 0; i < m.terminalHeight-32; i++ {
+		for range m.terminalHeight - 32 {
 			content += "\n"
 		}
 	case editActiveTLView:
@@ -172,7 +172,7 @@ func (m Model) View() string {
 			m.tLCommentInput.View(),
 			m.style.formHelp.Render(formSubmitHelp),
 		)
-		for i := 0; i < m.terminalHeight-26; i++ {
+		for range m.terminalHeight - 26 {
 			content += "\n"
 		}
 	case manualTasklogEntryView, editSavedTLView:
@@ -219,7 +219,7 @@ func (m Model) View() string {
 			m.tLCommentInput.View(),
 			m.style.formHelp.Render(formSubmitHelp),
 		)
-		for i := 0; i < m.terminalHeight-32; i++ {
+		for range m.terminalHeight - 32 {
 			content += "\n"
 		}
 	case helpView:
@@ -282,16 +282,16 @@ func (m recordsModel) View() string {
 
 	var dateRangeStr string
 	var dateRange string
-	if m.numDays > 1 {
+	if m.dateRange.NumDays > 1 {
 		dateRangeStr = fmt.Sprintf(`
  range:             %s...%s
  `,
-			m.start.Format(dateFormat), m.end.AddDate(0, 0, -1).Format(dateFormat))
+			m.dateRange.Start.Format(dateFormat), m.dateRange.End.AddDate(0, 0, -1).Format(dateFormat))
 	} else {
 		dateRangeStr = fmt.Sprintf(`
  date:              %s
 `,
-			m.start.Format(dateFormat))
+			m.dateRange.Start.Format(dateFormat))
 	}
 
 	helpStr := `

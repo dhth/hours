@@ -515,7 +515,15 @@ LIMIT ?;
 	return logEntries, nil
 }
 
-func FetchTLEntriesBetweenTS(db *sql.DB, beginTs, endTs time.Time, limit int) ([]types.TaskLogEntry, error) {
+func FetchTLEntriesBetweenTS(db *sql.DB, beginTs, endTs time.Time, taskStatus types.TaskStatus, limit int) ([]types.TaskLogEntry, error) {
+	var tsFilter string
+	switch taskStatus {
+	case types.TaskStatusActive:
+		tsFilter = "AND t.active is true"
+	case types.TaskStatusInactive:
+		tsFilter = "AND t.active is false"
+	}
+
 	var logEntries []types.TaskLogEntry
 
 	rows, err := db.Query(`
@@ -524,6 +532,7 @@ FROM task_log tl left join task t on tl.task_id=t.id
 WHERE tl.active=false
 AND tl.end_ts >= ?
 AND tl.end_ts < ?
+`+tsFilter+`
 ORDER by tl.begin_ts ASC LIMIT ?;
     `, beginTs.UTC(), endTs.UTC(), limit)
 	if err != nil {
@@ -555,11 +564,20 @@ ORDER by tl.begin_ts ASC LIMIT ?;
 	return logEntries, nil
 }
 
-func FetchStats(db *sql.DB, limit int) ([]types.TaskReportEntry, error) {
+func FetchStats(db *sql.DB, taskStatus types.TaskStatus, limit int) ([]types.TaskReportEntry, error) {
+	var tsFilter string
+	switch taskStatus {
+	case types.TaskStatusActive:
+		tsFilter = "WHERE t.active is true"
+	case types.TaskStatusInactive:
+		tsFilter = "WHERE t.active is false"
+	}
+
 	rows, err := db.Query(`
 SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries, t.secs_spent
 from task_log tl
 LEFT JOIN task t on tl.task_id = t.id
+`+tsFilter+`
 GROUP BY tl.task_id
 ORDER BY t.secs_spent DESC
 limit ?;
@@ -591,12 +609,20 @@ limit ?;
 	return tLE, nil
 }
 
-func FetchStatsBetweenTS(db *sql.DB, beginTs, endTs time.Time, limit int) ([]types.TaskReportEntry, error) {
+func FetchStatsBetweenTS(db *sql.DB, beginTs, endTs time.Time, taskStatus types.TaskStatus, limit int) ([]types.TaskReportEntry, error) {
+	var activeFilter string
+	switch taskStatus {
+	case types.TaskStatusActive:
+		activeFilter = " AND t.active is true"
+	case types.TaskStatusInactive:
+		activeFilter = " AND t.active is false"
+	}
+
 	rows, err := db.Query(`
 SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries,  SUM(tl.secs_spent) AS secs_spent
 FROM task_log tl 
 LEFT JOIN task t ON tl.task_id = t.id
-WHERE tl.end_ts >= ? AND tl.end_ts < ?
+WHERE tl.end_ts >= ? AND tl.end_ts < ?`+activeFilter+`
 GROUP BY tl.task_id
 ORDER BY secs_spent DESC
 LIMIT ?;
@@ -628,12 +654,21 @@ LIMIT ?;
 	return tLE, nil
 }
 
-func FetchReportBetweenTS(db *sql.DB, beginTs, endTs time.Time, limit int) ([]types.TaskReportEntry, error) {
+func FetchReportBetweenTS(db *sql.DB, beginTs, endTs time.Time, taskStatus types.TaskStatus, limit int) ([]types.TaskReportEntry, error) {
+	var tsFilter string
+	switch taskStatus {
+	case types.TaskStatusActive:
+		tsFilter = "AND t.active is true"
+	case types.TaskStatusInactive:
+		tsFilter = "AND t.active is false"
+	}
+
 	rows, err := db.Query(`
 SELECT tl.task_id, t.summary, COUNT(tl.id) as num_entries,  SUM(tl.secs_spent) AS secs_spent
 FROM task_log tl 
 LEFT JOIN task t ON tl.task_id = t.id
 WHERE tl.end_ts >= ? AND tl.end_ts < ?
+`+tsFilter+`
 GROUP BY tl.task_id
 ORDER BY t.updated_at ASC
 LIMIT ?;

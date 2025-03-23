@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"time"
@@ -10,6 +11,8 @@ import (
 )
 
 const emptyCommentIndicator = "∅"
+
+var ErrIncorrectTaskStatusProvided = errors.New("incorrect task status provided")
 
 type Task struct {
 	ID             int
@@ -176,3 +179,38 @@ const (
 	ShiftHour
 	ShiftDay
 )
+
+type TaskStatus uint8
+
+const (
+	TSValueActive   = "active"
+	TSValueInactive = "inactive"
+	TSValueAny      = "any"
+)
+
+const (
+	TaskStatusActive TaskStatus = iota
+	TaskStatusInactive
+	TaskStatusAny
+)
+
+func ParseTaskStatus(value string) (TaskStatus, error) {
+	switch value {
+	case TSValueActive:
+		return TaskStatusActive, nil
+	case TSValueInactive:
+		return TaskStatusInactive, nil
+	case TSValueAny:
+		return TaskStatusAny, nil
+	default:
+		return TaskStatusAny, ErrIncorrectTaskStatusProvided
+	}
+}
+
+var ValidTaskStatusValues = []string{TSValueActive, TSValueInactive, TSValueAny}
+
+type DateRange struct {
+	Start   time.Time
+	End     time.Time
+	NumDays int
+}

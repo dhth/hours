@@ -471,7 +471,7 @@ func TestRepository(t *testing.T) {
 		assert.Equal(t, numSecondsBefore-taskLog.SecsSpent, taskAfter.SecsSpent)
 	})
 
-	t.Run("TestFetchTLEntriesBetweenTS", func(t *testing.T) {
+	t.Run("TestFetchTLEntriesBetweenTS for all tasks", func(t *testing.T) {
 		t.Cleanup(func() { cleanupDB(t, testDB) })
 
 		// GIVEN
@@ -489,14 +489,54 @@ func TestRepository(t *testing.T) {
 
 		// WHEN
 		reportBeginTS := referenceTS.Add(time.Hour * 24 * 7 * -2)
-		entries, err := FetchTLEntriesBetweenTS(testDB, reportBeginTS, referenceTS, 100)
+		entries, err := FetchTLEntriesBetweenTS(testDB, reportBeginTS, referenceTS, types.TaskStatusAny, 100)
 
 		// THEN
 		require.NoError(t, err, "failed to fetch report entries")
 		require.Len(t, entries, 3)
 	})
 
-	t.Run("TestFetchStats", func(t *testing.T) {
+	t.Run("TestFetchTLEntriesBetweenTS for active tasks", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Date(2024, time.September, 1, 9, 0, 0, 0, time.Local)
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+
+		err = UpdateTaskActiveStatus(testDB, 1, false)
+		require.NoError(t, err, "failed to make task inactive")
+
+		// WHEN
+		reportBeginTS := referenceTS.Add(time.Hour * 24 * 10 * -1)
+		entries, err := FetchTLEntriesBetweenTS(testDB, reportBeginTS, referenceTS, types.TaskStatusActive, 100)
+
+		// THEN
+		require.NoError(t, err, "failed to fetch report entries")
+		require.Len(t, entries, 1)
+	})
+
+	t.Run("TestFetchTLEntriesBetweenTS for inactive tasks", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Date(2024, time.September, 1, 9, 0, 0, 0, time.Local)
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+
+		err = UpdateTaskActiveStatus(testDB, 2, false)
+		require.NoError(t, err, "failed to make task inactive")
+
+		// WHEN
+		reportBeginTS := referenceTS.Add(time.Hour * 24 * 10 * -1)
+		entries, err := FetchTLEntriesBetweenTS(testDB, reportBeginTS, referenceTS, types.TaskStatusInactive, 100)
+
+		// THEN
+		require.NoError(t, err, "failed to fetch report entries")
+		require.Len(t, entries, 1)
+	})
+
+	t.Run("TestFetchStats for all tasks", func(t *testing.T) {
 		t.Cleanup(func() { cleanupDB(t, testDB) })
 
 		// GIVEN
@@ -513,7 +553,7 @@ func TestRepository(t *testing.T) {
 		require.NoError(t, err, "failed to insert task log")
 
 		// WHEN
-		entries, err := FetchStats(testDB, 100)
+		entries, err := FetchStats(testDB, types.TaskStatusAny, 100)
 
 		// THEN
 		require.NoError(t, err, "failed to fetch report entries")
@@ -528,7 +568,53 @@ func TestRepository(t *testing.T) {
 		assert.Equal(t, 4*secsInOneHour, entries[1].SecsSpent)
 	})
 
-	t.Run("TestFetchStatsBetweenTS", func(t *testing.T) {
+	t.Run("TestFetchStats for active tasks", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Date(2024, time.September, 1, 9, 0, 0, 0, time.Local)
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+
+		err = UpdateTaskActiveStatus(testDB, 1, false)
+		require.NoError(t, err, "failed to make task inactive")
+
+		// WHEN
+		entries, err := FetchStats(testDB, types.TaskStatusActive, 100)
+
+		// THEN
+		require.NoError(t, err, "failed to fetch report entries")
+		require.Len(t, entries, 1)
+
+		assert.Equal(t, 2, entries[0].TaskID)
+		assert.Equal(t, 1, entries[0].NumEntries)
+		assert.Equal(t, 4*secsInOneHour, entries[0].SecsSpent)
+	})
+
+	t.Run("TestFetchStats for inactive tasks", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Date(2024, time.September, 1, 9, 0, 0, 0, time.Local)
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+
+		err = UpdateTaskActiveStatus(testDB, 2, false)
+		require.NoError(t, err, "failed to make task inactive")
+
+		// WHEN
+		entries, err := FetchStats(testDB, types.TaskStatusInactive, 100)
+
+		// THEN
+		require.NoError(t, err, "failed to fetch report entries")
+		require.Len(t, entries, 1)
+
+		assert.Equal(t, 2, entries[0].TaskID)
+		assert.Equal(t, 1, entries[0].NumEntries)
+		assert.Equal(t, 4*secsInOneHour, entries[0].SecsSpent)
+	})
+
+	t.Run("TestFetchStatsBetweenTS for all tasks", func(t *testing.T) {
 		t.Cleanup(func() { cleanupDB(t, testDB) })
 
 		// GIVEN
@@ -546,7 +632,7 @@ func TestRepository(t *testing.T) {
 
 		// WHEN
 		reportBeginTS := referenceTS.Add(time.Hour * 24 * 7 * -2)
-		entries, err := FetchStatsBetweenTS(testDB, reportBeginTS, referenceTS, 100)
+		entries, err := FetchStatsBetweenTS(testDB, reportBeginTS, referenceTS, types.TaskStatusAny, 100)
 
 		// THEN
 		require.NoError(t, err, "failed to fetch report entries")
@@ -561,7 +647,69 @@ func TestRepository(t *testing.T) {
 		assert.Equal(t, 4*secsInOneHour, entries[1].SecsSpent)
 	})
 
-	t.Run("TestFetchReportBetweenTS", func(t *testing.T) {
+	t.Run("TestFetchStatsBetweenTS for active tasks", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Date(2024, time.September, 1, 9, 0, 0, 0, time.Local)
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+
+		taskID := 1
+		numSeconds := 60 * 90
+		tlEndTS := referenceTS.Add(time.Hour * 2)
+		tlBeginTS := tlEndTS.Add(time.Second * -1 * time.Duration(numSeconds))
+		comment := taskLogComment
+		_, err = InsertManualTL(testDB, taskID, tlBeginTS, tlEndTS, &comment)
+		require.NoError(t, err, "failed to insert task log")
+		err = UpdateTaskActiveStatus(testDB, 2, false)
+		require.NoError(t, err, "failed to make task inactive")
+
+		// WHEN
+		reportBeginTS := referenceTS.Add(time.Hour * 24 * 7 * -2)
+		entries, err := FetchStatsBetweenTS(testDB, reportBeginTS, referenceTS, types.TaskStatusActive, 100)
+
+		// THEN
+		require.NoError(t, err, "failed to fetch report entries")
+		require.Len(t, entries, 1)
+
+		assert.Equal(t, 1, entries[0].TaskID)
+		assert.Equal(t, 2, entries[0].NumEntries)
+		assert.Equal(t, 5*secsInOneHour, entries[0].SecsSpent)
+	})
+
+	t.Run("TestFetchStatsBetweenTS for inactive tasks", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Date(2024, time.September, 1, 9, 0, 0, 0, time.Local)
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+
+		taskID := 1
+		numSeconds := 60 * 90
+		tlEndTS := referenceTS.Add(time.Hour * 2)
+		tlBeginTS := tlEndTS.Add(time.Second * -1 * time.Duration(numSeconds))
+		comment := taskLogComment
+		_, err = InsertManualTL(testDB, taskID, tlBeginTS, tlEndTS, &comment)
+		require.NoError(t, err, "failed to insert task log")
+		err = UpdateTaskActiveStatus(testDB, 1, false)
+		require.NoError(t, err, "failed to make task inactive")
+
+		// WHEN
+		reportBeginTS := referenceTS.Add(time.Hour * 24 * 7 * -2)
+		entries, err := FetchStatsBetweenTS(testDB, reportBeginTS, referenceTS, types.TaskStatusInactive, 100)
+
+		// THEN
+		require.NoError(t, err, "failed to fetch report entries")
+		require.Len(t, entries, 1)
+
+		assert.Equal(t, 1, entries[0].TaskID)
+		assert.Equal(t, 2, entries[0].NumEntries)
+		assert.Equal(t, 5*secsInOneHour, entries[0].SecsSpent)
+	})
+
+	t.Run("TestFetchReportBetweenTS for all tasks", func(t *testing.T) {
 		t.Cleanup(func() { cleanupDB(t, testDB) })
 
 		// GIVEN
@@ -579,7 +727,7 @@ func TestRepository(t *testing.T) {
 
 		// WHEN
 		reportBeginTS := referenceTS.Add(time.Hour * 24 * 7 * -2)
-		entries, err := FetchReportBetweenTS(testDB, reportBeginTS, referenceTS, 100)
+		entries, err := FetchReportBetweenTS(testDB, reportBeginTS, referenceTS, types.TaskStatusAny, 100)
 
 		// THEN
 		require.NoError(t, err, "failed to fetch report entries")
@@ -592,6 +740,70 @@ func TestRepository(t *testing.T) {
 		assert.Equal(t, 1, entries[1].TaskID)
 		assert.Equal(t, 2, entries[1].NumEntries)
 		assert.Equal(t, 5*secsInOneHour, entries[1].SecsSpent)
+	})
+
+	t.Run("TestFetchReportBetweenTS for active tasks tasks", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Date(2024, time.September, 1, 9, 0, 0, 0, time.Local)
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+
+		taskID := 1
+		numSeconds := 60 * 90
+		tlEndTS := referenceTS.Add(time.Hour * 2)
+		tlBeginTS := tlEndTS.Add(time.Second * -1 * time.Duration(numSeconds))
+		comment := taskLogComment
+		_, err = InsertManualTL(testDB, taskID, tlBeginTS, tlEndTS, &comment)
+		require.NoError(t, err, "failed to insert task log")
+
+		err = UpdateTaskActiveStatus(testDB, 2, false)
+		require.NoError(t, err, "failed to make task inactive")
+
+		// WHEN
+		reportBeginTS := referenceTS.Add(time.Hour * 24 * 7 * -2)
+		entries, err := FetchReportBetweenTS(testDB, reportBeginTS, referenceTS, types.TaskStatusActive, 100)
+
+		// THEN
+		require.NoError(t, err, "failed to fetch report entries")
+
+		require.Len(t, entries, 1)
+		assert.Equal(t, 1, entries[0].TaskID)
+		assert.Equal(t, 2, entries[0].NumEntries)
+		assert.Equal(t, 5*secsInOneHour, entries[0].SecsSpent)
+	})
+
+	t.Run("TestFetchReportBetweenTS for inactive tasks tasks", func(t *testing.T) {
+		t.Cleanup(func() { cleanupDB(t, testDB) })
+
+		// GIVEN
+		referenceTS := time.Date(2024, time.September, 1, 9, 0, 0, 0, time.Local)
+		seedData := getTestData(referenceTS)
+		seedDB(t, testDB, seedData)
+
+		taskID := 1
+		numSeconds := 60 * 90
+		tlEndTS := referenceTS.Add(time.Hour * 2)
+		tlBeginTS := tlEndTS.Add(time.Second * -1 * time.Duration(numSeconds))
+		comment := taskLogComment
+		_, err = InsertManualTL(testDB, taskID, tlBeginTS, tlEndTS, &comment)
+		require.NoError(t, err, "failed to insert task log")
+
+		err = UpdateTaskActiveStatus(testDB, 1, false)
+		require.NoError(t, err, "failed to make task inactive")
+
+		// WHEN
+		reportBeginTS := referenceTS.Add(time.Hour * 24 * 7 * -2)
+		entries, err := FetchReportBetweenTS(testDB, reportBeginTS, referenceTS, types.TaskStatusInactive, 100)
+
+		// THEN
+		require.NoError(t, err, "failed to fetch report entries")
+
+		require.Len(t, entries, 1)
+		assert.Equal(t, 1, entries[0].TaskID)
+		assert.Equal(t, 2, entries[0].NumEntries)
+		assert.Equal(t, 5*secsInOneHour, entries[0].SecsSpent)
 	})
 
 	err = testDB.Close()

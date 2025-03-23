@@ -12,10 +12,12 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	c "github.com/dhth/hours/internal/common"
 	pers "github.com/dhth/hours/internal/persistence"
+	"github.com/dhth/hours/internal/types"
 	"github.com/dhth/hours/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -150,6 +152,7 @@ func NewRootCommand() (*cobra.Command, error) {
 		reportAgg           bool
 		recordsInteractive  bool
 		recordsOutputPlain  bool
+		taskStatusStr       string
 		activeTemplate      string
 		genNumDays          uint8
 		genNumTasks         uint8
@@ -271,13 +274,15 @@ create dummy entries in it. You can run it on a throwaway database by passing a
 path for it via --dbpath/-d (use it for all further invocations of 'hours' as
 well).
 `))
-				fmt.Print(`
+				fmt.Printf(`
 The 'gen' subcommand is intended for new users of 'hours' so they can get a
 sense of its capabilities without actually tracking any time.
 
+Running with --dbpath set to: %q
+
 ---
 
-`)
+`, dbPathFull)
 				confirm, err := getConfirmation()
 				if err != nil {
 					return err
@@ -294,9 +299,6 @@ sense of its capabilities without actually tracking any time.
 			fmt.Printf(`
 Successfully generated dummy data in the database file: %s
 
-If this is not the default database file path, use --dbpath/-d with 'hours' when
-you want to access the dummy data.
-
 Go ahead and try the following!
 
 hours --dbpath=%s
@@ -309,7 +311,7 @@ hours --dbpath=%s stats today -i
 	}
 
 	reportCmd := &cobra.Command{
-		Use:   "report",
+		Use:   "report [PERIOD]",
 		Short: "Output a report based on task log entries",
 		Long: `Output a report based on task log entries.
 
@@ -319,12 +321,12 @@ cumulative time spent on each task per day.
 
 Accepts an argument, which can be one of the following:
 
-  today:     for today's report
-  yest:      for yesterday's report
-  3d:        for a report on the last 3 days (default)
-  week:      for a report on the current week
-  date:      for a report for a specific date (eg. "2024/06/08")
-  range:     for a report for a date range (eg. "2024/06/08...2024/06/12")
+  today      for today's report
+  yest       for yesterday's report
+  3d         for a report on the last 3 days (default)
+  week       for a report on the current week
+  date       for a report for a specific date (eg. "2024/06/08")
+  range      for a report for a date range (eg. "2024/06/08...2024/06/12")
 
 Note: If a task log continues past midnight in your local timezone, it
 will be reported on the day it ends.
@@ -332,6 +334,11 @@ will be reported on the day it ends.
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, args []string) error {
+			taskStatus, err := types.ParseTaskStatus(taskStatusStr)
+			if err != nil {
+				return err
+			}
+
 			var period string
 			if len(args) == 0 {
 				period = "3d"
@@ -339,23 +346,32 @@ will be reported on the day it ends.
 				period = args[0]
 			}
 
-			return ui.RenderReport(db, style, os.Stdout, recordsOutputPlain, period, reportAgg, recordsInteractive)
+			var fullWeek bool
+			if recordsInteractive {
+				fullWeek = true
+			}
+			dateRange, err := types.GetDateRangeFromPeriod(period, time.Now(), fullWeek)
+			if err != nil {
+				return err
+			}
+
+			return ui.RenderReport(db, style, os.Stdout, recordsOutputPlain, dateRange, period, taskStatus, reportAgg, recordsInteractive)
 		},
 	}
 
 	logCmd := &cobra.Command{
-		Use:   "log",
+		Use:   "log [PERIOD]",
 		Short: "Output task log entries",
 		Long: `Output task log entries.
 
 Accepts an argument, which can be one of the following:
 
-  today:     for log entries from today (default)
-  yest:      for log entries from yesterday
-  3d:        for log entries from the last 3 days
-  week:      for log entries from the current week
-  date:      for log entries from a specific date (eg. "2024/06/08")
-  range:     for log entries from a specific date range (eg. "2024/06/08...2024/06/12")
+  today      for log entries from today (default)
+  yest       for log entries from yesterday
+  3d         for log entries from the last 3 days
+  week       for log entries from the current week
+  date       for log entries from a specific date (eg. "2024/06/08")
+  range      for log entries from a specific date range (eg. "2024/06/08...2024/06/12")
 
 Note: If a task log continues past midnight in your local timezone, it'll
 appear in the log for the day it ends.
@@ -363,6 +379,11 @@ appear in the log for the day it ends.
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, args []string) error {
+			taskStatus, err := types.ParseTaskStatus(taskStatusStr)
+			if err != nil {
+				return err
+			}
+
 			var period string
 			if len(args) == 0 {
 				period = "today"
@@ -370,24 +391,29 @@ appear in the log for the day it ends.
 				period = args[0]
 			}
 
-			return ui.RenderTaskLog(db, style, os.Stdout, recordsOutputPlain, period, recordsInteractive)
+			dateRange, err := types.GetDateRangeFromPeriod(period, time.Now(), false)
+			if err != nil {
+				return err
+			}
+
+			return ui.RenderTaskLog(db, style, os.Stdout, recordsOutputPlain, dateRange, period, taskStatus, recordsInteractive)
 		},
 	}
 
 	statsCmd := &cobra.Command{
-		Use:   "stats",
+		Use:   "stats [PERIOD]",
 		Short: "Output statistics for tracked time",
 		Long: `Output statistics for tracked time.
 
 Accepts an argument, which can be one of the following:
 
-  today:     show stats for today
-  yest:      show stats for yesterday
-  3d:        show stats for the last 3 days (default)
-  week:      show stats for the current week
-  date:      show stats for a specific date (eg. "2024/06/08")
-  range:     show stats for a specific date range (eg. "2024/06/08...2024/06/12")
-  all:       show stats for all log entries
+  today      show stats for today
+  yest       show stats for yesterday
+  3d         show stats for the last 3 days (default)
+  week       show stats for the current week
+  date       show stats for a specific date (eg. "2024/06/08")
+  range      show stats for a specific date range (eg. "2024/06/08...2024/06/12")
+  all        show stats for all log entries
 
 Note: If a task log continues past midnight in your local timezone, it'll
 be considered in the stats for the day it ends.
@@ -395,6 +421,11 @@ be considered in the stats for the day it ends.
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, args []string) error {
+			taskStatus, err := types.ParseTaskStatus(taskStatusStr)
+			if err != nil {
+				return err
+			}
+
 			var period string
 			if len(args) == 0 {
 				period = "3d"
@@ -402,7 +433,20 @@ be considered in the stats for the day it ends.
 				period = args[0]
 			}
 
-			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, period, recordsInteractive)
+			var fullWeek bool
+			if recordsInteractive {
+				fullWeek = true
+			}
+			var dateRange types.DateRange
+			if period != "all" {
+				dateRange, err = types.GetDateRangeFromPeriod(period, time.Now(), fullWeek)
+				if err != nil {
+					return err
+				}
+
+			}
+
+			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, &dateRange, period, taskStatus, recordsInteractive)
 		},
 	}
 
@@ -534,20 +578,23 @@ eg. hours active -t ' {{task}} ({{time}}) '
 	reportCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view report interactively")
 	reportCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output report without any formatting")
 	reportCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
+	reportCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
 	reportCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
-		fmt.Sprintf("UI theme to use; themes live in %s", themesDir))
+		fmt.Sprintf("UI theme to use (themes live in %q)", themesDir))
 
 	logCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output logs without any formatting")
 	logCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view logs interactively")
 	logCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
+	logCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
 	logCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
-		fmt.Sprintf("UI theme to use; themes live in %s", themesDir))
+		fmt.Sprintf("UI theme to use (themes live in %q)", themesDir))
 
 	statsCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output stats without any formatting")
 	statsCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view stats interactively")
 	statsCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
+	statsCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
 	statsCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
-		fmt.Sprintf("UI theme to use; themes live in %s", themesDir))
+		fmt.Sprintf("UI theme to use (themes live in %q)", themesDir))
 
 	activeCmd.Flags().StringVarP(&activeTemplate, "template", "t", ui.ActiveTaskPlaceholder, "string template to use for outputting active task")
 	activeCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
@@ -572,7 +619,7 @@ func getRandomChars(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyz"
 
 	var code string
-	for i := 0; i < length; i++ {
+	for range length {
 		code += string(charset[rand.Intn(len(charset))])
 	}
 	return code

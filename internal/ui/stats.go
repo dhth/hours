@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -25,44 +24,48 @@ const (
 	periodAll              = "all"
 )
 
-func RenderStats(db *sql.DB, style Style, writer io.Writer, plain bool, period string, interactive bool) error {
-	if period == "" {
-		return nil
-	}
-
+func RenderStats(db *sql.DB,
+	style Style,
+	writer io.Writer,
+	plain bool,
+	dateRange *types.DateRange,
+	period string,
+	taskStatus types.TaskStatus,
+	interactive bool,
+) error {
 	var stats string
 	var err error
 
-	if interactive && period == periodAll {
+	if interactive && dateRange == nil {
 		return fmt.Errorf("%w when period=all", errInteractiveModeNotApplicable)
 	}
 
-	if period == periodAll {
-		// TODO: find a better way for this, passing start, end for "all" doesn't make sense
-		stats, err = getStats(db, style, period, time.Now(), time.Now(), plain)
+	if dateRange == nil {
+		stats, err = getStats(db, style, dateRange, taskStatus, plain)
 		if err != nil {
 			return fmt.Errorf("%w: %s", errCouldntGenerateStats, err.Error())
 		}
+
 		fmt.Fprint(writer, stats)
 		return nil
 	}
 
-	var fullWeek bool
-	if interactive {
-		fullWeek = true
-	}
-	ts, err := types.GetTimePeriod(period, time.Now(), fullWeek)
-	if err != nil {
-		return err
-	}
-
-	stats, err = getStats(db, style, period, ts.Start, ts.End, plain)
+	stats, err = getStats(db, style, dateRange, taskStatus, plain)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errCouldntGenerateStats, err.Error())
 	}
 
 	if interactive {
-		p := tea.NewProgram(initialRecordsModel(reportStats, db, style, ts.Start, ts.End, plain, period, ts.NumDays, stats))
+		p := tea.NewProgram(initialRecordsModel(
+			reportStats,
+			db,
+			style,
+			*dateRange,
+			period,
+			taskStatus,
+			plain,
+			stats,
+		))
 		_, err := p.Run()
 		if err != nil {
 			return err
@@ -73,14 +76,20 @@ func RenderStats(db *sql.DB, style Style, writer io.Writer, plain bool, period s
 	return nil
 }
 
-func getStats(db *sql.DB, style Style, period string, start, end time.Time, plain bool) (string, error) {
+func getStats(db *sql.DB,
+	style Style,
+	dateRange *types.DateRange,
+	taskStatus types.TaskStatus,
+	plain bool) (string,
+	error,
+) {
 	var entries []types.TaskReportEntry
 	var err error
 
-	if period == periodAll {
-		entries, err = pers.FetchStats(db, statsLogEntriesLimit)
+	if dateRange == nil {
+		entries, err = pers.FetchStats(db, taskStatus, statsLogEntriesLimit)
 	} else {
-		entries, err = pers.FetchStatsBetweenTS(db, start, end, statsLogEntriesLimit)
+		entries, err = pers.FetchStatsBetweenTS(db, dateRange.Start, dateRange.End, taskStatus, statsLogEntriesLimit)
 	}
 
 	if err != nil {
