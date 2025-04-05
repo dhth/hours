@@ -7,13 +7,13 @@ on:
     paths:
       - "go.*"
       - "**/*.go"
-      - ".github/workflows/*.yml"
+      - ".github/workflows/build.yml"
 
 permissions:
   contents: read
 
 env:
-  GO_VERSION: '1.24.0'
+  GO_VERSION: '1.24.2'
 
 jobs:
   build:

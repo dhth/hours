@@ -1,13 +1,9 @@
+version: "2"
 linters:
   enable:
-    - errcheck
     - errname
     - errorlint
     - goconst
-    - gofumpt
-    - gosimple
-    - govet
-    - ineffassign
     - intrange
     - nilerr
     - prealloc
@@ -15,47 +11,67 @@ linters:
     - revive
     - rowserrcheck
     - sqlclosecheck
-    - staticcheck
     - testifylint
     - thelper
     - unconvert
-    - unused
     - usestdlibvars
     - wastedassign
-linters-settings:
-  revive:
-    rules:
-      # defaults
-      - name: blank-imports
-      - name: context-as-argument
-        arguments:
-          - allowTypesBefore: "*testing.T"
-      - name: context-keys-type
-      - name: dot-imports
-      - name: empty-block
-      - name: error-naming
-      - name: error-return
-      - name: error-strings
-      - name: errorf
-      - name: exported
-      - name: if-return
-      - name: increment-decrement
-      - name: indent-error-flow
-      - name: package-comments
-      - name: range
-      - name: receiver-naming
-      - name: redefines-builtin-id
-      - name: superfluous-else
-      - name: time-naming
-      - name: unexported-return
-      - name: unreachable-code
-      - name: unused-parameter
-      - name: var-declaration
-      - name: var-naming
-      # additional
-      - name: unnecessary-stmt
-      - name: deep-exit
-      - name: confusing-naming
-      - name: unused-receiver
-      - name: unhandled-error
-        arguments: ["fmt.Print", "fmt.Printf", "fmt.Fprintf", "fmt.Fprint"]
+  settings:
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+          arguments:
+            - allowTypesBefore: '*testing.T'
+        - name: context-keys-type
+        - name: dot-imports
+        - name: empty-block
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: exported
+        - name: if-return
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: package-comments
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: time-naming
+        - name: unexported-return
+        - name: unreachable-code
+        - name: unused-parameter
+        - name: var-declaration
+        - name: var-naming
+        - name: unnecessary-stmt
+        - name: deep-exit
+        - name: confusing-naming
+        - name: unused-receiver
+        - name: unhandled-error
+          arguments:
+            - fmt.Print
+            - fmt.Printf
+            - fmt.Fprintf
+            - fmt.Fprint
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofumpt
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
