@@ -1,6 +1,6 @@
 module github.com/dhth/hours
 
-go 1.24.2
+go 1.24.3
 
 require (
 	github.com/charmbracelet/bubbles v0.20.0

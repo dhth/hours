@@ -9,7 +9,7 @@ permissions:
   id-token: write
 
 env:
-  GO_VERSION: '1.24.2'
+  GO_VERSION: '1.24.3'
 
 jobs:
   release:
@@ -29,7 +29,7 @@ jobs:
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
         with:
-          cosign-release: 'v2.4.3'
+          cosign-release: 'v2.5.0'
       - name: Release Binaries
         uses: goreleaser/goreleaser-action@v6
         with:
