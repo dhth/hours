@@ -4,8 +4,6 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-    reviewers:
-      - "dhth"
     labels:
       - "dependencies"
     commit-message:
@@ -15,8 +13,6 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-    reviewers:
-      - "dhth"
     labels:
       - "dependencies"
     commit-message:
