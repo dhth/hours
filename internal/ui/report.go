@@ -14,6 +14,8 @@ import (
 	"github.com/dhth/hours/internal/types"
 	"github.com/dhth/hours/internal/utils"
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 )
 
 var errCouldntGenerateReport = errors.New("couldn't generate report")
@@ -167,9 +169,6 @@ func getReport(db *sql.DB, style Style, start time.Time, numDays int, taskStatus
 		}
 	}
 
-	b := bytes.Buffer{}
-	table := tablewriter.NewWriter(&b)
-
 	headersValues := make([]string, numDays)
 
 	day = start
@@ -186,17 +185,34 @@ func getReport(db *sql.DB, style Style, start time.Time, numDays int, taskStatus
 		headers[i] = rs.headerStyle.Render(headersValues[i])
 	}
 
-	table.SetHeader(headers)
+	b := bytes.Buffer{}
+	table := tablewriter.NewTable(&b,
+		tablewriter.WithConfig(tablewriter.Config{
+			Header: tw.CellConfig{
+				Formatting: tw.CellFormatting{
+					Alignment:  tw.AlignCenter,
+					AutoWrap:   tw.WrapNone,
+					AutoFormat: tw.Off,
+				},
+			},
+			Row: tw.CellConfig{
+				Formatting: tw.CellFormatting{
+					Alignment: tw.AlignLeft,
+					AutoWrap:  tw.WrapNone,
+				},
+			},
+		}),
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{Symbols: tw.NewSymbols(tw.StyleASCII)})),
+		tablewriter.WithHeader(headers),
+	)
 
-	table.SetRowSeparator(rs.borderStyle.Render("-"))
-	table.SetColumnSeparator(rs.borderStyle.Render("|"))
-	table.SetCenterSeparator(rs.borderStyle.Render("+"))
-	table.SetAutoWrapText(false)
-	table.SetAutoFormatHeaders(false)
-	table.AppendBulk(data)
-	table.SetFooter(totalTimePerDay)
+	if err := table.Bulk(data); err != nil {
+		return "", fmt.Errorf("%w: %s", errCouldntAddDataToTable, err.Error())
+	}
 
-	table.Render()
+	if err := table.Render(); err != nil {
+		return "", fmt.Errorf("%w: %s", errCouldntRenderTable, err.Error())
+	}
 
 	return b.String(), nil
 }
@@ -303,9 +319,6 @@ func getReportAgg(db *sql.DB,
 		}
 	}
 
-	b := bytes.Buffer{}
-	table := tablewriter.NewWriter(&b)
-
 	headersValues := make([]string, numDays)
 
 	day = start
@@ -322,17 +335,34 @@ func getReportAgg(db *sql.DB,
 		headers[i] = rs.headerStyle.Render(headersValues[i])
 	}
 
-	table.SetHeader(headers)
+	b := bytes.Buffer{}
+	table := tablewriter.NewTable(&b,
+		tablewriter.WithConfig(tablewriter.Config{
+			Header: tw.CellConfig{
+				Formatting: tw.CellFormatting{
+					Alignment:  tw.AlignCenter,
+					AutoWrap:   tw.WrapNone,
+					AutoFormat: tw.Off,
+				},
+			},
+			Row: tw.CellConfig{
+				Formatting: tw.CellFormatting{
+					Alignment: tw.AlignLeft,
+					AutoWrap:  tw.WrapNone,
+				},
+			},
+		}),
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{Symbols: tw.NewSymbols(tw.StyleASCII)})),
+		tablewriter.WithHeader(headers),
+	)
 
-	table.SetRowSeparator(rs.borderStyle.Render("-"))
-	table.SetColumnSeparator(rs.borderStyle.Render("|"))
-	table.SetCenterSeparator(rs.borderStyle.Render("+"))
-	table.SetAutoWrapText(false)
-	table.SetAutoFormatHeaders(false)
-	table.AppendBulk(data)
-	table.SetFooter(totalTimePerDay)
+	if err := table.Bulk(data); err != nil {
+		return "", fmt.Errorf("%w: %s", errCouldntAddDataToTable, err.Error())
+	}
 
-	table.Render()
+	if err := table.Render(); err != nil {
+		return "", fmt.Errorf("%w: %s", errCouldntRenderTable, err.Error())
+	}
 
 	return b.String(), nil
 }
