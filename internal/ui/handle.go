@@ -560,12 +560,12 @@ func (m *Model) handleRequestToScrollVPUp() {
 		if m.helpVP.AtTop() {
 			return
 		}
-		m.helpVP.LineUp(viewPortMoveLineCount)
+		m.helpVP.ScrollUp(viewPortMoveLineCount)
 	case taskLogDetailsView:
 		if m.tLDetailsVP.AtTop() {
 			return
 		}
-		m.tLDetailsVP.LineUp(viewPortMoveLineCount)
+		m.tLDetailsVP.ScrollUp(viewPortMoveLineCount)
 	default:
 		return
 	}
@@ -577,12 +577,12 @@ func (m *Model) handleRequestToScrollVPDown() {
 		if m.helpVP.AtBottom() {
 			return
 		}
-		m.helpVP.LineDown(viewPortMoveLineCount)
+		m.helpVP.ScrollDown(viewPortMoveLineCount)
 	case taskLogDetailsView:
 		if m.tLDetailsVP.AtBottom() {
 			return
 		}
-		m.tLDetailsVP.LineDown(viewPortMoveLineCount)
+		m.tLDetailsVP.ScrollDown(viewPortMoveLineCount)
 	default:
 		return
 	}
