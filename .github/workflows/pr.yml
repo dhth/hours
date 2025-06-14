@@ -1,0 +1,192 @@
+name: pr
+
+on:
+  pull_request:
+
+env:
+  GO_VERSION: '1.24.3'
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      release: ${{ steps.filter.outputs.release }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+      yml: ${{ steps.filter.outputs.yml }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - "cmd/**"
+              - "internal/**"
+              - "tests/**"
+              - "**/*.go"
+              - "go.*"
+              - ".golangci.yml"
+              - "main.go"
+              - ".github/actions/**"
+              - ".github/workflows/pr.yml"
+            release:
+              - ".goreleaser.yaml"
+              - ".github/workflows/pr.yml"
+            workflows:
+              - ".github/workflows/**.yml"
+            yml:
+              - "**.yml"
+              - "**.yaml"
+
+  lint:
+    needs: changes
+    if: ${{ needs.changes.outputs.code == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1
+
+  build:
+    needs: changes
+    if: ${{ needs.changes.outputs.code == 'true' }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: go build
+        run: go build -v ./...
+      - name: run hours
+        run: |
+          go build .
+          ./hours --dbpath=/var/tmp/throwaway-1.db report 3d -p
+          ./hours --dbpath=/var/tmp/throwaway-2.db gen -y
+          ./hours --dbpath=/var/tmp/throwaway-2.db report 3d -p
+          ./hours --dbpath=/var/tmp/throwaway-2.db log 3d -p
+          ./hours --dbpath=/var/tmp/throwaway-2.db stats 3d -p
+
+  test:
+    needs: changes
+    if: ${{ needs.changes.outputs.code == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: go test
+        run: go test -v ./...
+
+  live-tests:
+    needs: [changes, test]
+    if: ${{ needs.changes.outputs.code == 'true' }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: go install
+        run: go install .
+      - name: Run live tests
+        run: |
+          cd tests
+          ./test.sh
+
+  lint-yaml:
+    needs: changes
+    if: ${{ needs.changes.outputs.yml == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: dhth/composite-actions/.github/actions/lint-yaml@main
+
+  lint-workflows:
+    needs: changes
+    if: ${{ needs.changes.outputs.workflows == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: dhth/composite-actions/.github/actions/lint-actions@main
+
+  release-check:
+    needs: changes
+    if: ${{ needs.changes.outputs.release == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Release check
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: 'v2.9.0'
+          args: check
+
+  back-compat:
+    needs: changes
+    if: ${{ needs.changes.outputs.code == 'true' }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: build main
+        run: |
+          go build -o hours_main
+          cp hours_main /var/tmp
+          rm hours_main
+      - uses: actions/checkout@v4
+      - name: build head
+        run: |
+          go build -o hours_head
+          cp hours_head /var/tmp
+          rm hours_head
+      - name: Run last version
+        run: |
+          /var/tmp/hours_main --dbpath=/var/tmp/throwaway-empty.db report 3d -p
+          /var/tmp/hours_main --dbpath=/var/tmp/throwaway-with-data.db gen -y
+      - name: Run current version
+        run: |
+          echo "empty"
+          /var/tmp/hours_head --dbpath=/var/tmp/throwaway-empty.db report 3d -p
+          /var/tmp/hours_head --dbpath=/var/tmp/throwaway-empty.db log 3d -p
+          /var/tmp/hours_head --dbpath=/var/tmp/throwaway-empty.db stats 3d -p
+          echo "with data"
+          /var/tmp/hours_head --dbpath=/var/tmp/throwaway-with-data.db report 3d -p
+          /var/tmp/hours_head --dbpath=/var/tmp/throwaway-with-data.db log 3d -p
+          /var/tmp/hours_head --dbpath=/var/tmp/throwaway-with-data.db stats 3d -p
