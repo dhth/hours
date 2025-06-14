@@ -33,7 +33,7 @@ jobs:
       - name: Release Binaries
         uses: goreleaser/goreleaser-action@v6
         with:
-          version: '~> v2'
+          version: 'v2.9.0'
           args: release --clean
         env:
           GITHUB_TOKEN: ${{secrets.GH_PAT}}
