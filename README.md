@@ -1,6 +1,6 @@
 # hours
 
-[![Build Workflow Status](https://img.shields.io/github/actions/workflow/status/dhth/hours/build.yml?style=flat-square)](https://github.com/dhth/hours/actions/workflows/build.yml)
+[![Build Workflow Status](https://img.shields.io/github/actions/workflow/status/dhth/hours/main.yml?style=flat-square)](https://github.com/dhth/hours/actions/workflows/main.yml)
 [![Vulncheck Workflow Status](https://img.shields.io/github/actions/workflow/status/dhth/hours/vulncheck.yml?style=flat-square&label=vulncheck)](https://github.com/dhth/hours/actions/workflows/vulncheck.yml)
 [![Latest Release](https://img.shields.io/github/release/dhth/hours.svg?style=flat-square)](https://github.com/dhth/hours/releases/latest)
 [![Commits Since Latest Release](https://img.shields.io/github/commits-since/dhth/hours/latest?style=flat-square)](https://github.com/dhth/hours/releases)
