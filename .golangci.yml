@@ -1,8 +1,4 @@
 version: "2"
-
-run:
-  go: "1.24"
-
 linters:
   enable:
     - errname
