@@ -8,13 +8,11 @@ import (
 )
 
 const (
-	dateRangeDaysUpperBound = 7
-	TimePeriodWeek          = "week"
-	timeFormat              = "2006/01/02 15:04"
-	timeOnlyFormat          = "15:04"
-	dayFormat               = "Monday"
-	friendlyTimeFormat      = "Mon, 15:04"
-	dateFormat              = "2006/01/02"
+	TimePeriodWeek = "week"
+	timeFormat     = "2006/01/02 15:04"
+	timeOnlyFormat = "15:04"
+	dayFormat      = "Monday"
+	dateFormat     = "2006/01/02"
 )
 
 var (
@@ -55,7 +53,7 @@ func parseDateRange(dateRangeStr string) (DateRange, error) {
 	return dr, nil
 }
 
-func GetDateRangeFromPeriod(period string, now time.Time, fullWeek bool) (DateRange, error) {
+func GetDateRangeFromPeriod(period string, now time.Time, fullWeek bool, maxDaysAllowed *int) (DateRange, error) {
 	var start, end time.Time
 	var numDays int
 
@@ -100,8 +98,8 @@ func GetDateRangeFromPeriod(period string, now time.Time, fullWeek bool) (DateRa
 				return dr, fmt.Errorf("%w: %s", errTimePeriodNotValid, err.Error())
 			}
 
-			if dr.NumDays > dateRangeDaysUpperBound {
-				return dr, fmt.Errorf("%w: maximum number of days allowed (both inclusive): %d", errTimePeriodTooLarge, dateRangeDaysUpperBound)
+			if maxDaysAllowed != nil && dr.NumDays > *maxDaysAllowed {
+				return dr, fmt.Errorf("%w: maximum number of days allowed (both inclusive): %d", errTimePeriodTooLarge, *maxDaysAllowed)
 			}
 
 			start = dr.Start

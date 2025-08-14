@@ -20,10 +20,8 @@ import (
 var errCouldntGenerateStats = errors.New("couldn't generate stats")
 
 const (
-	statsLogEntriesLimit   = 10000
-	statsNumDaysUpperBound = 3650
-	statsTimeCharsBudget   = 6
-	periodAll              = "all"
+	statsLogEntriesLimit = 10000
+	statsTimeCharsBudget = 6
 )
 
 func RenderStats(db *sql.DB,
