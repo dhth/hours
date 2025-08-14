@@ -312,7 +312,7 @@ hours --dbpath=%s stats today -i
 	}
 
 	reportCmd := &cobra.Command{
-		Use:   "report <PERIOD>",
+		Use:   "report [PERIOD]",
 		Short: "Output a report based on task log entries",
 		Long: fmt.Sprintf(`Output a report based on task log entries.
 
@@ -363,7 +363,7 @@ will be reported on the day it ends.
 	}
 
 	logCmd := &cobra.Command{
-		Use:   "log <PERIOD>",
+		Use:   "log [PERIOD]",
 		Short: "Output task log entries",
 		Long: `Output task log entries.
 
@@ -404,7 +404,7 @@ appear in the log for the day it ends.
 	}
 
 	statsCmd := &cobra.Command{
-		Use:   "stats <PERIOD>",
+		Use:   "stats [PERIOD]",
 		Short: "Output statistics for tracked time",
 		Long: `Output statistics for tracked time.
 
