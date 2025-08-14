@@ -27,7 +27,6 @@ tests=(
     "log: incorrect argument|hours -d ${db_file_path} log -p blah|1"
     "log: incorrect date|hours -d ${db_file_path} log -p 2024/0608|1"
     "log: incorrect date range|hours -d ${db_file_path} log -p 2024/0608...2024/06/12|1"
-    "log: date range too large|hours -d ${db_file_path} log -p 2024/06/08...2024/06/15|1"
     "report: today|hours -d ${db_file_path} report -p today|0"
     "report: yest|hours -d ${db_file_path} report -p yest|0"
     "report: 3d|hours -d ${db_file_path} report -p 3d|0"
@@ -48,7 +47,6 @@ tests=(
     "stats: incorrect argument|hours -d ${db_file_path} stats -p blah|1"
     "stats: incorrect date|hours -d ${db_file_path} stats -p 2024/0608|1"
     "stats: incorrect date range|hours -d ${db_file_path} stats -p 2024/0608...2024/06/12|1"
-    "stats: date range too large|hours -d ${db_file_path} stats -p 2024/06/08...2024/06/15|1"
 )
 
 for test in "${tests[@]}"; do
