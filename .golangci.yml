@@ -44,7 +44,6 @@ linters:
         - name: unreachable-code
         - name: unused-parameter
         - name: var-declaration
-        - name: var-naming
         - name: unnecessary-stmt
         - name: deep-exit
         - name: confusing-naming
