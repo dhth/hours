@@ -108,15 +108,18 @@ func TestGetDateRangeFromPeriod(t *testing.T) {
 		t.Fatalf("error setting up the test: time is not valid: %s", err)
 	}
 
+	maxDaysAllowed := 7
+
 	testCases := []struct {
 		name             string
 		period           string
 		now              time.Time
 		fullWeek         bool
+		maxDaysAllowed   *int
 		expectedStartStr string
 		expectedEndStr   string
 		expectedNumDays  int
-		err              error
+		expectedErr      error
 	}{
 		// success
 		{
@@ -178,43 +181,45 @@ func TestGetDateRangeFromPeriod(t *testing.T) {
 		{
 			name:             "a date range",
 			period:           "2024/06/15...2024/06/20",
+			maxDaysAllowed:   &maxDaysAllowed,
 			expectedStartStr: "2024/06/15 00:00",
 			expectedEndStr:   "2024/06/21 00:00",
 			expectedNumDays:  6,
 		},
 		// failures
 		{
-			name:   "a faulty date",
-			period: "2024/06-15",
-			err:    errTimePeriodNotValid,
+			name:        "a faulty date",
+			period:      "2024/06-15",
+			expectedErr: errTimePeriodNotValid,
 		},
 		{
-			name:   "a faulty date range",
-			period: "2024/06/15...2024",
-			err:    errTimePeriodNotValid,
+			name:        "a faulty date range",
+			period:      "2024/06/15...2024",
+			expectedErr: errTimePeriodNotValid,
 		},
 		{
-			name:   "a date range too large",
-			period: "2024/06/15...2024/06/22",
-			err:    errTimePeriodTooLarge,
+			name:           "a date range too large",
+			period:         "2024/06/15...2024/06/22",
+			maxDaysAllowed: &maxDaysAllowed,
+			expectedErr:    errTimePeriodTooLarge,
 		},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GetDateRangeFromPeriod(tt.period, tt.now, tt.fullWeek)
+			got, err := GetDateRangeFromPeriod(tt.period, tt.now, tt.fullWeek, tt.maxDaysAllowed)
 
 			startStr := got.Start.Format(timeFormat)
 			endStr := got.End.Format(timeFormat)
 
-			if tt.err == nil {
+			if tt.expectedErr == nil {
 				assert.Equal(t, tt.expectedStartStr, startStr)
 				assert.Equal(t, tt.expectedEndStr, endStr)
 				assert.Equal(t, tt.expectedNumDays, got.NumDays)
 				assert.NoError(t, err)
 				return
 			}
-			assert.ErrorIs(t, err, tt.err)
+			assert.ErrorIs(t, err, tt.expectedErr, tt.name)
 		})
 	}
 }

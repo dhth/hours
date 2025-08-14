@@ -19,10 +19,9 @@ import (
 )
 
 const (
-	logNumDaysUpperBound   = 7
 	logTimeCharsBudget     = 6
 	interactiveLogDayLimit = 1
-	logLimit               = 100
+	logLimit               = 10000
 )
 
 var errCouldntGenerateLogs = errors.New("couldn't generate logs")

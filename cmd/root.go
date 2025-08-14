@@ -23,11 +23,12 @@ import (
 )
 
 const (
-	defaultDBName     = "hours.db"
-	configDirName     = "hours"
-	themeDirName      = "themes"
-	numDaysThreshold  = 30
-	numTasksThreshold = 20
+	defaultDBName          = "hours.db"
+	configDirName          = "hours"
+	themeDirName           = "themes"
+	genNumDaysThreshold    = 30
+	genNumTasksThreshold   = 20
+	reportNumDaysThreshold = 7
 
 	themeEnvVar      = "HOURS_THEME"
 	defaultThemeName = "default"
@@ -260,11 +261,11 @@ this with a --dbpath/-d flag that points to a throwaway database.
 `,
 		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			if genNumDays > numDaysThreshold {
-				return fmt.Errorf("%w (%d)", errNumDaysExceedsThreshold, numDaysThreshold)
+			if genNumDays > genNumDaysThreshold {
+				return fmt.Errorf("%w (%d)", errNumDaysExceedsThreshold, genNumDaysThreshold)
 			}
-			if genNumTasks > numTasksThreshold {
-				return fmt.Errorf("%w (%d)", errNumTasksExceedsThreshold, numTasksThreshold)
+			if genNumTasks > genNumTasksThreshold {
+				return fmt.Errorf("%w (%d)", errNumTasksExceedsThreshold, genNumTasksThreshold)
 			}
 
 			if !genSkipConfirmation {
@@ -311,9 +312,9 @@ hours --dbpath=%s stats today -i
 	}
 
 	reportCmd := &cobra.Command{
-		Use:   "report [PERIOD]",
+		Use:   "report <PERIOD>",
 		Short: "Output a report based on task log entries",
-		Long: `Output a report based on task log entries.
+		Long: fmt.Sprintf(`Output a report based on task log entries.
 
 Reports show time spent on tasks per day in the time period you specify. These
 can also be aggregated (using -a) to consolidate all task entries and show the
@@ -326,11 +327,11 @@ Accepts an argument, which can be one of the following:
   3d         for a report on the last 3 days (default)
   week       for a report on the current week
   date       for a report for a specific date (eg. "2024/06/08")
-  range      for a report for a date range (eg. "2024/06/08...2024/06/12")
+  range      for a report for a date range (eg. "2024/06/08...2024/06/12", for a maximum of %d days)
 
 Note: If a task log continues past midnight in your local timezone, it
 will be reported on the day it ends.
-`,
+`, reportNumDaysThreshold),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, args []string) error {
@@ -350,7 +351,9 @@ will be reported on the day it ends.
 			if recordsInteractive {
 				fullWeek = true
 			}
-			dateRange, err := types.GetDateRangeFromPeriod(period, time.Now(), fullWeek)
+
+			numDaysUpperBound := reportNumDaysThreshold
+			dateRange, err := types.GetDateRangeFromPeriod(period, time.Now(), fullWeek, &numDaysUpperBound)
 			if err != nil {
 				return err
 			}
@@ -360,7 +363,7 @@ will be reported on the day it ends.
 	}
 
 	logCmd := &cobra.Command{
-		Use:   "log [PERIOD]",
+		Use:   "log <PERIOD>",
 		Short: "Output task log entries",
 		Long: `Output task log entries.
 
@@ -391,7 +394,7 @@ appear in the log for the day it ends.
 				period = args[0]
 			}
 
-			dateRange, err := types.GetDateRangeFromPeriod(period, time.Now(), false)
+			dateRange, err := types.GetDateRangeFromPeriod(period, time.Now(), false, nil)
 			if err != nil {
 				return err
 			}
@@ -401,7 +404,7 @@ appear in the log for the day it ends.
 	}
 
 	statsCmd := &cobra.Command{
-		Use:   "stats [PERIOD]",
+		Use:   "stats <PERIOD>",
 		Short: "Output statistics for tracked time",
 		Long: `Output statistics for tracked time.
 
@@ -439,7 +442,7 @@ be considered in the stats for the day it ends.
 			}
 			var dateRange types.DateRange
 			if period != "all" {
-				dateRange, err = types.GetDateRangeFromPeriod(period, time.Now(), fullWeek)
+				dateRange, err = types.GetDateRangeFromPeriod(period, time.Now(), fullWeek, nil)
 				if err != nil {
 					return err
 				}
