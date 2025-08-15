@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Removed limit on range limit for stats and log
-- Lack of end date in date range implies today (eg. 2025/08/12...)
+- Missing end date in date range implies today (eg. 2025/08/12...)
 - "today" can be used in date range (eg. 2025/08/12...today)
 
 ## [v0.5.0] - Feb 22, 2025
