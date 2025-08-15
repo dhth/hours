@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -9,13 +10,18 @@ import (
 )
 
 func TestParseDateRange(t *testing.T) {
+	start := time.Date(2024, 6, 28, 0, 0, 0, 0, time.Local)
+	now := time.Date(2024, 6, 30, 0, 0, 0, 0, time.Local)
+	rangeWithoutEnd := fmt.Sprintf("%s...", start.Format(dateFormat))
+	rangeEndingToday := fmt.Sprintf("%s...today", start.Format(dateFormat))
+
 	testCases := []struct {
 		name             string
 		input            string
 		expectedStartStr string
 		expectedEndStr   string
 		expectedNumDays  int
-		err              error
+		expectedErr      error
 	}{
 		// success
 		{
@@ -39,45 +45,59 @@ func TestParseDateRange(t *testing.T) {
 			expectedEndStr:   "2025/06/29 00:00",
 			expectedNumDays:  366,
 		},
+		{
+			name:             "a range without end",
+			input:            rangeWithoutEnd,
+			expectedStartStr: start.Format(timeFormat),
+			expectedEndStr:   now.Format(timeFormat),
+			expectedNumDays:  3,
+		},
+		{
+			name:             "a range ending today",
+			input:            rangeEndingToday,
+			expectedStartStr: start.Format(timeFormat),
+			expectedEndStr:   now.Format(timeFormat),
+			expectedNumDays:  3,
+		},
 		// failures
 		{
-			name:  "empty string",
-			input: "",
-			err:   errDateRangeIncorrect,
+			name:        "empty string",
+			input:       "",
+			expectedErr: errDateRangeIncorrect,
 		},
 		{
-			name:  "only one date",
-			input: "2024/06/10",
-			err:   errDateRangeIncorrect,
+			name:        "only one date",
+			input:       "2024/06/10",
+			expectedErr: errDateRangeIncorrect,
 		},
 		{
-			name:  "badly formatted start date",
-			input: "2024/0610...2024/06/10",
-			err:   errStartDateIncorrect,
+			name:        "badly formatted start date",
+			input:       "2024/0610...2024/06/10",
+			expectedErr: errStartDateIncorrect,
 		},
 		{
-			name:  "badly formatted end date",
-			input: "2024/06/10...2024/0610",
-			err:   errEndDateIncorrect,
+			name:        "badly formatted end date",
+			input:       "2024/06/10...2024/0610",
+			expectedErr: errEndDateIncorrect,
 		},
 		{
-			name:  "a range of 0 days",
-			input: "2024/06/10...2024/06/10",
-			err:   errEndDateIsNotAfterStartDate,
+			name:        "a range of 0 days",
+			input:       "2024/06/10...2024/06/10",
+			expectedErr: errEndDateIsNotAfterStartDate,
 		},
 		{
-			name:  "end date before start date",
-			input: "2024/06/10...2024/06/08",
-			err:   errEndDateIsNotAfterStartDate,
+			name:        "end date before start date",
+			input:       "2024/06/10...2024/06/08",
+			expectedErr: errEndDateIsNotAfterStartDate,
 		},
 	}
 
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseDateRange(tt.input)
+			got, err := parseDateRange(tt.input, now)
 
-			if tt.err != nil {
-				assert.ErrorIs(t, err, tt.err)
+			if tt.expectedErr != nil {
+				require.ErrorIs(t, err, tt.expectedErr)
 				return
 			}
 
