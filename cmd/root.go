@@ -374,7 +374,7 @@ Accepts an argument, which can be one of the following:
   3d         for log entries from the last 3 days
   week       for log entries from the current week
   date       for log entries from a specific date (eg. "2024/06/08")
-  range      for a report for a date range (eg. "2024/06/08...2024/06/12", "2024/06/08...today", "2024/06/08...")
+  range      for log entries for a date range (eg. "2024/06/08...2024/06/12", "2024/06/08...today", "2024/06/08...")
 
 Note: If a task log continues past midnight in your local timezone, it'll
 appear in the log for the day it ends.

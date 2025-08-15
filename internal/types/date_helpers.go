@@ -99,7 +99,7 @@ func GetDateRangeFromPeriod(period string, now time.Time, fullWeek bool, maxDays
 
 		if strings.Contains(period, "...") {
 			var dr DateRange
-			dr, err = parseDateRange(period, time.Now())
+			dr, err = parseDateRange(period, now)
 			if err != nil {
 				return dr, fmt.Errorf("%w: %s", errTimePeriodNotValid, err.Error())
 			}
