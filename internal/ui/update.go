@@ -188,6 +188,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "ctrl+t":
 			m.goToActiveTask()
+		case "f":
+			if m.activeView != taskListView {
+				break
+			}
+
+			if !m.trackingActive {
+				m.message = "nothing is being tracked right now"
+				break
+			}
+
+			handleCmd := m.getCmdToFinishActiveTLWithoutComment()
+			if handleCmd != nil {
+				cmds = append(cmds, handleCmd)
+			}
 		case "ctrl+s":
 			switch m.activeView {
 			case taskListView:
