@@ -97,8 +97,7 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 
 	m.activeTLEndTS = endTS
 
-	if m.activeTLEndTS.Sub(m.activeTLBeginTS).Seconds() < 60 {
-		m.message = timeSpentLowerBoundMsg
+	if !m.isDurationValid(m.activeTLBeginTS, m.activeTLEndTS) {
 		return nil
 	}
 
@@ -120,10 +119,8 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 func (m *Model) getCmdToFinishActiveTLWithoutComment() tea.Cmd {
 	beginTS := m.activeTLBeginTS
 
-	m.message = fmt.Sprintf("begin: %v", beginTS)
 	now := time.Now().Truncate(time.Second)
-	if now.Sub(beginTS).Seconds() < 60 {
-		m.message = timeSpentLowerBoundMsg
+	if !m.isDurationValid(beginTS, now) {
 		return nil
 	}
 
@@ -156,8 +153,7 @@ func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
 		return nil
 	}
 
-	if endTS.Sub(beginTS).Seconds() < 60 {
-		m.message = timeSpentLowerBoundMsg
+	if !m.isDurationValid(beginTS, endTS) {
 		return nil
 	}
 
@@ -921,4 +917,12 @@ func (m *Model) handleActiveTLDeletedMsg(msg activeTaskLogDeletedMsg) {
 	m.trackingActive = false
 	m.activeTLComment = nil
 	m.activeTaskID = -1
+}
+
+func (m *Model) isDurationValid(start, end time.Time) bool {
+	if end.Sub(start).Seconds() < 60 {
+		m.message = timeSpentLowerBoundMsg
+		return false
+	}
+	return true
 }

@@ -14,7 +14,6 @@ const (
 	enter                 = "enter"
 	viewPortMoveLineCount = 3
 	msgCouldntSelectATask = "Couldn't select a task"
-	msgChangesLocked      = "Changes locked momentarily"
 )
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

@@ -61,7 +61,7 @@ func getHelpText(style Style) string {
                                               entry for the currently active task, and
                                               start recording time for another
   f                                       Finish the currently active task log without
-											  a comment
+                                              comment
   <ctrl+s>                                Edit the currently active task log/Add a new
                                               manual task log entry
   <ctrl+x>                                Discard currently active recording
