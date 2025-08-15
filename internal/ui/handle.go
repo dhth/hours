@@ -17,6 +17,7 @@ const (
 	removeFilterMsg               = "Remove filter first"
 	beginTsCannotBeInTheFutureMsg = "Begin timestamp cannot be in the future"
 	endTsCannotBeInTheFutureMsg   = "End timestamp cannot be in the future"
+	timeSpentLowerBoundMsg        = "time spent needs to be at least a minute"
 )
 
 var suggestReloadingMsg = fmt.Sprintf("Something went wrong, please restart hours; let %s know about this error via %s.", c.Author, c.RepoIssuesURL)
@@ -96,8 +97,7 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 
 	m.activeTLEndTS = endTS
 
-	if m.activeTLEndTS.Sub(m.activeTLBeginTS).Seconds() <= 0 {
-		m.message = "time spent needs to be positive"
+	if !m.isDurationValid(m.activeTLBeginTS, m.activeTLEndTS) {
 		return nil
 	}
 
@@ -114,6 +114,17 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 	m.activeView = taskListView
 
 	return toggleTracking(m.db, m.activeTaskID, m.activeTLBeginTS, m.activeTLEndTS, comment)
+}
+
+func (m *Model) getCmdToFinishActiveTLWithoutComment() tea.Cmd {
+	now := time.Now().Truncate(time.Second)
+	if !m.isDurationValid(m.activeTLBeginTS, now) {
+		return nil
+	}
+
+	m.activeTLEndTS = now
+
+	return toggleTracking(m.db, m.activeTaskID, m.activeTLBeginTS, m.activeTLEndTS, nil)
 }
 
 func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
@@ -140,8 +151,7 @@ func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
 		return nil
 	}
 
-	if endTS.Sub(beginTS).Seconds() <= 0 {
-		m.message = "time spent needs to be positive"
+	if !m.isDurationValid(beginTS, endTS) {
 		return nil
 	}
 
@@ -905,4 +915,12 @@ func (m *Model) handleActiveTLDeletedMsg(msg activeTaskLogDeletedMsg) {
 	m.trackingActive = false
 	m.activeTLComment = nil
 	m.activeTaskID = -1
+}
+
+func (m *Model) isDurationValid(start, end time.Time) bool {
+	if end.Sub(start).Seconds() < 60 {
+		m.message = timeSpentLowerBoundMsg
+		return false
+	}
+	return true
 }
