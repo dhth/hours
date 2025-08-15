@@ -24,12 +24,13 @@ var (
 	errTimePeriodTooLarge         = errors.New("time period is too large")
 )
 
-func parseDateRange(dateRangeStr string) (DateRange, error) {
+func parseDateRange(rangeStr string, now time.Time) (DateRange, error) {
 	var dr DateRange
+	var err error
 
-	elements := strings.Split(dateRangeStr, "...")
+	elements := strings.Split(rangeStr, "...")
 	if len(elements) != 2 {
-		return dr, fmt.Errorf("%w: date range needs to be of the format: %s...%s", errDateRangeIncorrect, dateFormat, dateFormat)
+		return dr, fmt.Errorf("%w: date range needs to be of the format: %s...%s (the second date can be left empty for today)", errDateRangeIncorrect, dateFormat, dateFormat)
 	}
 
 	start, err := time.ParseInLocation(string(dateFormat), elements[0], time.Local)
@@ -37,20 +38,25 @@ func parseDateRange(dateRangeStr string) (DateRange, error) {
 		return dr, fmt.Errorf("%w: %s", errStartDateIncorrect, err.Error())
 	}
 
-	end, err := time.ParseInLocation(string(dateFormat), elements[1], time.Local)
-	if err != nil {
-		return dr, fmt.Errorf("%w: %s", errEndDateIncorrect, err.Error())
+	var end time.Time
+	if elements[1] == "" || elements[1] == "today" {
+		end = now
+	} else {
+		end, err = time.ParseInLocation(string(dateFormat), elements[1], time.Local)
+		if err != nil {
+			return dr, fmt.Errorf("%w: %s", errEndDateIncorrect, err.Error())
+		}
 	}
 
 	if end.Sub(start) <= 0 {
 		return dr, fmt.Errorf("%w", errEndDateIsNotAfterStartDate)
 	}
 
-	dr.Start = start
-	dr.End = end
-	dr.NumDays = int(end.Sub(start).Hours()/24) + 1
-
-	return dr, nil
+	return DateRange{
+		Start:   start,
+		End:     end,
+		NumDays: int(end.Sub(start).Hours()/24) + 1,
+	}, nil
 }
 
 func GetDateRangeFromPeriod(period string, now time.Time, fullWeek bool, maxDaysAllowed *int) (DateRange, error) {
@@ -93,7 +99,7 @@ func GetDateRangeFromPeriod(period string, now time.Time, fullWeek bool, maxDays
 
 		if strings.Contains(period, "...") {
 			var dr DateRange
-			dr, err = parseDateRange(period)
+			dr, err = parseDateRange(period, time.Now())
 			if err != nil {
 				return dr, fmt.Errorf("%w: %s", errTimePeriodNotValid, err.Error())
 			}

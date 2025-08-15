@@ -327,7 +327,7 @@ Accepts an argument, which can be one of the following:
   3d         for a report on the last 3 days (default)
   week       for a report on the current week
   date       for a report for a specific date (eg. "2024/06/08")
-  range      for a report for a date range (eg. "2024/06/08...2024/06/12", for a maximum of %d days)
+  range      for a report for a date range (eg. "2024/06/08...2024/06/12", "2024/06/08...today", "2024/06/08..."; shouldn't be greater than %d days)
 
 Note: If a task log continues past midnight in your local timezone, it
 will be reported on the day it ends.
@@ -374,7 +374,7 @@ Accepts an argument, which can be one of the following:
   3d         for log entries from the last 3 days
   week       for log entries from the current week
   date       for log entries from a specific date (eg. "2024/06/08")
-  range      for log entries from a specific date range (eg. "2024/06/08...2024/06/12")
+  range      for a report for a date range (eg. "2024/06/08...2024/06/12", "2024/06/08...today", "2024/06/08...")
 
 Note: If a task log continues past midnight in your local timezone, it'll
 appear in the log for the day it ends.
@@ -415,7 +415,7 @@ Accepts an argument, which can be one of the following:
   3d         show stats for the last 3 days (default)
   week       show stats for the current week
   date       show stats for a specific date (eg. "2024/06/08")
-  range      show stats for a specific date range (eg. "2024/06/08...2024/06/12")
+  range      show stats for a date range (eg. "2024/06/08...2024/06/12", "2024/06/08...today", "2024/06/08...")
   all        show stats for all log entries
 
 Note: If a task log continues past midnight in your local timezone, it'll
