@@ -17,7 +17,7 @@ const (
 	removeFilterMsg               = "Remove filter first"
 	beginTsCannotBeInTheFutureMsg = "Begin timestamp cannot be in the future"
 	endTsCannotBeInTheFutureMsg   = "End timestamp cannot be in the future"
-	timeSpentLowerBoundMsg        = "time spent needs to be greater than a minute"
+	timeSpentLowerBoundMsg        = "time spent needs to be at least a minute"
 )
 
 var suggestReloadingMsg = fmt.Sprintf("Something went wrong, please restart hours; let %s know about this error via %s.", c.Author, c.RepoIssuesURL)
@@ -117,10 +117,8 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 }
 
 func (m *Model) getCmdToFinishActiveTLWithoutComment() tea.Cmd {
-	beginTS := m.activeTLBeginTS
-
 	now := time.Now().Truncate(time.Second)
-	if !m.isDurationValid(beginTS, now) {
+	if !m.isDurationValid(m.activeTLBeginTS, now) {
 		return nil
 	}
 
