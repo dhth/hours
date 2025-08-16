@@ -9,20 +9,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//go:embed static/valid-theme-with-entire-config.json
-var validThemeJSONWithEntireConfig []byte
+//go:embed static/valid-with-entire-config.json
+var validThemeWithEntireConfig []byte
 
-//go:embed static/valid-theme-with-partial-config.json
-var validThemeJSONWithPartialConfig []byte
+//go:embed static/valid-with-partial-config.json
+var validThemeWithPartialConfig []byte
 
-//go:embed static/malformed-json-theme.json
-var malformedJSONTheme []byte
+//go:embed static/invalid-with-entire-config.json
+var invalidThemeWithEntireConfig []byte
 
-//go:embed static/invalid-schema-theme.json
-var invalidSchemaTheme []byte
+//go:embed static/malformed-json.json
+var invalidThemeMalformedJSON []byte
 
-//go:embed static/invalid-data-theme.json
-var invalidDataTheme []byte
+//go:embed static/invalid-schema.json
+var invalidThemeInvalidSchema []byte
+
+//go:embed static/invalid-data.json
+var invalidThemeInvalidData []byte
 
 func TestGetInvalidColors(t *testing.T) {
 	testCases := []struct {
@@ -33,14 +36,19 @@ func TestGetInvalidColors(t *testing.T) {
 		// success
 		{
 			name:               "valid json with all key-values provided",
-			themeBytes:         validThemeJSONWithEntireConfig,
+			themeBytes:         validThemeWithEntireConfig,
 			expectedNumInvalid: 0,
 		},
 		// failures
 		{
 			name:               "invalid data",
-			themeBytes:         invalidDataTheme,
+			themeBytes:         invalidThemeInvalidData,
 			expectedNumInvalid: 5,
+		},
+		{
+			name:               "invalid data with entire config",
+			themeBytes:         invalidThemeWithEntireConfig,
+			expectedNumInvalid: 39,
 		},
 	}
 
@@ -68,26 +76,26 @@ func TestLoadTheme(t *testing.T) {
 		// success
 		{
 			name:  "valid json with all key-values provided",
-			input: validThemeJSONWithEntireConfig,
+			input: validThemeWithEntireConfig,
 		},
 		{
 			name:  "valid json with some key-values provided",
-			input: validThemeJSONWithPartialConfig,
+			input: validThemeWithPartialConfig,
 		},
 		// failures
 		{
 			name:  "malformed json",
-			input: malformedJSONTheme,
+			input: invalidThemeMalformedJSON,
 			err:   errThemeFileIsInvalidJSON,
 		},
 		{
 			name:  "invalid schema",
-			input: invalidSchemaTheme,
+			input: invalidThemeInvalidSchema,
 			err:   ErrThemeFileHasInvalidSchema,
 		},
 		{
 			name:  "invalid data",
-			input: invalidDataTheme,
+			input: invalidThemeInvalidData,
 			err:   ErrThemeColorsAreInvalid,
 		},
 	}
