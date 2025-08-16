@@ -12,6 +12,7 @@ import (
 const (
 	ctrlC                 = "ctrl+c"
 	enter                 = "enter"
+	escape                = "esc"
 	viewPortMoveLineCount = 3
 	msgCouldntSelectATask = "Couldn't select a task"
 )
@@ -22,23 +23,23 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	m.message = ""
 
+	// early check for window resizing and handling insufficient dimensions
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.handleWindowResizing(msg)
 	case tea.KeyMsg:
 		if m.activeView == insufficientDimensionsView {
 			switch msg.String() {
-			case ctrlC, "q", "esc":
+			case ctrlC, "q", escape:
 				return m, tea.Quit
+			default:
+				return m, nil
 			}
 		}
 	}
 
 	keyMsg, keyMsgOK := msg.(tea.KeyMsg)
 	if keyMsgOK {
-		if m.activeView == insufficientDimensionsView {
-			return m, tea.Batch(cmds...)
-		}
 		if m.activeTasksList.FilterState() == list.Filtering {
 			m.activeTasksList, cmd = m.activeTasksList.Update(msg)
 			cmds = append(cmds, cmd)
@@ -76,8 +77,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds = append(cmds, updateCmd)
 				return m, tea.Batch(cmds...)
 			}
-		case "esc":
-			m.handleEscape()
+		case escape:
+			switch m.activeView {
+			case taskInputView, editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
+				m.handleEscapeInForms()
+				return m, tea.Batch(cmds...)
+			}
 		case "tab":
 			m.goForwardInView()
 		case "shift+tab":
@@ -158,12 +163,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if m.activeView == insufficientDimensionsView {
-			return m, tea.Batch(cmds...)
-		}
-
 		switch msg.String() {
-		case ctrlC, "q":
+		case ctrlC:
+			return m, tea.Quit
+		case "q", escape:
 			shouldQuit := m.handleRequestToGoBackOrQuit()
 			if shouldQuit {
 				return m, tea.Quit
@@ -369,7 +372,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case ctrlC, "q":
+		case ctrlC, "q", escape:
 			m.quitting = true
 			return m, tea.Quit
 		case "left", "h":
