@@ -21,6 +21,9 @@
   "taskEntry": "#",
   "taskLogEntry": "#",
   "taskLogList": "#",
+  "taskLogFormInfo": "#",
+  "taskLogFormWarn": "#",
+  "taskLogFormError": "#",
   "tasks": [
     "#",
     "#",

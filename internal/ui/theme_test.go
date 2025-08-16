@@ -48,7 +48,7 @@ func TestGetInvalidColors(t *testing.T) {
 		{
 			name:               "invalid data with entire config",
 			themeBytes:         invalidThemeWithEntireConfig,
-			expectedNumInvalid: 39,
+			expectedNumInvalid: 42,
 		},
 	}
 

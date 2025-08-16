@@ -21,6 +21,9 @@
   "taskEntry": "#8ec07c",
   "taskLogEntry": "#fabd2f",
   "taskLogList": "#b8bb26",
+  "taskLogFormInfo": "#d3869b",
+  "taskLogFormWarn": "#fe8019",
+  "taskLogFormError": "#fb4934",
   "tasks": [
     "#d3869b",
     "#b5e48c",

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Contextual cues in the "Task Log Entry" view
+
 ### Changed
 
 - Removed limit on range limit for stats and log
