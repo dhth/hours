@@ -33,7 +33,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case ctrlC, "q", escape:
 				return m, tea.Quit
 			default:
-				return m, nil
+				return m, tea.Batch(cmds...)
 			}
 		}
 	}
