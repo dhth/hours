@@ -22,17 +22,17 @@ const (
 type stateView uint
 
 const (
-	taskListView stateView = iota
-	taskLogView
-	taskLogDetailsView
-	inactiveTaskListView
-	editActiveTLView
-	finishActiveTLView
-	manualTasklogEntryView
-	editSavedTLView
-	taskInputView
-	helpView
-	insufficientDimensionsView
+	taskListView               stateView = iota // Main list of active tasks
+	taskLogView                                 // View showing task log entries
+	taskLogDetailsView                          // Detailed view of a specific task log entry
+	inactiveTaskListView                        // List of inactive tasks
+	editActiveTLView                            // Form to edit currently active task log (ie, begin TS)
+	finishActiveTLView                          // Form to finish active task log
+	manualTasklogEntryView                      // Form to manually create a new task log entry
+	editSavedTLView                             // Form to edit an existing task log
+	taskInputView                               // Form to create or edit task details
+	helpView                                    // Help documentation view
+	insufficientDimensionsView                  // Error view when terminal is too small
 )
 
 type taskMgmtContext uint

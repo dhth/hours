@@ -21,6 +21,9 @@
   "taskEntry": "#8ec07c",                    # primary color for the task entry view
   "taskLogEntry": "#fabd2f",                 # primary color for the task log entry view
   "taskLogList": "#b8bb26",                  # primary color for the task log list view
+  "taskLogFormInfo": "#d3869b",              # color to use for contextual information in the task log form
+  "taskLogFormWarn": "#fe8019",              # color to use for contextual warnings in the task log form
+  "taskLogFormError": "#fb4934",             # color to use for contextual errors in the task log form
   "tasks": [                                 # colors to be used for tasks in the output of logs, report, stats
     "#d3869b",
     "#b5e48c",

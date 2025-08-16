@@ -2,8 +2,11 @@ package ui
 
 import (
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/dhth/hours/internal/types"
 	"github.com/dhth/hours/internal/utils"
 )
 
@@ -11,9 +14,18 @@ const (
 	taskLogEntryViewHeading = "Task Log Entry"
 	minHeightNeeded         = 32
 	minWidthNeeded          = 96
+	tlWarningThresholdSecs  = 8 * 60 * 60
 )
 
 var listWidth = 140
+
+type tlFormValidity uint
+
+const (
+	tlSubmitOk tlFormValidity = iota
+	tlSubmitWarn
+	tlSubmitErr
+)
 
 func (m Model) View() string {
 	var content string
@@ -53,16 +65,34 @@ func (m Model) View() string {
 		formCommentContext = fmt.Sprintf("%d/%d", m.tLCommentInput.Length(), tlCommentLengthLimit)
 	}
 	formCommentHelp := fmt.Sprintf("Comment (%s)", formCommentContext)
-	var formSubmitHelp string
 
+	var submissionCtx string
+	var submissionValidity tlFormValidity
+	var durationCtx string
+	if m.activeView == finishActiveTLView || m.activeView == manualTasklogEntryView || m.activeView == editSavedTLView {
+		durationCtx, submissionValidity = getDurationValidityContext(m.tLInputs[entryBeginTS].Value(), m.tLInputs[entryEndTS].Value())
+
+		switch submissionValidity {
+		case tlSubmitOk:
+			submissionCtx = m.style.tlFormOkStyle.Render(durationCtx)
+		case tlSubmitWarn:
+			submissionCtx = m.style.tlFormWarnStyle.Render(durationCtx)
+		case tlSubmitErr:
+			submissionCtx = m.style.tlFormErrStyle.Render(durationCtx)
+		}
+	}
+
+	var formSubmitHelp string
 	switch m.activeView {
 	case taskInputView:
 		formSubmitHelp = "Press <ctrl+s>/<enter> to submit"
 	case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
-		if m.trackingFocussedField == entryComment {
-			formSubmitHelp = "Press <ctrl+s> to submit"
-		} else {
-			formSubmitHelp = "Press <ctrl+s>/<enter> to submit"
+		if submissionValidity != tlSubmitErr {
+			if m.trackingFocussedField == entryComment {
+				formSubmitHelp = m.style.formHelp.Render("Press <ctrl+s> to submit")
+			} else {
+				formSubmitHelp = m.style.formHelp.Render("Press <ctrl+s>/<enter> to submit")
+			}
 		}
 	}
 
@@ -127,6 +157,8 @@ func (m Model) View() string {
 %s
 
   %s
+
+  %s
 `,
 			m.style.taskLogEntryHeading.Render(taskLogEntryViewHeading),
 			m.style.formContext.Render(formHeadingText),
@@ -139,9 +171,10 @@ func (m Model) View() string {
 			m.style.formHelp.Render(formTimeShiftHelp),
 			m.style.formFieldName.Render(formCommentHelp),
 			m.tLCommentInput.View(),
-			m.style.formHelp.Render(formSubmitHelp),
+			submissionCtx,
+			formSubmitHelp,
 		)
-		for range m.terminalHeight - 32 {
+		for range m.terminalHeight - 34 {
 			content += "\n"
 		}
 	case editActiveTLView:
@@ -205,6 +238,8 @@ func (m Model) View() string {
 %s
 
   %s
+
+  %s
 `,
 			m.style.taskLogEntryHeading.Render(taskLogEntryViewHeading),
 			m.style.formContext.Render(formHeadingText),
@@ -217,9 +252,10 @@ func (m Model) View() string {
 			m.style.formHelp.Render(formTimeShiftHelp),
 			m.style.formFieldName.Render(formCommentHelp),
 			m.tLCommentInput.View(),
-			m.style.formHelp.Render(formSubmitHelp),
+			submissionCtx,
+			formSubmitHelp,
 		)
-		for range m.terminalHeight - 32 {
+		for range m.terminalHeight - 34 {
 			content += "\n"
 		}
 	case helpView:
@@ -311,4 +347,44 @@ func (m recordsModel) View() string {
 	}
 
 	return fmt.Sprintf("%s%s%s", m.report, dateRange, help)
+}
+
+func getDurationValidityContext(beginStr, endStr string) (string, tlFormValidity) {
+	if strings.TrimSpace(beginStr) == "" {
+		return "Begin time is empty", tlSubmitErr
+	}
+
+	if strings.TrimSpace(endStr) == "" {
+		return "End time is empty", tlSubmitErr
+	}
+
+	beginTS, err := time.ParseInLocation(timeFormat, beginStr, time.Local)
+	if err != nil {
+		return "Begin time is invalid", tlSubmitErr
+	}
+
+	endTS, err := time.ParseInLocation(timeFormat, endStr, time.Local)
+	if err != nil {
+		return "End time is invalid", tlSubmitErr
+	}
+
+	dur := endTS.Sub(beginTS)
+
+	if dur == 0 {
+		return "You're recording no time, change begin and/or end time", tlSubmitErr
+	}
+
+	if dur < 0 {
+		return "End time is before begin time", tlSubmitErr
+	}
+
+	totalSeconds := int(dur.Seconds())
+
+	humanized := types.HumanizeDuration(totalSeconds)
+	msg := fmt.Sprintf("You're recording %s", humanized)
+	if totalSeconds > tlWarningThresholdSecs {
+		return msg, tlSubmitWarn
+	}
+
+	return msg, tlSubmitOk
 }

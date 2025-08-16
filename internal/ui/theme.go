@@ -40,6 +40,9 @@ type Theme struct {
 	TaskEntry               string   `json:"taskEntry,omitempty"`
 	TaskLogEntry            string   `json:"taskLogEntry,omitempty"`
 	TaskLogList             string   `json:"taskLogList,omitempty"`
+	TaskLogFormInfo         string   `json:"taskLogFormInfo,omitempty"`
+	TaskLogFormWarn         string   `json:"taskLogFormWarn,omitempty"`
+	TaskLogFormError        string   `json:"taskLogFormError,omitempty"`
 	Tasks                   []string `json:"tasks,omitempty"`
 	TitleForeground         string   `json:"titleForeground,omitempty"`
 	ToolName                string   `json:"toolName,omitempty"`
@@ -86,6 +89,9 @@ func DefaultTheme() Theme {
 		TaskLogDetailsViewTitle: "#d3869b",
 		TaskLogEntry:            "#fabd2f",
 		TaskLogList:             "#b8bb26",
+		TaskLogFormInfo:         "#d3869b",
+		TaskLogFormWarn:         "#fe8019",
+		TaskLogFormError:        "#fb4934",
 		TitleForeground:         "#282828",
 		ToolName:                "#fe8019",
 		Tracking:                "#fabd2f",
@@ -149,10 +155,10 @@ func getInvalidColors(theme Theme) []string {
 		invalidColors = append(invalidColors, "initialHelpMsg")
 	}
 	if !isValidColor(theme.ListItemDesc) {
-		invalidColors = append(invalidColors, "ListItemDesc")
+		invalidColors = append(invalidColors, "listItemDesc")
 	}
 	if !isValidColor(theme.ListItemTitle) {
-		invalidColors = append(invalidColors, "ListItemTitle")
+		invalidColors = append(invalidColors, "listItemTitle")
 	}
 	if !isValidColor(theme.RecordsBorder) {
 		invalidColors = append(invalidColors, "recordsBorder")
@@ -169,17 +175,31 @@ func getInvalidColors(theme Theme) []string {
 	if !isValidColor(theme.RecordsHelp) {
 		invalidColors = append(invalidColors, "recordsHelp")
 	}
-	if !isValidColor(theme.TaskEntry) {
-		invalidColors = append(invalidColors, "taskEntry")
-	}
 	if !isValidColor(theme.TaskLogDetailsViewTitle) {
 		invalidColors = append(invalidColors, "taskLogDetails")
+	}
+	if !isValidColor(theme.TaskEntry) {
+		invalidColors = append(invalidColors, "taskEntry")
 	}
 	if !isValidColor(theme.TaskLogEntry) {
 		invalidColors = append(invalidColors, "taskLogEntry")
 	}
 	if !isValidColor(theme.TaskLogList) {
 		invalidColors = append(invalidColors, "taskLogList")
+	}
+	if !isValidColor(theme.TaskLogFormInfo) {
+		invalidColors = append(invalidColors, "taskLogFormInfo")
+	}
+	if !isValidColor(theme.TaskLogFormWarn) {
+		invalidColors = append(invalidColors, "taskLogFormWarn")
+	}
+	if !isValidColor(theme.TaskLogFormError) {
+		invalidColors = append(invalidColors, "taskLogFormError")
+	}
+	for i, color := range theme.Tasks {
+		if !isValidColor(color) {
+			invalidColors = append(invalidColors, fmt.Sprintf("tasks[%d]", i+1))
+		}
 	}
 	if !isValidColor(theme.TitleForeground) {
 		invalidColors = append(invalidColors, "titleForeground")
@@ -189,12 +209,6 @@ func getInvalidColors(theme Theme) []string {
 	}
 	if !isValidColor(theme.Tracking) {
 		invalidColors = append(invalidColors, "tracking")
-	}
-
-	for i, color := range theme.Tasks {
-		if !isValidColor(color) {
-			invalidColors = append(invalidColors, fmt.Sprintf("tasks[%d]", i+1))
-		}
 	}
 
 	return invalidColors

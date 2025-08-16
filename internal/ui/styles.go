@@ -35,6 +35,9 @@ type Style struct {
 	taskLogEntryHeading  lipgloss.Style
 	theme                Theme
 	titleForegroundColor lipgloss.Color
+	tlFormOkStyle        lipgloss.Style
+	tlFormWarnStyle      lipgloss.Style
+	tlFormErrStyle       lipgloss.Style
 	toolName             lipgloss.Style
 	tracking             lipgloss.Style
 	viewPort             lipgloss.Style
@@ -94,6 +97,9 @@ func NewStyle(theme Theme) Style {
 		taskLogEntryHeading:  baseHeading.Background(lipgloss.Color(theme.TaskLogEntry)),
 		theme:                theme,
 		titleForegroundColor: lipgloss.Color(theme.TitleForeground),
+		tlFormOkStyle:        lipgloss.NewStyle().Foreground(lipgloss.Color(theme.TaskLogFormInfo)),
+		tlFormWarnStyle:      lipgloss.NewStyle().Foreground(lipgloss.Color(theme.TaskLogFormWarn)),
+		tlFormErrStyle:       lipgloss.NewStyle().Foreground(lipgloss.Color(theme.TaskLogFormError)),
 		toolName:             base.Align(lipgloss.Center).Bold(true).Background(lipgloss.Color(theme.ToolName)),
 		tracking:             tracking,
 		viewPort:             lipgloss.NewStyle().PaddingTop(1).PaddingLeft(2).PaddingRight(2).PaddingBottom(1),

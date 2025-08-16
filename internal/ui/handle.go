@@ -918,6 +918,11 @@ func (m *Model) handleActiveTLDeletedMsg(msg activeTaskLogDeletedMsg) {
 }
 
 func (m *Model) isDurationValid(start, end time.Time) bool {
+	if !end.After(start) {
+		m.message = "End time must be after begin time"
+		return false
+	}
+
 	if end.Sub(start).Seconds() < 60 {
 		m.message = timeSpentLowerBoundMsg
 		return false
