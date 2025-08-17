@@ -40,7 +40,8 @@ func getHelpText(style Style) string {
   3                                       Switch to Inactive Tasks List View
   <tab>                                   Go to next view/form entry
   <shift+tab>                             Go to previous view/form entry
-  q/<ctrl+c>                              Go back
+  q/<esc>                                 Go back
+  <ctrl+c>                                Quit immediately
   ?                                       Show help view
 `),
 		style.helpPrimary.Render("General List Controls"),

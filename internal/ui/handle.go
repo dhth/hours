@@ -188,7 +188,7 @@ func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
 	return cmd
 }
 
-func (m *Model) handleEscape() {
+func (m *Model) handleEscapeInForms() {
 	switch m.activeView {
 	case taskInputView:
 		m.activeView = taskListView
@@ -328,10 +328,10 @@ func (m *Model) handleRequestToGoBackOrQuit() bool {
 		if fs == list.Filtering || fs == list.FilterApplied {
 			m.inactiveTasksList.ResetFilter()
 		} else {
-			m.activeView = taskListView
+			m.activeView = taskLogView
 		}
 	case helpView:
-		m.activeView = taskListView
+		m.activeView = m.lastView
 	}
 
 	return shouldQuit
