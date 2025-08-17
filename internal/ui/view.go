@@ -303,6 +303,15 @@ func (m Model) View() string {
 		activeMsg,
 	)
 
+	if m.debug {
+		footer = fmt.Sprintf("%s [term: %dx%d] [msg frames left: %d]",
+			footer,
+			m.terminalWidth,
+			m.terminalHeight,
+			m.message.framesLeft,
+		)
+	}
+
 	return lipgloss.JoinVertical(lipgloss.Left,
 		content,
 		statusBar,

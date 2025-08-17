@@ -15,7 +15,7 @@ const (
 	textInputWidth       = 80
 )
 
-func InitialModel(db *sql.DB, style Style) Model {
+func InitialModel(db *sql.DB, style Style, debug bool) Model {
 	var activeTaskItems []list.Item
 	var inactiveTaskItems []list.Item
 	var tasklogListItems []list.Item
@@ -72,6 +72,7 @@ This can be used to record details about your work on this task.`
 		tLInputs:          tLInputs,
 		tLCommentInput:    tLCommentInput,
 		taskInputs:        taskInputs,
+		debug:             debug,
 	}
 	m.activeTasksList.Title = "Tasks"
 	m.activeTasksList.SetStatusBarItemName("task", "tasks")
