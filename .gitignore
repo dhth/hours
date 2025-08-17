@@ -6,3 +6,4 @@ debug.log
 .quickrun
 justfile
 .cmds
+.frames

@@ -2,6 +2,9 @@ package ui
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -26,6 +29,8 @@ const (
 	tlSubmitWarn
 	tlSubmitErr
 )
+
+var ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*m`)
 
 func (m Model) View() string {
 	var content string
@@ -304,19 +309,26 @@ func (m Model) View() string {
 	)
 
 	if m.debug {
-		footer = fmt.Sprintf("%s [term: %dx%d] [msg frames left: %d]",
+		footer = fmt.Sprintf("%s [term: %dx%d] [msg frames left: %d] [frames rendered: %d]",
 			footer,
 			m.terminalWidth,
 			m.terminalHeight,
 			m.message.framesLeft,
+			m.frameCounter,
 		)
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Left,
+	result := lipgloss.JoinVertical(lipgloss.Left,
 		content,
 		statusBar,
 		footer,
 	)
+
+	if m.logFramesCfg.log {
+		logFrame(result, m.frameCounter, m.logFramesCfg.framesDir)
+	}
+
+	return result
 }
 
 func (m recordsModel) View() string {
@@ -396,4 +408,17 @@ func getDurationValidityContext(beginStr, endStr string) (string, tlFormValidity
 	}
 
 	return msg, tlSubmitOk
+}
+
+func logFrame(content string, frameIndex uint, framesDir string) {
+	cleanContent := stripANSI(content)
+
+	filename := fmt.Sprintf("%d.txt", frameIndex)
+	filepath := filepath.Join(framesDir, filename)
+
+	_ = os.WriteFile(filepath, []byte(cleanContent), 0o644)
+}
+
+func stripANSI(s string) string {
+	return ansiRegex.ReplaceAllString(s, "")
 }
