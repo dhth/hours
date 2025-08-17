@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Allow filtering tasks by status in analytics commands (log, report, stats)
 - Contextual cues in the "Task Log Entry" view
 
 ### Changed
@@ -16,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed limit on range limit for stats and log
 - Missing end date in date range implies today (eg. 2025/08/12...)
 - "today" can be used in date range (eg. 2025/08/12...today)
+- Improved TUI navigation: (Esc/q) now function from more panes, returning the
+    user to previous panes in a predictable manner
+- User messages in the TUI remain visible for a while
 
 ## [v0.5.0] - Feb 22, 2025
 
