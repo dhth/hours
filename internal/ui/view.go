@@ -5,8 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
-	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dhth/hours/internal/types"
@@ -371,34 +369,12 @@ func (m recordsModel) View() string {
 }
 
 func getDurationValidityContext(beginStr, endStr string) (string, tlFormValidity) {
-	if strings.TrimSpace(beginStr) == "" {
-		return "Begin time is empty", tlSubmitErr
-	}
-
-	if strings.TrimSpace(endStr) == "" {
-		return "End time is empty", tlSubmitErr
-	}
-
-	beginTS, err := time.ParseInLocation(timeFormat, beginStr, time.Local)
+	beginTS, endTS, err := types.ParseTaskLogTimes(beginStr, endStr)
 	if err != nil {
-		return "Begin time is invalid", tlSubmitErr
-	}
-
-	endTS, err := time.ParseInLocation(timeFormat, endStr, time.Local)
-	if err != nil {
-		return "End time is invalid", tlSubmitErr
+		return fmt.Sprintf("Error: %s", err.Error()), tlSubmitErr
 	}
 
 	dur := endTS.Sub(beginTS)
-
-	if dur == 0 {
-		return "You're recording no time, change begin and/or end time", tlSubmitErr
-	}
-
-	if dur < 0 {
-		return "End time is before begin time", tlSubmitErr
-	}
-
 	totalSeconds := int(dur.Seconds())
 
 	humanized := types.HumanizeDuration(totalSeconds)
