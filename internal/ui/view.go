@@ -309,11 +309,12 @@ func (m Model) View() string {
 	)
 
 	if m.debug {
-		footer = fmt.Sprintf("%s [term: %dx%d] [msg frames left: %d]",
+		footer = fmt.Sprintf("%s [term: %dx%d] [msg frames left: %d] [frames rendered: %d]",
 			footer,
 			m.terminalWidth,
 			m.terminalHeight,
 			m.message.framesLeft,
+			m.frameCounter,
 		)
 	}
 
@@ -323,8 +324,8 @@ func (m Model) View() string {
 		footer,
 	)
 
-	if m.logFrames {
-		logFrame(result)
+	if m.logFramesCfg.log {
+		logFrame(result, m.frameCounter, m.logFramesCfg.framesDir)
 	}
 
 	return result
@@ -409,11 +410,11 @@ func getDurationValidityContext(beginStr, endStr string) (string, tlFormValidity
 	return msg, tlSubmitOk
 }
 
-func logFrame(content string) {
+func logFrame(content string, frameIndex uint, framesDir string) {
 	cleanContent := stripANSI(content)
 
-	filename := fmt.Sprintf("frame-%d.txt", time.Now().Unix())
-	filepath := filepath.Join("frames", filename)
+	filename := fmt.Sprintf("%d.txt", frameIndex)
+	filepath := filepath.Join(framesDir, filename)
 
 	_ = os.WriteFile(filepath, []byte(cleanContent), 0o644)
 }

@@ -18,6 +18,7 @@ const (
 )
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	m.frameCounter++
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 

@@ -92,6 +92,11 @@ type userMsg struct {
 	framesLeft uint
 }
 
+type logFramesConfig struct {
+	log       bool
+	framesDir string
+}
+
 type Model struct {
 	activeView                     stateView
 	lastView                       stateView
@@ -127,7 +132,8 @@ type Model struct {
 	terminalHeight                 int
 	trackingActive                 bool
 	debug                          bool
-	logFrames                      bool
+	frameCounter                   uint
+	logFramesCfg                   logFramesConfig
 }
 
 func (m *Model) blurTLTrackingInputs() {
