@@ -110,7 +110,8 @@ func (tl *TaskLogEntry) UpdateListDesc(timeProvider TimeProvider) {
 	var timeStr string
 	var durationMsg string
 
-	endTSRelative := getTSRelative(tl.EndTS, timeProvider.Now())
+	now := timeProvider.Now()
+	endTSRelative := getTSRelative(tl.EndTS, now)
 
 	switch endTSRelative {
 	case tsFromToday:
@@ -120,7 +121,7 @@ func (tl *TaskLogEntry) UpdateListDesc(timeProvider TimeProvider) {
 	case tsFromThisWeek:
 		durationMsg = tl.EndTS.Format(dayFormat)
 	default:
-		durationMsg = humanize.RelTime(tl.EndTS, timeProvider.Now(), "ago", "from now")
+		durationMsg = humanize.RelTime(tl.EndTS, now, "ago", "from now")
 	}
 
 	timeStr = fmt.Sprintf("%s (%s)",

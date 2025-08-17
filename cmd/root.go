@@ -247,7 +247,7 @@ summary statistics for your tracked time.
 		SilenceUsage: true,
 		PreRunE:      preRun,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return ui.RenderUI(db, style)
+			return ui.RenderUI(db, style, types.RealTimeProvider{})
 		},
 	}
 

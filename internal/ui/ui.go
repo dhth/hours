@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dhth/hours/internal/types"
@@ -17,7 +16,7 @@ var (
 	errCouldnCreateFramesDir      = errors.New("couldn't create frames directory")
 )
 
-func RenderUI(db *sql.DB, style Style) error {
+func RenderUI(db *sql.DB, style Style, timeProvider types.TimeProvider) error {
 	if len(os.Getenv("DEBUG")) > 0 {
 		f, err := tea.LogToFile("debug.log", "debug")
 		if err != nil {
@@ -32,7 +31,7 @@ func RenderUI(db *sql.DB, style Style) error {
 		log: logFrames,
 	}
 	if logFrames {
-		framesDir := filepath.Join(".frames", fmt.Sprintf("%d", time.Now().Unix()))
+		framesDir := filepath.Join(".frames", fmt.Sprintf("%d", timeProvider.Now().Unix()))
 		err := os.MkdirAll(framesDir, 0o755)
 		if err != nil {
 			return fmt.Errorf("%w: %s", errCouldnCreateFramesDir, err.Error())
@@ -44,7 +43,7 @@ func RenderUI(db *sql.DB, style Style) error {
 		InitialModel(
 			db,
 			style,
-			types.RealTimeProvider{},
+			timeProvider,
 			debug,
 			logFramesCfg,
 		),
