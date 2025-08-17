@@ -16,8 +16,6 @@ const (
 	genericErrorMsg               = "Something went wrong"
 	removeFilterMsg               = "Remove filter first"
 	beginTsCannotBeInTheFutureMsg = "Begin timestamp cannot be in the future"
-	endTsCannotBeInTheFutureMsg   = "End timestamp cannot be in the future"
-	timeSpentLowerBoundMsg        = "Time spent needs to be at least a minute"
 )
 
 var suggestReloadingMsg = fmt.Sprintf("Something went wrong, please restart hours; let %s know about this error via %s.", c.Author, c.RepoIssuesURL)
@@ -70,36 +68,13 @@ func (m *Model) getCmdToUpdateActiveTL() tea.Cmd {
 }
 
 func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
-	beginTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryBeginTS].Value(), time.Local)
+	beginTS, endTS, err := types.GetTaskLogTimes(m.tLInputs[entryBeginTS].Value(), m.tLInputs[entryEndTS].Value())
 	if err != nil {
-		m.message = errMsgQuick(err.Error())
-		return nil
-	}
-
-	now := m.timeProvider.Now()
-	if beginTS.After(now) {
-		m.message = errMsgQuick(beginTsCannotBeInTheFutureMsg)
 		return nil
 	}
 
 	m.activeTLBeginTS = beginTS
-
-	endTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryEndTS].Value(), time.Local)
-	if err != nil {
-		m.message = errMsgQuick(err.Error())
-		return nil
-	}
-
-	if endTS.After(now) {
-		m.message = errMsgQuick(endTsCannotBeInTheFutureMsg)
-		return nil
-	}
-
 	m.activeTLEndTS = endTS
-
-	if !m.isDurationValid(m.activeTLBeginTS, m.activeTLEndTS) {
-		return nil
-	}
 
 	commentValue := strings.TrimSpace(m.tLCommentInput.Value())
 	var comment *string
@@ -118,7 +93,9 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 
 func (m *Model) getCmdToFinishActiveTLWithoutComment() tea.Cmd {
 	now := m.timeProvider.Now().Truncate(time.Second)
-	if !m.isDurationValid(m.activeTLBeginTS, now) {
+	err := types.IsTaskLogDurationValid(m.activeTLBeginTS, now)
+	if err != nil {
+		m.message = errMsg(fmt.Sprintf("Error: %s", err.Error()))
 		return nil
 	}
 
@@ -128,30 +105,8 @@ func (m *Model) getCmdToFinishActiveTLWithoutComment() tea.Cmd {
 }
 
 func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
-	beginTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryBeginTS].Value(), time.Local)
+	beginTS, endTS, err := types.GetTaskLogTimes(m.tLInputs[entryBeginTS].Value(), m.tLInputs[entryEndTS].Value())
 	if err != nil {
-		m.message = errMsgQuick(err.Error())
-		return nil
-	}
-
-	now := m.timeProvider.Now()
-	if beginTS.After(now) {
-		m.message = errMsgQuick(beginTsCannotBeInTheFutureMsg)
-		return nil
-	}
-
-	endTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryEndTS].Value(), time.Local)
-	if err != nil {
-		m.message = errMsgQuick(err.Error())
-		return nil
-	}
-
-	if endTS.After(now) {
-		m.message = errMsgQuick(endTsCannotBeInTheFutureMsg)
-		return nil
-	}
-
-	if !m.isDurationValid(beginTS, endTS) {
 		return nil
 	}
 
@@ -915,17 +870,4 @@ func (m *Model) handleActiveTLDeletedMsg(msg activeTaskLogDeletedMsg) {
 	m.trackingActive = false
 	m.activeTLComment = nil
 	m.activeTaskID = -1
-}
-
-func (m *Model) isDurationValid(start, end time.Time) bool {
-	if !end.After(start) {
-		m.message = errMsgQuick("End time must be after begin time")
-		return false
-	}
-
-	if end.Sub(start).Seconds() < 60 {
-		m.message = errMsgQuick(timeSpentLowerBoundMsg)
-		return false
-	}
-	return true
 }

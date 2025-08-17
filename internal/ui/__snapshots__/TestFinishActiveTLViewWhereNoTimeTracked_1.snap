@@ -26,7 +26,7 @@
   ┃                                                                             
   ┃                                                                             
                                                                                 
-  You're recording no time, change begin and/or end time                        
+  Error: end time needs to be atleast a minute after begin time                 
                                                                                 
                                                                                 
                                                                                 

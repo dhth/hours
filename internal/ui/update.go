@@ -27,9 +27,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.handleWindowResizing(msg)
 	case tea.KeyMsg:
+		if msg.String() == ctrlC {
+			return m, tea.Quit
+		}
+
 		if m.activeView == insufficientDimensionsView {
 			switch msg.String() {
-			case ctrlC, "q", escape:
+			case "q", escape:
 				return m, tea.Quit
 			default:
 				return m, tea.Batch(cmds...)
@@ -171,8 +175,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case ctrlC:
-			return m, tea.Quit
 		case "q", escape:
 			shouldQuit := m.handleRequestToGoBackOrQuit()
 			if shouldQuit {
