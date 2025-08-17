@@ -546,7 +546,6 @@ func createTestTaskLogEntry(id int, taskID int, taskSummary string, tp types.Tim
 		Comment:     &comment,
 	}
 
-	// TODO: this is mixing concerns, improve it
 	entry.UpdateListTitle()
 	entry.UpdateListDesc(tp)
 
