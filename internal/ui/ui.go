@@ -9,6 +9,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/dhth/hours/internal/types"
 )
 
 var (
@@ -39,7 +40,16 @@ func RenderUI(db *sql.DB, style Style) error {
 		logFramesCfg.framesDir = framesDir
 	}
 
-	p := tea.NewProgram(InitialModel(db, style, debug, logFramesCfg), tea.WithAltScreen())
+	p := tea.NewProgram(
+		InitialModel(
+			db,
+			style,
+			types.RealTimeProvider{},
+			debug,
+			logFramesCfg,
+		),
+		tea.WithAltScreen(),
+	)
 	_, err := p.Run()
 
 	return err

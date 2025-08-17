@@ -103,6 +103,7 @@ type Model struct {
 	lastViewBeforeInsufficientDims stateView
 	db                             *sql.DB
 	style                          Style
+	timeProvider                   types.TimeProvider
 	activeTasksList                list.Model
 	inactiveTasksList              list.Model
 	taskMap                        map[int]*types.Task
@@ -153,17 +154,18 @@ func (m Model) Init() tea.Cmd {
 }
 
 type recordsModel struct {
-	db         *sql.DB
-	style      Style
-	kind       recordsKind
-	dateRange  types.DateRange
-	period     string
-	plain      bool
-	taskStatus types.TaskStatus
-	report     string
-	quitting   bool
-	busy       bool
-	err        error
+	db           *sql.DB
+	style        Style
+	timeProvider types.TimeProvider
+	kind         recordsKind
+	dateRange    types.DateRange
+	period       string
+	plain        bool
+	taskStatus   types.TaskStatus
+	report       string
+	quitting     bool
+	busy         bool
+	err          error
 }
 
 func (recordsModel) Init() tea.Cmd {

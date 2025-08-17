@@ -60,6 +60,24 @@ type TaskReportEntry struct {
 	SecsSpent   int
 }
 
+type TimeProvider interface {
+	Now() time.Time
+}
+
+type RealTimeProvider struct{}
+
+func (RealTimeProvider) Now() time.Time {
+	return time.Now()
+}
+
+type TestTimeProvider struct {
+	FixedTime time.Time
+}
+
+func (t TestTimeProvider) Now() time.Time {
+	return t.FixedTime
+}
+
 func (t *Task) UpdateListTitle() {
 	var trackingIndicator string
 	if t.TrackingActive {
@@ -69,7 +87,7 @@ func (t *Task) UpdateListTitle() {
 	t.ListTitle = trackingIndicator + t.Summary
 }
 
-func (t *Task) UpdateListDesc() {
+func (t *Task) UpdateListDesc(timeProvider TimeProvider) {
 	var timeSpent string
 
 	if t.SecsSpent != 0 {
@@ -77,7 +95,7 @@ func (t *Task) UpdateListDesc() {
 	} else {
 		timeSpent = "no time spent"
 	}
-	lastUpdated := fmt.Sprintf("last updated: %s", humanize.Time(t.UpdatedAt))
+	lastUpdated := fmt.Sprintf("last updated: %s", humanize.RelTime(t.UpdatedAt, timeProvider.Now(), "ago", "from now"))
 
 	t.ListDesc = fmt.Sprintf("%s %s", utils.RightPadTrim(lastUpdated, 60, true), timeSpent)
 }
@@ -86,13 +104,13 @@ func (tl *TaskLogEntry) UpdateListTitle() {
 	tl.ListTitle = utils.TrimWithMoreLinesIndicator(tl.GetComment(), 60)
 }
 
-func (tl *TaskLogEntry) UpdateListDesc() {
+func (tl *TaskLogEntry) UpdateListDesc(timeProvider TimeProvider) {
 	timeSpentStr := HumanizeDuration(tl.SecsSpent)
 
 	var timeStr string
 	var durationMsg string
 
-	endTSRelative := getTSRelative(tl.EndTS, time.Now())
+	endTSRelative := getTSRelative(tl.EndTS, timeProvider.Now())
 
 	switch endTSRelative {
 	case tsFromToday:
@@ -102,7 +120,7 @@ func (tl *TaskLogEntry) UpdateListDesc() {
 	case tsFromThisWeek:
 		durationMsg = tl.EndTS.Format(dayFormat)
 	default:
-		durationMsg = humanize.Time(tl.EndTS)
+		durationMsg = humanize.RelTime(tl.EndTS, timeProvider.Now(), "ago", "from now")
 	}
 
 	timeStr = fmt.Sprintf("%s (%s)",

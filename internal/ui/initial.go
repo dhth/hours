@@ -15,7 +15,12 @@ const (
 	textInputWidth       = 80
 )
 
-func InitialModel(db *sql.DB, style Style, debug bool, logFramesCfg logFramesConfig) Model {
+func InitialModel(db *sql.DB,
+	style Style,
+	timeProvider types.TimeProvider,
+	debug bool,
+	logFramesCfg logFramesConfig,
+) Model {
 	var activeTaskItems []list.Item
 	var inactiveTaskItems []list.Item
 	var tasklogListItems []list.Item
@@ -49,8 +54,9 @@ This can be used to record details about your work on this task.`
 	taskInputs[entryBeginTS].Width = textInputWidth
 
 	m := Model{
-		db:    db,
-		style: style,
+		db:           db,
+		style:        style,
+		timeProvider: timeProvider,
 		activeTasksList: list.New(activeTaskItems,
 			newItemDelegate(style.listItemTitleColor,
 				style.listItemDescColor,
@@ -116,6 +122,7 @@ func initialRecordsModel(
 	kind recordsKind,
 	db *sql.DB,
 	style Style,
+	timeProvider types.TimeProvider,
 	dateRange types.DateRange,
 	period string,
 	taskStatus types.TaskStatus,
@@ -123,13 +130,14 @@ func initialRecordsModel(
 	initialData string,
 ) recordsModel {
 	return recordsModel{
-		kind:       kind,
-		db:         db,
-		style:      style,
-		dateRange:  dateRange,
-		period:     period,
-		taskStatus: taskStatus,
-		plain:      plain,
-		report:     initialData,
+		kind:         kind,
+		db:           db,
+		style:        style,
+		timeProvider: timeProvider,
+		dateRange:    dateRange,
+		period:       period,
+		taskStatus:   taskStatus,
+		plain:        plain,
+		report:       initialData,
 	}
 }

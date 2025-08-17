@@ -54,7 +54,7 @@ func (m *Model) getCmdToUpdateActiveTL() tea.Cmd {
 		return nil
 	}
 
-	if beginTS.After(time.Now()) {
+	if beginTS.After(m.timeProvider.Now()) {
 		m.message = errMsgQuick(beginTsCannotBeInTheFutureMsg)
 		return nil
 	}
@@ -76,7 +76,7 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 		return nil
 	}
 
-	now := time.Now()
+	now := m.timeProvider.Now()
 	if beginTS.After(now) {
 		m.message = errMsgQuick(beginTsCannotBeInTheFutureMsg)
 		return nil
@@ -117,7 +117,7 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 }
 
 func (m *Model) getCmdToFinishActiveTLWithoutComment() tea.Cmd {
-	now := time.Now().Truncate(time.Second)
+	now := m.timeProvider.Now().Truncate(time.Second)
 	if !m.isDurationValid(m.activeTLBeginTS, now) {
 		return nil
 	}
@@ -134,7 +134,7 @@ func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
 		return nil
 	}
 
-	now := time.Now()
+	now := m.timeProvider.Now()
 	if beginTS.After(now) {
 		m.message = errMsgQuick(beginTsCannotBeInTheFutureMsg)
 		return nil
@@ -392,7 +392,7 @@ func (m *Model) handleRequestToEditActiveTL() {
 func (m *Model) handleRequestToCreateManualTL() {
 	m.activeView = manualTasklogEntryView
 	m.tasklogSaveType = tasklogInsert
-	currentTime := time.Now()
+	currentTime := m.timeProvider.Now()
 	currentTimeStr := currentTime.Format(timeFormat)
 
 	m.tLInputs[entryBeginTS].SetValue(currentTimeStr)
@@ -486,13 +486,13 @@ func (m *Model) getCmdToStartTracking() tea.Cmd {
 	}
 
 	m.changesLocked = true
-	m.activeTLBeginTS = time.Now().Truncate(time.Second)
+	m.activeTLBeginTS = m.timeProvider.Now().Truncate(time.Second)
 	return toggleTracking(m.db, task.ID, m.activeTLBeginTS, m.activeTLEndTS, nil)
 }
 
 func (m *Model) handleRequestToStopTracking() {
 	m.activeView = finishActiveTLView
-	m.activeTLEndTS = time.Now()
+	m.activeTLEndTS = m.timeProvider.Now()
 
 	beginTimeStr := m.activeTLBeginTS.Format(timeFormat)
 	currentTimeStr := m.activeTLEndTS.Format(timeFormat)
@@ -521,7 +521,7 @@ func (m *Model) getCmdToQuickSwitchTracking() tea.Cmd {
 
 	if !m.trackingActive {
 		m.changesLocked = true
-		m.activeTLBeginTS = time.Now().Truncate(time.Second)
+		m.activeTLBeginTS = m.timeProvider.Now().Truncate(time.Second)
 		return toggleTracking(m.db,
 			task.ID,
 			m.activeTLBeginTS,
@@ -530,7 +530,7 @@ func (m *Model) getCmdToQuickSwitchTracking() tea.Cmd {
 		)
 	}
 
-	return quickSwitchActiveIssue(m.db, task.ID, time.Now())
+	return quickSwitchActiveIssue(m.db, task.ID, m.timeProvider.Now())
 }
 
 func (m *Model) handleRequestToCreateTask() {
@@ -697,7 +697,7 @@ func (m *Model) handleTasksFetchedMsg(msg tasksFetchedMsg) tea.Cmd {
 		tasks := make([]list.Item, len(msg.tasks))
 		for i, task := range msg.tasks {
 			task.UpdateListTitle()
-			task.UpdateListDesc()
+			task.UpdateListDesc(m.timeProvider)
 			tasks[i] = &task
 			m.taskMap[task.ID] = &task
 			m.taskIndexMap[task.ID] = i
@@ -711,7 +711,7 @@ func (m *Model) handleTasksFetchedMsg(msg tasksFetchedMsg) tea.Cmd {
 		inactiveTasks := make([]list.Item, len(msg.tasks))
 		for i, inactiveTask := range msg.tasks {
 			inactiveTask.UpdateListTitle()
-			inactiveTask.UpdateListDesc()
+			inactiveTask.UpdateListDesc(m.timeProvider)
 			inactiveTasks[i] = &inactiveTask
 		}
 		m.inactiveTasksList.SetItems(inactiveTasks)
@@ -765,7 +765,7 @@ func (m *Model) handleTLSFetchedMsg(msg tLsFetchedMsg) {
 	var indexToFocusOnFound bool
 	for i, e := range msg.entries {
 		e.UpdateListTitle()
-		e.UpdateListDesc()
+		e.UpdateListDesc(m.timeProvider)
 		items[i] = e
 		if !indexToFocusOnFound && msg.tlIDToFocusOn != nil && e.ID == *msg.tlIDToFocusOn {
 			indexToFocusOn = &i
