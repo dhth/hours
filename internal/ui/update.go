@@ -51,7 +51,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			var bail bool
 			if keyMsg.String() == enter {
 				switch m.activeView {
-				case taskInputView, editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
+				case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
 					if m.trackingFocussedField == entryComment {
 						bail = true
 					}
