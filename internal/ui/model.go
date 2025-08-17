@@ -127,6 +127,7 @@ type Model struct {
 	terminalHeight                 int
 	trackingActive                 bool
 	debug                          bool
+	logFrames                      bool
 }
 
 func (m *Model) blurTLTrackingInputs() {

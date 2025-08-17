@@ -2,6 +2,9 @@ package ui
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -26,6 +29,8 @@ const (
 	tlSubmitWarn
 	tlSubmitErr
 )
+
+var ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*m`)
 
 func (m Model) View() string {
 	var content string
@@ -312,11 +317,17 @@ func (m Model) View() string {
 		)
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Left,
+	result := lipgloss.JoinVertical(lipgloss.Left,
 		content,
 		statusBar,
 		footer,
 	)
+
+	if m.logFrames {
+		logFrame(result)
+	}
+
+	return result
 }
 
 func (m recordsModel) View() string {
@@ -396,4 +407,17 @@ func getDurationValidityContext(beginStr, endStr string) (string, tlFormValidity
 	}
 
 	return msg, tlSubmitOk
+}
+
+func logFrame(content string) {
+	cleanContent := stripANSI(content)
+
+	filename := fmt.Sprintf("frame-%d.txt", time.Now().Unix())
+	filepath := filepath.Join("frames", filename)
+
+	_ = os.WriteFile(filepath, []byte(cleanContent), 0o644)
+}
+
+func stripANSI(s string) string {
+	return ansiRegex.ReplaceAllString(s, "")
 }
