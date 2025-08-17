@@ -502,15 +502,12 @@ func createTestModel() Model {
 	theme := DefaultTheme()
 	style := NewStyle(theme)
 
-	terminalWidth := 120
-	terminalHeight := 40
-
 	testTimeProvider := types.TestTimeProvider{FixedTime: referenceTime}
 	m := InitialModel(nil, style, testTimeProvider, false, logFramesConfig{})
 
 	msg := tea.WindowSizeMsg{
-		Width:  terminalWidth,
-		Height: terminalHeight,
+		Width:  minWidthNeeded,
+		Height: minHeightNeeded,
 	}
 	m.handleWindowResizing(msg)
 
