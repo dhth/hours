@@ -20,10 +20,10 @@ func RenderUI(db *sql.DB, style Style) error {
 		defer f.Close()
 	}
 
-	p := tea.NewProgram(InitialModel(db, style), tea.WithAltScreen())
+	debug := os.Getenv("HOURS_DEBUG") == "1"
+
+	p := tea.NewProgram(InitialModel(db, style, debug), tea.WithAltScreen())
 	_, err := p.Run()
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }

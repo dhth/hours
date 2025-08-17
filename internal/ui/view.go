@@ -32,8 +32,8 @@ func (m Model) View() string {
 	var footer string
 
 	var statusBar string
-	if m.message != "" {
-		statusBar = utils.Trim(m.message, 120)
+	if m.message.framesLeft > 0 && m.message.value != "" {
+		statusBar = m.message.value
 	}
 
 	var activeMsg string
@@ -302,6 +302,15 @@ func (m Model) View() string {
 		helpMsg,
 		activeMsg,
 	)
+
+	if m.debug {
+		footer = fmt.Sprintf("%s [term: %dx%d] [msg frames left: %d]",
+			footer,
+			m.terminalWidth,
+			m.terminalHeight,
+			m.message.framesLeft,
+		)
+	}
 
 	return lipgloss.JoinVertical(lipgloss.Left,
 		content,
