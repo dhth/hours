@@ -12,10 +12,10 @@ var (
 	errBeginTimeIsInvalid     = errors.New("begin time is invalid")
 	errEndTimeIsInvalid       = errors.New("end time is invalid")
 	errEndTimeBeforeBeginTime = errors.New("end time is before begin time")
-	errDurationNotLongEnough  = errors.New("end time needs to be atleast a minute after begin time")
+	errDurationNotLongEnough  = errors.New("end time needs to be at least a minute after begin time")
 )
 
-func GetTaskLogTimes(beginStr, endStr string) (time.Time, time.Time, error) {
+func ParseTaskLogTimes(beginStr, endStr string) (time.Time, time.Time, error) {
 	var zero time.Time
 	if strings.TrimSpace(beginStr) == "" {
 		return zero, zero, errBeginTimeIsEmpty
@@ -48,7 +48,7 @@ func IsTaskLogDurationValid(begin, end time.Time) error {
 		return errEndTimeBeforeBeginTime
 	}
 
-	if end.Sub(begin).Seconds() < 60 {
+	if end.Sub(begin) < time.Minute {
 		return errDurationNotLongEnough
 	}
 	return nil

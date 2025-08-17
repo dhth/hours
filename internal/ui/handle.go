@@ -68,7 +68,7 @@ func (m *Model) getCmdToUpdateActiveTL() tea.Cmd {
 }
 
 func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
-	beginTS, endTS, err := types.GetTaskLogTimes(m.tLInputs[entryBeginTS].Value(), m.tLInputs[entryEndTS].Value())
+	beginTS, endTS, err := types.ParseTaskLogTimes(m.tLInputs[entryBeginTS].Value(), m.tLInputs[entryEndTS].Value())
 	if err != nil {
 		return nil
 	}
@@ -105,7 +105,7 @@ func (m *Model) getCmdToFinishActiveTLWithoutComment() tea.Cmd {
 }
 
 func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
-	beginTS, endTS, err := types.GetTaskLogTimes(m.tLInputs[entryBeginTS].Value(), m.tLInputs[entryEndTS].Value())
+	beginTS, endTS, err := types.ParseTaskLogTimes(m.tLInputs[entryBeginTS].Value(), m.tLInputs[entryEndTS].Value())
 	if err != nil {
 		return nil
 	}

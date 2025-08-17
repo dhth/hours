@@ -369,7 +369,7 @@ func (m recordsModel) View() string {
 }
 
 func getDurationValidityContext(beginStr, endStr string) (string, tlFormValidity) {
-	beginTS, endTS, err := types.GetTaskLogTimes(beginStr, endStr)
+	beginTS, endTS, err := types.ParseTaskLogTimes(beginStr, endStr)
 	if err != nil {
 		return fmt.Sprintf("Error: %s", err.Error()), tlSubmitErr
 	}
