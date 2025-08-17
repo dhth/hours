@@ -336,7 +336,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err != nil {
 			m.message = errMsg(fmt.Sprintf("Error updating task status: %s", msg.err))
 		} else {
-			msg.tsk.UpdateListDesc()
+			msg.tsk.UpdateListDesc(m.timeProvider)
 		}
 	case tLDeletedMsg:
 		updateCmds := m.handleTLDeleted(msg)
@@ -426,16 +426,15 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if !m.busy {
 				var dr types.DateRange
 
+				now := m.timeProvider.Now()
 				switch m.period {
 				case types.TimePeriodWeek:
-					now := time.Now()
 					weekday := now.Weekday()
 					offset := (7 + weekday - time.Monday) % 7
 					startOfWeek := now.AddDate(0, 0, -int(offset))
 					dr.Start = time.Date(startOfWeek.Year(), startOfWeek.Month(), startOfWeek.Day(), 0, 0, 0, 0, startOfWeek.Location())
 					dr.NumDays = 7
 				default:
-					now := time.Now()
 					nDaysBack := now.AddDate(0, 0, -1*(m.dateRange.NumDays-1))
 
 					dr.Start = time.Date(nDaysBack.Year(), nDaysBack.Month(), nDaysBack.Day(), 0, 0, 0, 0, nDaysBack.Location())
