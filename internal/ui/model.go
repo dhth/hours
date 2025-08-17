@@ -73,10 +73,24 @@ const (
 )
 
 const (
-	timeFormat     = "2006/01/02 15:04"
-	timeOnlyFormat = "15:04"
-	dateFormat     = "2006/01/02"
+	timeFormat           = "2006/01/02 15:04"
+	timeOnlyFormat       = "15:04"
+	dateFormat           = "2006/01/02"
+	userMsgDefaultFrames = 3
 )
+
+type userMsgKind uint
+
+const (
+	userMsgInfo userMsgKind = iota
+	userMsgErr
+)
+
+type userMsg struct {
+	value      string
+	kind       userMsgKind
+	framesLeft uint
+}
 
 type Model struct {
 	activeView                     stateView
@@ -107,7 +121,7 @@ type Model struct {
 	changesLocked                  bool
 	activeTaskID                   int
 	tasklogSaveType                tasklogSaveType
-	message                        string
+	message                        userMsg
 	showHelpIndicator              bool
 	terminalWidth                  int
 	terminalHeight                 int
@@ -146,4 +160,20 @@ type recordsModel struct {
 
 func (recordsModel) Init() tea.Cmd {
 	return nil
+}
+
+func errMsg(msg string) userMsg {
+	return userMsg{
+		value:      msg,
+		kind:       userMsgErr,
+		framesLeft: userMsgDefaultFrames,
+	}
+}
+
+func errMsgQuick(msg string) userMsg {
+	return userMsg{
+		value:      msg,
+		kind:       userMsgErr,
+		framesLeft: 2,
+	}
 }

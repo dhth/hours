@@ -21,8 +21,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 
-	m.message = ""
-
 	// early check for window resizing and handling insufficient dimensions
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -36,6 +34,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Batch(cmds...)
 			}
 		}
+	}
+
+	if m.message.framesLeft > 0 {
+		m.message.framesLeft--
+	}
+
+	if m.message.framesLeft == 0 {
+		m.message.value = ""
 	}
 
 	keyMsg, keyMsgOK := msg.(tea.KeyMsg)
@@ -196,7 +202,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			if !m.trackingActive {
-				m.message = "nothing is being tracked right now"
+				m.message = errMsg("Nothing is being tracked right now")
 				break
 			}
 
@@ -278,13 +284,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case taskCreatedMsg:
 		if msg.err != nil {
-			m.message = fmt.Sprintf("Error creating task: %s", msg.err)
+			m.message = errMsg(fmt.Sprintf("Error creating task: %s", msg.err))
 		} else {
 			cmds = append(cmds, fetchTasks(m.db, true))
 		}
 	case taskUpdatedMsg:
 		if msg.err != nil {
-			m.message = fmt.Sprintf("Error updating task: %s", msg.err)
+			m.message = errMsg(fmt.Sprintf("Error updating task: %s", msg.err))
 		} else {
 			msg.tsk.Summary = msg.summary
 			msg.tsk.UpdateListTitle()
@@ -296,7 +302,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case activeTLUpdatedMsg:
 		if msg.err != nil {
-			m.message = msg.err.Error()
+			m.message = errMsg(msg.err.Error())
 		} else {
 			m.activeTLBeginTS = msg.beginTS
 			m.activeTLComment = msg.comment
@@ -327,7 +333,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case taskRepUpdatedMsg:
 		if msg.err != nil {
-			m.message = fmt.Sprintf("Error updating task status: %s", msg.err)
+			m.message = errMsg(fmt.Sprintf("Error updating task status: %s", msg.err))
 		} else {
 			msg.tsk.UpdateListDesc()
 		}
@@ -340,7 +346,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.handleActiveTLDeletedMsg(msg)
 	case taskActiveStatusUpdatedMsg:
 		if msg.err != nil {
-			m.message = "error updating task's active status: " + msg.err.Error()
+			m.message = errMsg("Error updating task's active status: " + msg.err.Error())
 		} else {
 			cmds = append(cmds, fetchTasks(m.db, true))
 			cmds = append(cmds, fetchTasks(m.db, false))

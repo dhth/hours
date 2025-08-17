@@ -32,8 +32,8 @@ func (m Model) View() string {
 	var footer string
 
 	var statusBar string
-	if m.message != "" {
-		statusBar = utils.Trim(m.message, 120)
+	if m.message.framesLeft > 0 && m.message.value != "" {
+		statusBar = m.message.value
 	}
 
 	var activeMsg string

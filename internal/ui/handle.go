@@ -17,14 +17,14 @@ const (
 	removeFilterMsg               = "Remove filter first"
 	beginTsCannotBeInTheFutureMsg = "Begin timestamp cannot be in the future"
 	endTsCannotBeInTheFutureMsg   = "End timestamp cannot be in the future"
-	timeSpentLowerBoundMsg        = "time spent needs to be at least a minute"
+	timeSpentLowerBoundMsg        = "Time spent needs to be at least a minute"
 )
 
 var suggestReloadingMsg = fmt.Sprintf("Something went wrong, please restart hours; let %s know about this error via %s.", c.Author, c.RepoIssuesURL)
 
 func (m *Model) getCmdToCreateOrUpdateTask() tea.Cmd {
 	if strings.TrimSpace(m.taskInputs[summaryField].Value()) == "" {
-		m.message = "Task summary cannot be empty"
+		m.message = errMsg("Task summary cannot be empty")
 		return nil
 	}
 
@@ -36,7 +36,7 @@ func (m *Model) getCmdToCreateOrUpdateTask() tea.Cmd {
 	case taskUpdateCxt:
 		selectedTask, ok := m.activeTasksList.SelectedItem().(*types.Task)
 		if !ok {
-			m.message = "Something went wrong"
+			m.message = errMsg("Something went wrong")
 			return nil
 		}
 		cmd = updateTask(m.db, selectedTask, m.taskInputs[summaryField].Value())
@@ -50,12 +50,12 @@ func (m *Model) getCmdToCreateOrUpdateTask() tea.Cmd {
 func (m *Model) getCmdToUpdateActiveTL() tea.Cmd {
 	beginTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryBeginTS].Value(), time.Local)
 	if err != nil {
-		m.message = err.Error()
+		m.message = errMsgQuick(err.Error())
 		return nil
 	}
 
 	if beginTS.After(time.Now()) {
-		m.message = beginTsCannotBeInTheFutureMsg
+		m.message = errMsgQuick(beginTsCannotBeInTheFutureMsg)
 		return nil
 	}
 
@@ -72,13 +72,13 @@ func (m *Model) getCmdToUpdateActiveTL() tea.Cmd {
 func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 	beginTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryBeginTS].Value(), time.Local)
 	if err != nil {
-		m.message = err.Error()
+		m.message = errMsgQuick(err.Error())
 		return nil
 	}
 
 	now := time.Now()
 	if beginTS.After(now) {
-		m.message = beginTsCannotBeInTheFutureMsg
+		m.message = errMsgQuick(beginTsCannotBeInTheFutureMsg)
 		return nil
 	}
 
@@ -86,12 +86,12 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 
 	endTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryEndTS].Value(), time.Local)
 	if err != nil {
-		m.message = err.Error()
+		m.message = errMsgQuick(err.Error())
 		return nil
 	}
 
 	if endTS.After(now) {
-		m.message = endTsCannotBeInTheFutureMsg
+		m.message = errMsgQuick(endTsCannotBeInTheFutureMsg)
 		return nil
 	}
 
@@ -130,24 +130,24 @@ func (m *Model) getCmdToFinishActiveTLWithoutComment() tea.Cmd {
 func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
 	beginTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryBeginTS].Value(), time.Local)
 	if err != nil {
-		m.message = err.Error()
+		m.message = errMsgQuick(err.Error())
 		return nil
 	}
 
 	now := time.Now()
 	if beginTS.After(now) {
-		m.message = beginTsCannotBeInTheFutureMsg
+		m.message = errMsgQuick(beginTsCannotBeInTheFutureMsg)
 		return nil
 	}
 
 	endTS, err := time.ParseInLocation(timeFormat, m.tLInputs[entryEndTS].Value(), time.Local)
 	if err != nil {
-		m.message = err.Error()
+		m.message = errMsgQuick(err.Error())
 		return nil
 	}
 
 	if endTS.After(now) {
-		m.message = endTsCannotBeInTheFutureMsg
+		m.message = errMsgQuick(endTsCannotBeInTheFutureMsg)
 		return nil
 	}
 
@@ -171,7 +171,7 @@ func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
 		m.activeView = taskListView
 		task, ok := m.activeTasksList.SelectedItem().(*types.Task)
 		if !ok {
-			m.message = genericErrorMsg
+			m.message = errMsg(genericErrorMsg)
 			return nil
 		}
 		cmd = insertManualTL(m.db, task.ID, beginTS, endTS, comment)
@@ -179,7 +179,7 @@ func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
 		m.activeView = taskLogView
 		tl, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
 		if !ok {
-			m.message = genericErrorMsg
+			m.message = errMsg(genericErrorMsg)
 			return nil
 		}
 		cmd = editSavedTL(m.db, tl.ID, tl.TaskID, beginTS, endTS, comment)
@@ -359,7 +359,7 @@ func (m *Model) goToActiveTask() {
 	}
 
 	if !m.trackingActive {
-		m.message = "Nothing is being tracked right now"
+		m.message = errMsg("Nothing is being tracked right now")
 		return
 	}
 
@@ -368,7 +368,7 @@ func (m *Model) goToActiveTask() {
 	}
 	activeIndex, ok := m.taskIndexMap[m.activeTaskID]
 	if !ok {
-		m.message = genericErrorMsg
+		m.message = errMsg(genericErrorMsg)
 		return
 	}
 
@@ -410,7 +410,7 @@ func (m *Model) handleRequestToEditSavedTL() {
 
 	tl, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
 	if !ok {
-		m.message = genericErrorMsg
+		m.message = errMsg(genericErrorMsg)
 		return
 	}
 
@@ -436,18 +436,18 @@ func (m *Model) handleRequestToEditSavedTL() {
 
 func (m *Model) getCmdToDeactivateTask() tea.Cmd {
 	if m.activeTasksList.IsFiltered() {
-		m.message = removeFilterMsg
+		m.message = errMsg(removeFilterMsg)
 		return nil
 	}
 
 	if m.trackingActive {
-		m.message = "Cannot deactivate a task being tracked; stop tracking and try again."
+		m.message = errMsg("Cannot deactivate a task being tracked; stop tracking and try again.")
 		return nil
 	}
 
 	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
 	if !ok {
-		m.message = msgCouldntSelectATask
+		m.message = errMsg(msgCouldntSelectATask)
 		return nil
 	}
 
@@ -457,7 +457,7 @@ func (m *Model) getCmdToDeactivateTask() tea.Cmd {
 func (m *Model) getCmdToDeleteTL() tea.Cmd {
 	entry, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
 	if !ok {
-		m.message = "Couldn't delete task log entry"
+		m.message = errMsg("Couldn't delete task log entry")
 		return nil
 	}
 	return deleteTL(m.db, &entry)
@@ -465,13 +465,13 @@ func (m *Model) getCmdToDeleteTL() tea.Cmd {
 
 func (m *Model) getCmdToActivateDeactivatedTask() tea.Cmd {
 	if m.inactiveTasksList.IsFiltered() {
-		m.message = removeFilterMsg
+		m.message = errMsg(removeFilterMsg)
 		return nil
 	}
 
 	task, ok := m.inactiveTasksList.SelectedItem().(*types.Task)
 	if !ok {
-		m.message = genericErrorMsg
+		m.message = errMsg(genericErrorMsg)
 		return nil
 	}
 
@@ -481,7 +481,7 @@ func (m *Model) getCmdToActivateDeactivatedTask() tea.Cmd {
 func (m *Model) getCmdToStartTracking() tea.Cmd {
 	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
 	if !ok {
-		m.message = genericErrorMsg
+		m.message = errMsg(genericErrorMsg)
 		return nil
 	}
 
@@ -511,7 +511,7 @@ func (m *Model) handleRequestToStopTracking() {
 func (m *Model) getCmdToQuickSwitchTracking() tea.Cmd {
 	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
 	if !ok {
-		m.message = genericErrorMsg
+		m.message = errMsg(genericErrorMsg)
 		return nil
 	}
 
@@ -535,7 +535,7 @@ func (m *Model) getCmdToQuickSwitchTracking() tea.Cmd {
 
 func (m *Model) handleRequestToCreateTask() {
 	if m.activeTasksList.IsFiltered() {
-		m.message = removeFilterMsg
+		m.message = errMsg(removeFilterMsg)
 		return
 	}
 
@@ -547,13 +547,13 @@ func (m *Model) handleRequestToCreateTask() {
 
 func (m *Model) handleRequestToUpdateTask() {
 	if m.activeTasksList.IsFiltered() {
-		m.message = removeFilterMsg
+		m.message = errMsg(removeFilterMsg)
 		return
 	}
 
 	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
 	if !ok {
-		m.message = genericErrorMsg
+		m.message = errMsg(genericErrorMsg)
 		return
 	}
 
@@ -605,7 +605,7 @@ func (m *Model) handleRequestToViewTLDetails() {
 
 	tl, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
 	if !ok {
-		m.message = genericErrorMsg
+		m.message = errMsg(genericErrorMsg)
 		return
 	}
 
@@ -685,7 +685,7 @@ func (m *Model) handleWindowResizing(msg tea.WindowSizeMsg) {
 
 func (m *Model) handleTasksFetchedMsg(msg tasksFetchedMsg) tea.Cmd {
 	if msg.err != nil {
-		m.message = "error fetching tasks : " + msg.err.Error()
+		m.message = errMsg("Error fetching tasks : " + msg.err.Error())
 		return nil
 	}
 
@@ -722,7 +722,7 @@ func (m *Model) handleTasksFetchedMsg(msg tasksFetchedMsg) tea.Cmd {
 
 func (m *Model) handleManualTLInsertedMsg(msg manualTLInsertedMsg) []tea.Cmd {
 	if msg.err != nil {
-		m.message = msg.err.Error()
+		m.message = errMsg(msg.err.Error())
 		return nil
 	}
 
@@ -739,7 +739,7 @@ func (m *Model) handleManualTLInsertedMsg(msg manualTLInsertedMsg) []tea.Cmd {
 
 func (m *Model) handleSavedTLEditedMsg(msg savedTLEditedMsg) []tea.Cmd {
 	if msg.err != nil {
-		m.message = msg.err.Error()
+		m.message = errMsg(msg.err.Error())
 		return nil
 	}
 
@@ -756,7 +756,7 @@ func (m *Model) handleSavedTLEditedMsg(msg savedTLEditedMsg) []tea.Cmd {
 
 func (m *Model) handleTLSFetchedMsg(msg tLsFetchedMsg) {
 	if msg.err != nil {
-		m.message = msg.err.Error()
+		m.message = errMsg(msg.err.Error())
 		return
 	}
 
@@ -783,7 +783,7 @@ func (m *Model) handleTLSFetchedMsg(msg tLsFetchedMsg) {
 
 func (m *Model) handleActiveTaskFetchedMsg(msg activeTaskFetchedMsg) {
 	if msg.err != nil {
-		m.message = msg.err.Error()
+		m.message = errMsg(msg.err.Error())
 		return
 	}
 
@@ -813,7 +813,7 @@ func (m *Model) handleActiveTaskFetchedMsg(msg activeTaskFetchedMsg) {
 
 func (m *Model) handleTrackingToggledMsg(msg trackingToggledMsg) []tea.Cmd {
 	if msg.err != nil {
-		m.message = msg.err.Error()
+		m.message = errMsg(msg.err.Error())
 		m.trackingActive = false
 		return nil
 	}
@@ -823,7 +823,7 @@ func (m *Model) handleTrackingToggledMsg(msg trackingToggledMsg) []tea.Cmd {
 	task, ok := m.taskMap[msg.taskID]
 
 	if !ok {
-		m.message = genericErrorMsg
+		m.message = errMsg(genericErrorMsg)
 		return nil
 	}
 
@@ -851,14 +851,14 @@ func (m *Model) handleTrackingToggledMsg(msg trackingToggledMsg) []tea.Cmd {
 
 func (m *Model) handleActiveTLSwitchedMsg(msg activeTLSwitchedMsg) tea.Cmd {
 	if msg.err != nil {
-		m.message = msg.err.Error()
+		m.message = errMsg(msg.err.Error())
 		return nil
 	}
 
 	lastActiveTask, ok := m.taskMap[msg.lastActiveTaskID]
 
 	if !ok {
-		m.message = suggestReloadingMsg
+		m.message = errMsg(suggestReloadingMsg)
 		return nil
 	}
 
@@ -868,7 +868,7 @@ func (m *Model) handleActiveTLSwitchedMsg(msg activeTLSwitchedMsg) tea.Cmd {
 	currentlyActiveTask, ok := m.taskMap[msg.currentlyActiveTaskID]
 
 	if !ok {
-		m.message = suggestReloadingMsg
+		m.message = errMsg(suggestReloadingMsg)
 		return nil
 	}
 	currentlyActiveTask.TrackingActive = true
@@ -883,7 +883,7 @@ func (m *Model) handleActiveTLSwitchedMsg(msg activeTLSwitchedMsg) tea.Cmd {
 
 func (m *Model) handleTLDeleted(msg tLDeletedMsg) []tea.Cmd {
 	if msg.err != nil {
-		m.message = "error deleting entry: " + msg.err.Error()
+		m.message = errMsg("Error deleting entry: " + msg.err.Error())
 		return nil
 	}
 
@@ -899,13 +899,13 @@ func (m *Model) handleTLDeleted(msg tLDeletedMsg) []tea.Cmd {
 
 func (m *Model) handleActiveTLDeletedMsg(msg activeTaskLogDeletedMsg) {
 	if msg.err != nil {
-		m.message = fmt.Sprintf("Error deleting active log entry: %s", msg.err)
+		m.message = errMsg(fmt.Sprintf("Error deleting active log entry: %s", msg.err))
 		return
 	}
 
 	activeTask, ok := m.taskMap[m.activeTaskID]
 	if !ok {
-		m.message = genericErrorMsg
+		m.message = errMsg(genericErrorMsg)
 		return
 	}
 
@@ -919,12 +919,12 @@ func (m *Model) handleActiveTLDeletedMsg(msg activeTaskLogDeletedMsg) {
 
 func (m *Model) isDurationValid(start, end time.Time) bool {
 	if !end.After(start) {
-		m.message = "End time must be after begin time"
+		m.message = errMsgQuick("End time must be after begin time")
 		return false
 	}
 
 	if end.Sub(start).Seconds() < 60 {
-		m.message = timeSpentLowerBoundMsg
+		m.message = errMsgQuick(timeSpentLowerBoundMsg)
 		return false
 	}
 	return true
