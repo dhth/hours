@@ -1,0 +1,32 @@
+                                                                                                
+   Help   (scroll with j/k/↓/↑)                                                                 
+                                                                                                
+  "hours" Reference Manual                                                                      
+                                                                                                
+  "hours" has 6 views:                                                                          
+    - Tasks List View                       Shows active tasks                                  
+    - Task Management View                  Shows a form to create/update tasks                 
+    - Task Logs List View                   Shows your task logs                                
+    - Task Log Details View                 Shows details for a task log                        
+    - Inactive Tasks List View              Shows inactive tasks                                
+    - Task Log Entry View                   Shows a form to save/update a task log entry        
+    - Help View (this one)                                                                      
+                                                                                                
+  Keyboard Shortcuts                                                                            
+                                                                                                
+  General                                                                                       
+                                                                                                
+    1                                       Switch to Tasks List View                           
+    2                                       Switch to Task Logs List View                       
+    3                                       Switch to Inactive Tasks List View                  
+    <tab>                                   Go to next view/form entry                          
+    <shift+tab>                             Go to previous view/form entry                      
+    q/<esc>                                 Go back                                             
+    <ctrl+c>                                Quit immediately                                    
+    ?                                       Show help view                                      
+                                                                                                
+  General List Controls                                                                         
+                                                                                                
+                                                                                                
+                                                                                                
+ hours   Press ? for help                                                                       
