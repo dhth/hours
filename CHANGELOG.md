@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Allow filtering tasks by status in analytics commands (log, report, stats)
+- Keymap to finish active task log without comment
 - Contextual cues in the "Task Log Entry" view
 
 ### Changed
