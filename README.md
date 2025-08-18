@@ -87,12 +87,12 @@ cumulative time spent on each task per day.
 
 Accepts an argument, which can be one of the following:
 
-    today:     for today's report
-    yest:      for yesterday's report
-    3d:        for a report on the last 3 days (default)
-    week:      for a report on the current week
-    date:      for a report for a specific date (eg. "2024/06/08")
-    range:     for a report for a date range (eg. "2024/06/08...2024/06/12")
+    today      for today's report
+    yest       for yesterday's report
+    3d         for a report on the last 3 days (default)
+    week       for a report on the current week
+    date       for a report for a specific date (eg. "2024/06/08")
+    range      for a report for a date range (eg. "2024/06/08...2024/06/12", "2024/06/08...today", "2024/06/08..."; shouldn't be greater than 7 days)
 
 *Note: If a task log continues past midnight in your local timezone, it will be
 reported on the day it ends.*
@@ -114,12 +114,12 @@ Output task log entries.
 
 Accepts an argument, which can be one of the following:
 
-    today:     for log entries from today (default)
-    yest:      for log entries from yesterday
-    3d:        for log entries from the last 3 days
-    week:      for log entries from the current week
-    date:      for log entries from a specific date (eg. "2024/06/08")
-    range:     for log entries from a specific date range (eg. "2024/06/08...2024/06/12")
+    today      for log entries from today (default)
+    yest       for log entries from yesterday
+    3d         for log entries from the last 3 days
+    week       for log entries from the current week
+    date       for log entries from a specific date (eg. "2024/06/08")
+    range      for log entries for a date range (eg. "2024/06/08...2024/06/12", "2024/06/08...today", "2024/06/08...")
 
 *Note: If a task log continues past midnight in your local timezone, it'll
 appear in the log for the day it ends.*
@@ -142,13 +142,13 @@ Output statistics for tracked time.
 
 Accepts an argument, which can be one of the following:
 
-    today:     show stats for today
-    yest:      show stats for yesterday
-    3d:        show stats for the last 3 days (default)
-    week:      show stats for the current week
-    date:      show stats for a specific date (eg. "2024/06/08")
-    range:     show stats for a specific date range (eg. "2024/06/08...2024/06/12")
-    all:       show stats for all log entries
+    today      show stats for today
+    yest       show stats for yesterday
+    3d         show stats for the last 3 days (default)
+    week       show stats for the current week
+    date       show stats for a specific date (eg. "2024/06/08")
+    range      show stats for a date range (eg. "2024/06/08...2024/06/12", "2024/06/08...today", "2024/06/08...")
+    all        show stats for all log entries
 
 *Note: If a task log continues past midnight in your local timezone, it'll
 be considered in the stats for the day it ends.*
@@ -222,6 +222,9 @@ you want to change.
   "taskEntry": "#8ec07c",                    # primary color for the task entry view
   "taskLogEntry": "#fabd2f",                 # primary color for the task log entry view
   "taskLogList": "#b8bb26",                  # primary color for the task log list view
+  "taskLogFormInfo": "#d3869b",              # color to use for contextual information in the task log form
+  "taskLogFormWarn": "#fe8019",              # color to use for contextual warnings in the task log form
+  "taskLogFormError": "#fb4934",             # color to use for contextual errors in the task log form
   "tasks": [                                 # colors to be used for tasks in the output of logs, report, stats
     "#d3869b",
     "#b5e48c",
@@ -265,8 +268,8 @@ Here's a sampling of custom themes in action.
 📋 TUI Reference Manual
 ---
 
-```text
-"hours" has 6 views:
+`hours` has 6 views:
+
   - Tasks List View                       Shows active tasks
   - Task Management View                  Shows a form to create/update tasks
   - Task Logs List View                   Shows your task logs
@@ -275,69 +278,78 @@ Here's a sampling of custom themes in action.
   - Task Log Entry View                   Shows a form to save/update a task log entry
   - Help View
 
-Keyboard Shortcuts
+### Keyboard Shortcuts
 
-General
+#### General
 
-  1                                       Switch to Tasks List View
-  2                                       Switch to Task Logs List View
-  3                                       Switch to Inactive Tasks List View
-  <tab>                                   Go to next view/form entry
-  <shift+tab>                             Go to previous view/form entry
-  q/<ctrl+c>                              Go back
-  ?                                       Show help view
+| Shortcut      | Action                             |
+|---------------|------------------------------------|
+| `1`           | Switch to Tasks List View          |
+| `2`           | Switch to Task Logs List View      |
+| `3`           | Switch to Inactive Tasks List View |
+| `<tab>`       | Go to next view/form entry         |
+| `<shift+tab>` | Go to previous view/form entry     |
+| `q`/`<esc>`   | Go back or quit                    |
+| `<ctrl+c>`    | Quit immediately                   |
+| `?`           | Show help view                     |
 
-General List Controls
+#### General List Controls
 
-  k/<Up>                                  Move cursor up
-  j/<Down>                                Move cursor down
-  h<Left>                                 Go to previous page
-  l<Right>                                Go to next page
-  <ctrl+r>                                Refresh list
+| Shortcut      | Action              |
+|---------------|---------------------|
+| `k`/`<Up>`    | Move cursor up      |
+| `j`/`<Down>`  | Move cursor down    |
+| `h`/`<Left>`  | Go to previous page |
+| `l`/`<Right>` | Go to next page     |
+| `<ctrl+r>`    | Refresh list        |
 
-Task List View
+#### Task List View
 
-  a                                       Add a task
-  u                                       Update task details
-  s                                       Start/stop recording time on a task; stopping
-                                              will open up the "Task Log Entry View"
-  S                                       Quick switch recording; will save a task log
-                                              entry for the currently active task, and
-                                              start recording time for another
-  <ctrl+s>                                Edit the currently active task log/Add a new
-                                              manual task log entry
-  <ctrl+x>                                Discard currently active recording
-  <ctrl+t>                                Go to currently tracked item
-  <ctrl+d>                                Deactivate task
+| Shortcut   | Action                                                                                                                 |
+|------------|------------------------------------------------------------------------------------------------------------------------|
+| `a`        | Add a task                                                                                                             |
+| `u`        | Update task details                                                                                                    |
+| `s`        | Start/stop recording time on a task; stopping will open up the "Task Log Entry View"                                   |
+| `S`        | Quick switch recording; will save a task log entry for the currently active task, and start recording time for another |
+| `<ctrl+s>` | Edit the currently active task log/Add a new manual task log entry                                                     |
+| `<ctrl+x>` | Discard currently active recording                                                                                     |
+| `<ctrl+t>` | Go to currently tracked item                                                                                           |
+| `<ctrl+d>` | Deactivate task                                                                                                        |
 
-Task Logs List View
+#### Task Logs List View
 
-  ~ at the end of a task log comment indicates that it has more lines that are not
-  visible in the list view
+*Note: `~` at the end of a task log comment indicates that it has more lines that are not visible in the list view*
 
-  d                                       Show task log details
-  <ctrl+s>/u                              Update task log entry
-  <ctrl+d>                                Delete task log entry
+| Shortcut       | Action                |
+|----------------|-----------------------|
+| `d`            | Show task log details |
+| `<ctrl+s>`/`u` | Update task log entry |
+| `<ctrl+d>`     | Delete task log entry |
 
-Task Log Details View
+#### Task Log Details View
 
-  h                                       Go to previous entry
-  l                                       Go to next entry
+| Shortcut | Action               |
+|----------|----------------------|
+| `h`      | Go to previous entry |
+| `l`      | Go to next entry     |
 
-Inactive Task List View
+#### Inactive Task List View
 
-  <ctrl+d>                                Activate task
+| Shortcut   | Action        |
+|------------|---------------|
+| `<ctrl+d>` | Activate task |
 
-Task Log Entry View
+#### Task Log Entry View
 
-  enter/<ctrl+s>                          Save entered details for the task log
-  k                                       Move timestamp backwards by one minute
-  j                                       Move timestamp forwards by one minute
-  K                                       Move timestamp backwards by five minutes
-  J                                       Move timestamp forwards by five minutes
-  h                                       Move timestamp backwards by a day
-  l                                       Move timestamp forwards by a day
-```
+| Shortcut           | Action                                   |
+|--------------------|------------------------------------------|
+| `enter`/`<ctrl+s>` | Save entered details for the task log    |
+| `k`                | Move timestamp backwards by one minute   |
+| `j`                | Move timestamp forwards by one minute    |
+| `K`                | Move timestamp backwards by five minutes |
+| `J`                | Move timestamp forwards by five minutes  |
+| `h`                | Move timestamp backwards by a day        |
+| `l`                | Move timestamp forwards by a day         |
 
 Acknowledgements
 ---
