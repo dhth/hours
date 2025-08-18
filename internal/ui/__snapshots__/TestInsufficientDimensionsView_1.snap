@@ -1,8 +1,9 @@
 
-    Terminal size too small:
-      Width = 50 Height = 20
+  Terminal size too small:
+    Width = 50 Height = 20
 
-    Minimum dimensions needed:
-      Width = 96 Height = 32
+  Minimum dimensions needed:
+    Width = 80 Height = 32
 
-    Press (q/<ctrl+c>/<esc> to exit)
+  Press q/<ctrl+c>/<esc>
+    to exit
