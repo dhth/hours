@@ -41,7 +41,7 @@ jobs:
               - "go.sum"
               - ".github/workflows/main.yml"
             release:
-              - ".goreleaser.yaml"
+              - ".goreleaser.yml"
               - ".github/workflows/main.yml"
             workflows:
               - ".github/workflows/**.yml"
