@@ -407,6 +407,31 @@ func TestTaskListViewDebugMode(t *testing.T) {
 	snaps.MatchStandaloneSnapshot(t, result)
 }
 
+func TestTerminalWidthResizingWorks(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.activeView = taskLogView
+
+	entry1 := createTestTaskLogEntry(1, 1, "Implement feature A", m.timeProvider)
+	entry2 := createTestTaskLogEntry(2, 2, "Fix bug in module B", m.timeProvider)
+	entry3 := createTestTaskLogEntry(3, 1, "Implement feature A", m.timeProvider)
+
+	items := []list.Item{entry1, entry2, entry3}
+	m.taskLogList.SetItems(items)
+
+	// WHEN
+	msg := tea.WindowSizeMsg{
+		Width:  minWidthNeeded,
+		Height: minHeightNeeded,
+	}
+	m.handleWindowResizing(msg)
+
+	result := m.View()
+
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
+}
+
 func createTestModel() Model {
 	theme := DefaultTheme()
 	style := NewStyle(theme)
@@ -415,7 +440,7 @@ func createTestModel() Model {
 	m := InitialModel(nil, style, testTimeProvider, false, logFramesConfig{})
 
 	msg := tea.WindowSizeMsg{
-		Width:  minWidthNeeded,
+		Width:  96,
 		Height: minHeightNeeded,
 	}
 	m.handleWindowResizing(msg)

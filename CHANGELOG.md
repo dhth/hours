@@ -14,12 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Removed limit on range limit for stats and log
+- Removed date range limit for stats and log commands
 - Missing end date in date range implies today (eg. 2025/08/12...)
 - "today" can be used in date range (eg. 2025/08/12...today)
-- Improved TUI navigation: (Esc/q) now function from more panes, returning the
-    user to previous panes in a predictable manner
+- Improved TUI navigation: esc/q now function in more panes, returning the user
+    to previous panes in a predictable manner
 - User messages in the TUI remain visible for a while
+- Minimum terminal width needed brought down to 80 characters (from 96)
 
 ## [v0.5.0] - Feb 22, 2025
 

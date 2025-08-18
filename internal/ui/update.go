@@ -41,12 +41,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	if m.message.framesLeft > 0 {
-		m.message.framesLeft--
-	}
+	if m.activeView != insufficientDimensionsView {
+		if m.message.framesLeft > 0 {
+			m.message.framesLeft--
+		}
 
-	if m.message.framesLeft == 0 {
-		m.message.value = ""
+		if m.message.framesLeft == 0 {
+			m.message.value = ""
+		}
 	}
 
 	keyMsg, keyMsgOK := msg.(tea.KeyMsg)

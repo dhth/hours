@@ -14,7 +14,7 @@ import (
 const (
 	taskLogEntryViewHeading = "Task Log Entry"
 	minHeightNeeded         = 32
-	minWidthNeeded          = 96
+	minWidthNeeded          = 80
 	tlWarningThresholdSecs  = 8 * 60 * 60
 )
 
@@ -272,13 +272,14 @@ func (m Model) View() string {
 		}
 	case insufficientDimensionsView:
 		return fmt.Sprintf(`
-    Terminal size too small:
-      Width = %d Height = %d
+  Terminal size too small:
+    Width = %d Height = %d
 
-    Minimum dimensions needed:
-      Width = %d Height = %d
+  Minimum dimensions needed:
+    Width = %d Height = %d
 
-    Press (q/<ctrl+c>/<esc> to exit)
+  Press q/<ctrl+c>/<esc>
+    to exit
 `, m.terminalWidth, m.terminalHeight, minWidthNeeded, minHeightNeeded)
 	}
 
