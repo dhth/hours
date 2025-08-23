@@ -3,9 +3,6 @@ name: pr
 on:
   pull_request:
 
-env:
-  GO_VERSION: '1.25.0'
-
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -56,7 +53,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: 'go.mod'
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
@@ -74,7 +71,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: 'go.mod'
       - name: go build
         run: go build -v ./...
       - name: run hours
@@ -98,7 +95,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: 'go.mod'
       - name: go test
         run: go test -v ./...
 
@@ -114,7 +111,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: 'go.mod'
       - name: go install
         run: go install .
       - name: Run live tests
@@ -149,7 +146,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: 'go.mod'
       - name: Release check
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -166,19 +163,23 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
       - uses: actions/checkout@v5
         with:
           ref: main
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
       - name: build main
         run: |
           go build -o hours_main
           cp hours_main /var/tmp
           rm hours_main
       - uses: actions/checkout@v5
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
       - name: build head
         run: |
           go build -o hours_head
@@ -208,7 +209,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: 'go.mod'
       - name: install govulncheck
         run: go install golang.org/x/vuln/cmd/govulncheck@latest
       - name: govulncheck
