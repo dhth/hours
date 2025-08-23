@@ -2,7 +2,6 @@ name: scan
 
 on:
   workflow_dispatch:
-  pull_request:
 
 env:
   GO_VERSION: '1.25.0'
