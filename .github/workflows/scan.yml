@@ -2,6 +2,7 @@ name: scan
 
 on:
   workflow_dispatch:
+  pull_request:
 
 jobs:
   virus-total:
@@ -20,10 +21,7 @@ jobs:
       - name: List binaries
         run: |
           ls -lh ./dist/hours_*/hours
-      - name: VirusTotal scan
-        uses: crazy-max/ghaction-virustotal@d34968c958ae283fe976efed637081b9f9dcf74f #v4.2.0
+      - uses: dhth/composite-actions/.github/actions/scan-files@main
         with:
-          vt_api_key: ${{ secrets.VT_API_KEY }}
-          request_rate: 4
-          files: |
-            ./dist/hours_*/hours
+          files: './dist/hours_*/hours'
+          vt-api-key: ${{ secrets.VT_API_KEY }}
