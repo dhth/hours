@@ -1,0 +1,31 @@
+name: scan
+
+on:
+  workflow_dispatch:
+
+env:
+  GO_VERSION: '1.25.0'
+
+jobs:
+  virus-total:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Build Binaries
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: 'v2.9.0'
+          args: build --snapshot
+      - name: VirusTotal scan
+        uses: crazy-max/ghaction-virustotal@d34968c958ae283fe976efed637081b9f9dcf74f #v4.2.0
+        with:
+          vt_api_key: ${{ secrets.VT_API_KEY }}
+          request_rate: 4
+          files: |
+            ./dist/hours_*/hours
