@@ -163,19 +163,23 @@ jobs:
     permissions:
       contents: read
     steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
-      - uses: actions/checkout@v5
-        with:
-          ref: main
       - name: build main
         run: |
           go build -o hours_main
           cp hours_main /var/tmp
           rm hours_main
       - uses: actions/checkout@v5
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
       - name: build head
         run: |
           go build -o hours_head
