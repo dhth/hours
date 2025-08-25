@@ -10,7 +10,7 @@ require (
 	github.com/gkampitakis/go-snaps v0.5.14
 	github.com/olekukonko/tablewriter v1.0.9
 	github.com/spf13/cobra v1.9.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	modernc.org/sqlite v1.38.2
 )
 
