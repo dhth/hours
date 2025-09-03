@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -94,7 +95,10 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 func (m *Model) getCmdToFinishActiveTLWithoutComment() tea.Cmd {
 	now := m.timeProvider.Now().Truncate(time.Second)
 	err := types.IsTaskLogDurationValid(m.activeTLBeginTS, now)
-	if err != nil {
+	if errors.Is(err, types.ErrDurationNotLongEnough) {
+		m.message = infoMsg("Task log duration is too short to save; discarding it")
+		return deleteActiveTL(m.db)
+	} else if err != nil {
 		m.message = errMsg(fmt.Sprintf("Error: %s", err.Error()))
 		return nil
 	}
