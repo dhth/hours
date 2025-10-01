@@ -7,7 +7,7 @@ require (
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/dustin/go-humanize v1.0.1
-	github.com/gkampitakis/go-snaps v0.5.14
+	github.com/gkampitakis/go-snaps v0.5.15
 	github.com/olekukonko/tablewriter v1.1.0
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
