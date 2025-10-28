@@ -9,22 +9,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//go:embed static/valid-with-entire-config.json
+//go:embed testdata/theme/valid-with-entire-config.json
 var validThemeWithEntireConfig []byte
 
-//go:embed static/valid-with-partial-config.json
+//go:embed testdata/theme/valid-with-partial-config.json
 var validThemeWithPartialConfig []byte
 
-//go:embed static/invalid-with-entire-config.json
+//go:embed testdata/theme/invalid-with-entire-config.json
 var invalidThemeWithEntireConfig []byte
 
-//go:embed static/malformed-json.json
+//go:embed testdata/theme/malformed-json.json
 var invalidThemeMalformedJSON []byte
 
-//go:embed static/invalid-schema.json
+//go:embed testdata/theme/invalid-schema.json
 var invalidThemeInvalidSchema []byte
 
-//go:embed static/invalid-data.json
+//go:embed testdata/theme/invalid-data.json
 var invalidThemeInvalidData []byte
 
 func TestGetInvalidColors(t *testing.T) {
