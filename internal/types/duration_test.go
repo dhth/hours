@@ -97,7 +97,7 @@ func TestParseTaskLogTimes(t *testing.T) {
 			name:     "zero duration",
 			beginStr: "2025/08/08 00:00",
 			endStr:   "2025/08/08 00:00",
-			err:      errDurationNotLongEnough,
+			err:      ErrDurationNotLongEnough,
 		},
 	}
 
