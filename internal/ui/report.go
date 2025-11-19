@@ -202,9 +202,17 @@ func getReport(db *sql.DB, style Style, start time.Time, numDays int, taskStatus
 					AutoWrap:  tw.WrapNone,
 				},
 			},
+			Footer: tw.CellConfig{
+				Formatting: tw.CellFormatting{
+					Alignment:  tw.AlignCenter,
+					AutoWrap:   tw.WrapNone,
+					AutoFormat: tw.Off,
+				},
+			},
 		}),
 		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{Symbols: tw.NewSymbols(tw.StyleASCII)})),
 		tablewriter.WithHeader(headers),
+		tablewriter.WithFooter(totalTimePerDay),
 	)
 
 	if err := table.Bulk(data); err != nil {
@@ -311,6 +319,7 @@ func getReportAgg(db *sql.DB,
 		}
 		data[rowIndex] = row
 	}
+
 	totalTimePerDay := make([]string, numDays)
 	for i, ts := range totalSecsPerDay {
 		if ts != 0 {
@@ -352,9 +361,17 @@ func getReportAgg(db *sql.DB,
 					AutoWrap:  tw.WrapNone,
 				},
 			},
+			Footer: tw.CellConfig{
+				Formatting: tw.CellFormatting{
+					Alignment:  tw.AlignCenter,
+					AutoWrap:   tw.WrapNone,
+					AutoFormat: tw.Off,
+				},
+			},
 		}),
 		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{Symbols: tw.NewSymbols(tw.StyleASCII)})),
 		tablewriter.WithHeader(headers),
+		tablewriter.WithFooter(totalTimePerDay),
 	)
 
 	if err := table.Bulk(data); err != nil {
