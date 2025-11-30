@@ -85,8 +85,9 @@ func (f Fixture) RunCmd(cmd HoursCmd) (string, error) {
 	}
 	cmdToRun := exec.Command(f.binPath, argsToUse...)
 
+	cmdToRun.Env = os.Environ()
 	for key, value := range cmd.env {
-		cmdToRun.Env = append(os.Environ(), fmt.Sprintf("%s=%s", key, value))
+		cmdToRun.Env = append(cmdToRun.Env, fmt.Sprintf("%s=%s", key, value))
 	}
 
 	var stdoutBuf, stderrBuf bytes.Buffer

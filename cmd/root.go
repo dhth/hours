@@ -52,7 +52,7 @@ var (
 	errCouldntListThemes         = errors.New("couldn't list themes in config directory")
 	errCouldntCheckIfThemeExists = errors.New("couldn't check if theme already exists")
 	errThemeAlreadyExists        = errors.New("theme already exists")
-	ErrThemeDoesntExist          = errors.New("theme doesn't exist")
+	errCouldntMarshalTheme       = errors.New("couldn't marshal theme")
 
 	msgReportIssue = fmt.Sprintf("This isn't supposed to happen; let %s know about this error via \n%s.", c.Author, c.RepoIssuesURL)
 )
@@ -72,8 +72,9 @@ func Execute() error {
 
 	err = rootCmd.Execute()
 	if err != nil {
-		handleErrors(err)
+		handleError(err)
 	}
+
 	return err
 }
 
@@ -231,8 +232,8 @@ Sorry for breaking the upgrade step!
 You can use "hours" to track time on your tasks, or view logs, reports, and
 summary statistics for your tracked time.
 `,
-		SilenceUsage: true,
-		PreRunE:      preRun,
+		SilenceUsage:  true,
+		PreRunE:       preRun,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return ui.RenderUI(db, style, types.RealTimeProvider{})
 		},
@@ -475,9 +476,9 @@ You can edit it as per your liking.
 
 	listThemesCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List themes set up for hours",
+		Short: "List built-in and custom themes set up for hours",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			var themes []string
+			themes := theme.BuiltIn()
 			walkErr := filepath.Walk(themesDir, func(path string, info os.FileInfo, err error) error {
 				if err != nil {
 					if errors.Is(err, fs.ErrNotExist) {
@@ -489,18 +490,13 @@ You can edit it as per your liking.
 				ext := filepath.Ext(path)
 				if !info.IsDir() && ext == ".json" {
 					base := filepath.Base(path)
-					themes = append(themes, strings.TrimSuffix(base, ext))
+					themes = append(themes, fmt.Sprintf("%s%s", theme.CustomThemePrefix, strings.TrimSuffix(base, ext)))
 				}
 				return nil
 			})
 
 			if walkErr != nil {
 				return fmt.Errorf("%w: %s", errCouldntListThemes, walkErr.Error())
-			}
-
-			if len(themes) == 0 {
-				fmt.Println("no themes configured (run \"hours theme add\" to add one)")
-				return nil
 			}
 
 			fmt.Printf("%s\n", strings.Join(themes, "\n"))
@@ -535,17 +531,17 @@ You can choose to provide only the attributes you want to change.
 				}
 			}
 
-			theme, err := theme.Get(themeName, themesDir)
+			thm, err := theme.Get(themeName, themesDir)
 			if err != nil {
 				return err
 			}
 
-			themeBytes, err := json.MarshalIndent(theme, "", "  ")
+			themeBytes, err := json.MarshalIndent(thm, "", "  ")
 			if err != nil {
-				fmt.Printf("%v\n", theme)
-			} else {
-				fmt.Printf("%s\n", themeBytes)
+				return fmt.Errorf("%w: %w", errCouldntMarshalTheme, err)
 			}
+
+			fmt.Printf("%s\n", themeBytes)
 
 			return nil
 		},

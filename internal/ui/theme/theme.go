@@ -14,7 +14,7 @@ import (
 
 const (
 	defaultThemeName  = "default"
-	customThemePrefix = "custom:"
+	CustomThemePrefix = "custom:"
 )
 
 var (
@@ -74,7 +74,7 @@ func Get(themeName string, themesDir string) (Theme, error) {
 		return Default(), nil
 	}
 
-	if customThemeName, ok := strings.CutPrefix(themeName, customThemePrefix); ok {
+	if customThemeName, ok := strings.CutPrefix(themeName, CustomThemePrefix); ok {
 		if len(customThemeName) == 0 {
 			return zero, errEmptyThemeNameProvided
 		}
@@ -85,7 +85,7 @@ func Get(themeName string, themesDir string) (Theme, error) {
 			if errors.Is(err, fs.ErrNotExist) {
 				return zero, fmt.Errorf("%w: %q", ErrCustomThemeDoesntExist, customThemeName)
 			}
-			return zero, fmt.Errorf("%w %q: %s", errCouldntReadCustomThemeFile, themeFilePath, err.Error())
+			return zero, fmt.Errorf("%w (%q): %s", errCouldntReadCustomThemeFile, themeFilePath, err.Error())
 		}
 
 		theme, err := loadCustom(themeBytes)
