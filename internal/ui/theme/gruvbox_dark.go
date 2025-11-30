@@ -20,11 +20,13 @@ func paletteGruvboxDark() builtInThemePalette {
 		warn:       "#d79921",
 		tasks: []string{
 			"#7ec8e3",
-			"#f4a261",
+			"#98d4bb",
 			"#a3d9a5",
 			"#c9b1ff",
-			"#f5d67b",
+			"#d5c4a1",
 			"#e09f9f",
+			"#f4a261",
+			"#f5d67b",
 		},
 	}
 }

@@ -11,17 +11,20 @@ func paletteMonokaiClassic() builtInThemePalette {
 		foreground: "#272822",
 		text:       "#fdfff1",
 		subtext:    "#c0c1b5",
-		muted:      "#c0c1b5",
+		muted:      "#57584f",
 		help:       "#e6db74",
 		info:       "#a6e22e",
 		error:      "#f92672",
 		warn:       "#fd971f",
 		tasks: []string{
+			"#78dce8",
+			"#a9dc76",
+			"#ab9df2",
 			"#c4e88a",
 			"#d4bfff",
-			"#e6db74",
 			"#ff6a9e",
 			"#ffb86c",
+			"#ffd866",
 		},
 	}
 }

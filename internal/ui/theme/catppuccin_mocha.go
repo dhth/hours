@@ -13,7 +13,7 @@ func paletteCatppuccinMocha() builtInThemePalette {
 		foreground: "#1e1e2e",
 		text:       "#74a8fc",
 		subtext:    "#a6adc8",
-		muted:      "#cdd6f4",
+		muted:      "#a6adc8",
 		help:       "#ebd391",
 		info:       "#89d88b",
 		error:      "#f37799",
@@ -22,9 +22,11 @@ func paletteCatppuccinMocha() builtInThemePalette {
 			"#6bd7ca",
 			"#89b4fa",
 			"#94e2d5",
-			"#89d88b",
+			"#cba6f7",
+			"#eba0ac",
 			"#f38ba8",
 			"#f9e2af",
+			"#fab387",
 		},
 	}
 }

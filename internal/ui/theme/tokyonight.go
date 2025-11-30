@@ -18,10 +18,12 @@ func paletteTokyonight() builtInThemePalette {
 		warn:       "#e0af68",
 		tasks: []string{
 			"#2ac3de",
+			"#41a6b5",
 			"#73daca",
 			"#7dcfff",
 			"#b4f9f8",
-			"#c0caf5",
+			"#d4a5e5",
+			"#e06c75",
 			"#ff9e64",
 		},
 	}
