@@ -105,7 +105,7 @@ func Get(themeName string, themesDir string) (Theme, error) {
 }
 
 func Default() Theme {
-	return themeGruvboxDark()
+	return getBuiltInTheme(paletteGruvboxDark())
 }
 
 func BuiltIn() []string {
@@ -113,7 +113,6 @@ func BuiltIn() []string {
 		themeNameCatppuccinMocha,
 		themeNameGruvboxDark,
 		themeNameMonokaiClassic,
-		themeNameSolarizedDark,
 		themeNameTokyonight,
 	}
 }
@@ -139,20 +138,21 @@ func loadCustom(themeJSON []byte) (Theme, error) {
 }
 
 func getBuiltIn(theme string) (Theme, error) {
+	var palette builtInThemePalette
 	switch theme {
 	case themeNameCatppuccinMocha:
-		return themeCatppuccinMocha(), nil
+		palette = paletteCatppuccinMocha()
 	case themeNameGruvboxDark:
-		return themeGruvboxDark(), nil
+		palette = paletteGruvboxDark()
 	case themeNameMonokaiClassic:
-		return themeMonokai(), nil
-	case themeNameSolarizedDark:
-		return themeSolarizedDark(), nil
+		palette = paletteMonokai()
 	case themeNameTokyonight:
-		return themeTokyonight(), nil
+		palette = paletteTokyonight()
 	default:
 		return Theme{}, fmt.Errorf("%w: %q", ErrBuiltInThemeDoesntExist, theme)
 	}
+
+	return getBuiltInTheme(palette), nil
 }
 
 func getInvalidColors(theme Theme) []string {

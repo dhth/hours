@@ -9,12 +9,12 @@ Usage:
 Examples:
   hours themes show-config                               # shows config for the current theme
   hours themes show-config -t 'default'                  # shows config for the default theme
-  hours themes show-config -t 'monokai'                  # shows config for the built-in theme "monokai"
+  hours themes show-config -t 'monokai-classic'          # shows config for the built-in theme "monokai-classic"
   hours themes show-config -t 'custom:yourtheme'         # shows config for a user-defined theme, with missing elements replaced by those from the default theme
 
 Flags:
   -h, --help           help for show-config
-  -t, --theme string   UI theme to use; allowed values: [default, catppuccin-mocha, gruvbox-dark, monokai-classic, solarized-dark, tokyonight, custom:<theme>] (default "default")
+  -t, --theme string   UI theme to use; allowed values: [default, catppuccin-mocha, gruvbox-dark, monokai-classic, tokyonight, custom:<theme>] (default "default")
 
 ----- stderr -----
 
