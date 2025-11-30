@@ -4,15 +4,28 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
+	"os"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
+const (
+	defaultThemeName  = "default"
+	customThemePrefix = "custom:"
+)
+
 var (
-	errThemeFileIsInvalidJSON    = errors.New("theme file is not valid JSON")
-	ErrThemeFileHasInvalidSchema = errors.New("theme file's schema is incorrect")
-	ErrThemeColorsAreInvalid     = errors.New("invalid colors provided")
+	errThemeFileIsInvalidJSON     = errors.New("theme file is not valid JSON")
+	ErrThemeFileHasInvalidSchema  = errors.New("theme file's schema is incorrect")
+	ErrThemeColorsAreInvalid      = errors.New("invalid colors provided")
+	errCouldntReadCustomThemeFile = errors.New("couldn't read custom theme file")
+	errCouldntLoadCustomTheme     = errors.New("couldn't load custom theme")
+	errEmptyThemeNameProvided     = errors.New("empty theme name provided")
+	ErrCustomThemeDoesntExist     = errors.New("custom theme doesn't exist")
+	ErrBuiltInThemeDoesntExist    = errors.New("built-in theme doesn't exist")
 )
 
 var hexCodeRegex = regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`)
@@ -49,52 +62,58 @@ type Theme struct {
 	Tracking                string   `json:"tracking,omitempty"`
 }
 
-func DefaultTheme() Theme {
-	return Theme{
-		ActiveTask:          "#8ec07c",
-		ActiveTaskBeginTime: "#d3869b",
-		ActiveTasks:         "#fe8019",
-		FormContext:         "#fabd2f",
-		FormFieldName:       "#8ec07c",
-		FormHelp:            "#928374",
-		HelpMsg:             "#83a598",
-		HelpPrimary:         "#83a598",
-		HelpSecondary:       "#bdae93",
-		InactiveTasks:       "#928374",
-		InitialHelpMsg:      "#a58390",
-		ListItemDesc:        "#777777",
-		ListItemTitle:       "#dddddd",
-		RecordsBorder:       "#665c54",
-		RecordsDateRange:    "#fabd2f",
-		RecordsFooter:       "#ef8f62",
-		RecordsHeader:       "#d85d5d",
-		RecordsHelp:         "#928374",
-		Tasks: []string{
-			"#d3869b",
-			"#b5e48c",
-			"#90e0ef",
-			"#ca7df9",
-			"#ada7ff",
-			"#bbd0ff",
-			"#48cae4",
-			"#8187dc",
-			"#ffb4a2",
-			"#b8bb26",
-			"#ffc6ff",
-			"#4895ef",
-			"#83a598",
-			"#fabd2f",
-		},
-		TaskEntry:               "#8ec07c",
-		TaskLogDetailsViewTitle: "#d3869b",
-		TaskLogEntry:            "#fabd2f",
-		TaskLogList:             "#b8bb26",
-		TaskLogFormInfo:         "#d3869b",
-		TaskLogFormWarn:         "#fe8019",
-		TaskLogFormError:        "#fb4934",
-		TitleForeground:         "#282828",
-		ToolName:                "#fe8019",
-		Tracking:                "#fabd2f",
+func GetTheme(themeName string, themesDir string) (Theme, error) {
+	var zero Theme
+	themeName = strings.TrimSpace(themeName)
+
+	if len(themeName) == 0 {
+		return zero, errEmptyThemeNameProvided
+	}
+
+	if themeName == defaultThemeName {
+		return DefaultTheme(), nil
+	}
+
+	if customThemeName, ok := strings.CutPrefix(themeName, customThemePrefix); ok {
+		if len(customThemeName) == 0 {
+			return zero, errEmptyThemeNameProvided
+		}
+
+		themeFilePath := path.Join(themesDir, fmt.Sprintf("%s.json", customThemeName))
+		themeBytes, err := os.ReadFile(themeFilePath)
+		if err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				return zero, fmt.Errorf("%w: %q", ErrCustomThemeDoesntExist, customThemeName)
+			}
+			return zero, fmt.Errorf("%w %q: %s", errCouldntReadCustomThemeFile, themeFilePath, err.Error())
+		}
+
+		theme, err := LoadTheme(themeBytes)
+		if err != nil {
+			return zero, fmt.Errorf("%w from file %q: %w", errCouldntLoadCustomTheme, themeFilePath, err)
+		}
+
+		return theme, nil
+	}
+
+	builtInTheme, err := getBuiltInTheme(themeName)
+	if err != nil {
+		return zero, err
+	}
+
+	return builtInTheme, nil
+}
+
+func getBuiltInTheme(theme string) (Theme, error) {
+	switch theme {
+	case themeNameCatppuccin:
+		return themeCatppuccin, nil
+	case themeNameMonokai:
+		return themeMonokai, nil
+	case themeNameTokyonight:
+		return themeTokyonight, nil
+	default:
+		return Theme{}, fmt.Errorf("%w: %q", ErrBuiltInThemeDoesntExist, theme)
 	}
 }
 
@@ -107,7 +126,7 @@ func LoadTheme(themeJSON []byte) (Theme, error) {
 		if errors.As(err, &syntaxError) {
 			return theme, fmt.Errorf("%w: %w", errThemeFileIsInvalidJSON, err)
 		}
-		return theme, ErrThemeFileHasInvalidSchema
+		return theme, fmt.Errorf("%w: %s", ErrThemeFileHasInvalidSchema, err.Error())
 	}
 
 	invalidColors := getInvalidColors(theme)

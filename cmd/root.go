@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"database/sql"
 	_ "embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
 	"math/rand"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -30,13 +30,10 @@ const (
 	genNumTasksThreshold   = 20
 	reportNumDaysThreshold = 7
 
-	themeEnvVar      = "HOURS_THEME"
+	envVarTheme      = "HOURS_THEME"
 	defaultThemeName = "default"
 	warningColor     = "#fb4934"
 )
-
-//go:embed static/sample-theme.txt
-var sampleThemeConfig string
 
 var (
 	errCouldntGetHomeDir         = errors.New("couldn't get home directory")
@@ -46,8 +43,6 @@ var (
 	errCouldntCreateDB           = errors.New("couldn't create database")
 	errCouldntInitializeDB       = errors.New("couldn't initialize database")
 	errCouldntOpenDB             = errors.New("couldn't open database")
-	errCouldntReadTheme          = errors.New("couldn't read theme file")
-	errCouldntLoadTheme          = errors.New("couldn't load theme file")
 	errCouldntGenerateData       = errors.New("couldn't generate dummy data")
 	errNumDaysExceedsThreshold   = errors.New("number of days exceeds threshold")
 	errNumTasksExceedsThreshold  = errors.New("number of tasks exceeds threshold")
@@ -60,6 +55,9 @@ var (
 
 	msgReportIssue = fmt.Sprintf("This isn't supposed to happen; let %s know about this error via \n%s.", c.Author, c.RepoIssuesURL)
 )
+
+//go:embed static/show-theme-config-examples.txt
+var showThemeConfigExamples string
 
 func Execute() error {
 	rootCmd, err := NewRootCommand()
@@ -118,23 +116,10 @@ func setupDB(dbPathFull string) (*sql.DB, error) {
 	return db, nil
 }
 
-func getTheme(themesDir string, themeName string) (ui.Style, error) {
-	var zero ui.Style
-	var theme ui.Theme
-	if themeName == defaultThemeName {
-		return ui.NewStyle(ui.DefaultTheme()), nil
-	}
-
-	themeFilePath := path.Join(themesDir, fmt.Sprintf("%s.json", themeName))
-	themeBytes, err := os.ReadFile(themeFilePath)
+func getStyle(themeName string, themesDir string) (ui.Style, error) {
+	theme, err := ui.GetTheme(themeName, themesDir)
 	if err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
-			return zero, fmt.Errorf("%w: %s", ErrThemeDoesntExist, themeName)
-		}
-		return zero, fmt.Errorf("%w: %s", errCouldntReadTheme, err.Error())
-	}
-	if theme, err = ui.LoadTheme(themeBytes); err != nil {
-		return zero, fmt.Errorf("%w: %w", errCouldntLoadTheme, err)
+		return ui.Style{}, err
 	}
 
 	return ui.NewStyle(theme), nil
@@ -223,13 +208,13 @@ Sorry for breaking the upgrade step!
 		}
 
 		if !cmd.Flags().Changed("theme") {
-			themeFromEnv := strings.TrimSpace(os.Getenv(themeEnvVar))
+			themeFromEnv := strings.TrimSpace(os.Getenv(envVarTheme))
 			if themeFromEnv != "" {
 				themeName = themeFromEnv
 			}
 		}
 
-		if style, err = getTheme(themesDir, themeName); err != nil {
+		if style, err = getStyle(themeName, themesDir); err != nil {
 			return err
 		}
 
@@ -239,6 +224,7 @@ Sorry for breaking the upgrade step!
 	rootCmd := &cobra.Command{
 		Use:   "hours",
 		Short: "\"hours\" is a no-frills time tracking toolkit for the command line",
+		// TODO: add more context about built-in themes
 		Long: `"hours" is a no-frills time tracking toolkit for the command line.
 
 You can use "hours" to track time on your tasks, or view logs, reports, and
@@ -536,6 +522,28 @@ You can choose to provide only the attributes you want to change.
 		},
 	}
 
+	showThemeConfigCmd := &cobra.Command{
+		Use:     "show-config",
+		Short:   "Show JSON configuration for a theme",
+		Example: strings.TrimSuffix(showThemeConfigExamples, "\n"),
+		RunE: func(_ *cobra.Command, _ []string) error {
+			theme, err := ui.GetTheme(themeName, themesDir)
+			if err != nil {
+				return err
+			}
+
+			themeBytes, err := json.MarshalIndent(theme, "", "  ")
+			if err != nil {
+				fmt.Printf("%v\n", theme)
+				return nil
+			}
+
+			fmt.Printf("%s\n", themeBytes)
+
+			return nil
+		},
+	}
+
 	activeCmd := &cobra.Command{
 		Use:   "active",
 		Short: "Show the task being actively tracked by \"hours\"",
@@ -568,9 +576,16 @@ eg. hours active -t ' {{task}} ({{time}}) '
 
 	themesDir = filepath.Join(userConfigDir, configDirName, themeDirName)
 
+	allowedThemeValues := []string{
+		"default",
+	}
+	allowedThemeValues = append(allowedThemeValues, ui.BuiltInThemes()...)
+	allowedThemeValues = append(allowedThemeValues, "custom:<theme>")
+	allowedThemeValuesStr := strings.Join(allowedThemeValues, ", ")
+
 	defaultDBPath := filepath.Join(userHomeDir, defaultDBName)
 	rootCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
-	rootCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName, "UI theme to use")
+	rootCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName, fmt.Sprintf("UI theme to use; allowed values: [%s]", allowedThemeValuesStr))
 
 	generateCmd.Flags().Uint8Var(&genNumDays, "num-days", 30, "number of days to generate fake data for")
 	generateCmd.Flags().Uint8Var(&genNumTasks, "num-tasks", 10, "number of tasks to generate fake data for")
@@ -583,28 +598,32 @@ eg. hours active -t ' {{task}} ({{time}}) '
 	reportCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 	reportCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
 	reportCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
-		fmt.Sprintf("UI theme to use (themes live in %q)", themesDir))
+		fmt.Sprintf("UI theme to use; allowed values: [%s]", allowedThemeValuesStr))
 
 	logCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output logs without any formatting")
 	logCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view logs interactively")
 	logCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 	logCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
 	logCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
-		fmt.Sprintf("UI theme to use (themes live in %q)", themesDir))
+		fmt.Sprintf("UI theme to use; allowed values: [%s]", allowedThemeValuesStr))
 
 	statsCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output stats without any formatting")
 	statsCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view stats interactively")
 	statsCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 	statsCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
 	statsCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
-		fmt.Sprintf("UI theme to use (themes live in %q)", themesDir))
+		fmt.Sprintf("UI theme to use; allowed values: [%s]", allowedThemeValuesStr))
 
 	activeCmd.Flags().StringVarP(&activeTemplate, "template", "t", ui.ActiveTaskPlaceholder, "string template to use for outputting active task")
 	activeCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 
+	showThemeConfigCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
+		fmt.Sprintf("UI theme to use; allowed values: [%s]", allowedThemeValuesStr))
+
 	themesCmd.AddCommand(addThemeCmd)
 	themesCmd.AddCommand(listThemesCmd)
 	themesCmd.AddCommand(sampleThemeCmd)
+	themesCmd.AddCommand(showThemeConfigCmd)
 
 	rootCmd.AddCommand(generateCmd)
 	rootCmd.AddCommand(reportCmd)

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,6 +15,9 @@ import (
 const themeNameRegexPattern = `^[a-zA-Z0-9-]{1,20}$`
 
 var themeNameRegExp = regexp.MustCompile(themeNameRegexPattern)
+
+//go:embed static/sample-theme.txt
+var sampleThemeConfig string
 
 var (
 	errThemeNameInvalid        = fmt.Errorf("theme name is invalid; valid regex: %s", themeNameRegexPattern)
