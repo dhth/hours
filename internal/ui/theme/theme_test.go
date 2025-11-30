@@ -56,11 +56,11 @@ func TestGetInvalidColors(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			// GIVEN
-			theme := Default()
-			err := json.Unmarshal(tt.themeBytes, &theme)
+			defaultTheme := Default()
+			err := json.Unmarshal(tt.themeBytes, &defaultTheme)
 			require.NoError(t, err)
 			// WHEN
-			invalidColors := getInvalidColors(theme)
+			invalidColors := getInvalidColors(defaultTheme)
 
 			// THEN
 			assert.Len(t, invalidColors, tt.expectedNumInvalid)

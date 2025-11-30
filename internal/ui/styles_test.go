@@ -9,8 +9,8 @@ import (
 
 func TestGetDynamicStyle(t *testing.T) {
 	// GIVEN
-	thm := theme.Default()
-	style := NewStyle(thm)
+	defaultTheme := theme.Default()
+	style := NewStyle(defaultTheme)
 	input := "abcdefghi"
 
 	// WHEN
@@ -24,9 +24,9 @@ func TestGetDynamicStyle(t *testing.T) {
 
 func TestGetDynamicStyleHandlesEmptyTaskList(t *testing.T) {
 	// GIVEN
-	thm := theme.Default()
-	thm.Tasks = []string{}
-	style := NewStyle(thm)
+	defaultTheme := theme.Default()
+	defaultTheme.Tasks = []string{}
+	style := NewStyle(defaultTheme)
 	input := "abcdefghi"
 
 	// WHEN

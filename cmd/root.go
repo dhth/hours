@@ -119,12 +119,12 @@ func setupDB(dbPathFull string) (*sql.DB, error) {
 }
 
 func getStyle(themeName string, themesDir string) (ui.Style, error) {
-	theme, err := theme.Get(themeName, themesDir)
+	thm, err := theme.Get(themeName, themesDir)
 	if err != nil {
 		return ui.Style{}, err
 	}
 
-	return ui.NewStyle(theme), nil
+	return ui.NewStyle(thm), nil
 }
 
 func NewRootCommand() (*cobra.Command, error) {

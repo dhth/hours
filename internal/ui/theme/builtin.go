@@ -25,6 +25,7 @@ func getBuiltInTheme(palette builtInThemePalette) Theme {
 		palette.help,
 		palette.info,
 		palette.warn,
+		palette.error,
 	}
 	taskColors = append(taskColors, palette.tasks...)
 

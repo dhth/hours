@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -79,7 +79,7 @@ func Get(themeName string, themesDir string) (Theme, error) {
 			return zero, errEmptyThemeNameProvided
 		}
 
-		themeFilePath := path.Join(themesDir, fmt.Sprintf("%s.json", customThemeName))
+		themeFilePath := filepath.Join(themesDir, fmt.Sprintf("%s.json", customThemeName))
 		themeBytes, err := os.ReadFile(themeFilePath)
 		if err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
@@ -118,23 +118,23 @@ func BuiltIn() []string {
 }
 
 func loadCustom(themeJSON []byte) (Theme, error) {
-	theme := Default()
-	err := json.Unmarshal(themeJSON, &theme)
+	thm := Default()
+	err := json.Unmarshal(themeJSON, &thm)
 	var syntaxError *json.SyntaxError
 
 	if err != nil {
 		if errors.As(err, &syntaxError) {
-			return theme, fmt.Errorf("%w: %w", errThemeFileIsInvalidJSON, err)
+			return thm, fmt.Errorf("%w: %w", errThemeFileIsInvalidJSON, err)
 		}
-		return theme, fmt.Errorf("%w: %s", ErrThemeFileHasInvalidSchema, err.Error())
+		return thm, fmt.Errorf("%w: %s", ErrThemeFileHasInvalidSchema, err.Error())
 	}
 
-	invalidColors := getInvalidColors(theme)
+	invalidColors := getInvalidColors(thm)
 	if len(invalidColors) > 0 {
-		return theme, fmt.Errorf("%w: %q", ErrThemeColorsAreInvalid, invalidColors)
+		return thm, fmt.Errorf("%w: %q", ErrThemeColorsAreInvalid, invalidColors)
 	}
 
-	return theme, err
+	return thm, err
 }
 
 func getBuiltIn(theme string) (Theme, error) {

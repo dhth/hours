@@ -434,8 +434,8 @@ func TestTerminalWidthResizingWorks(t *testing.T) {
 }
 
 func createTestModel() Model {
-	theme := theme.Default()
-	style := NewStyle(theme)
+	defaultTheme := theme.Default()
+	style := NewStyle(defaultTheme)
 
 	testTimeProvider := types.TestTimeProvider{FixedTime: referenceTime}
 	m := InitialModel(nil, style, testTimeProvider, false, logFramesConfig{})

@@ -11,7 +11,7 @@ import (
 
 func handleError(err error) {
 	if errors.Is(err, errCouldntGenerateData) {
-		fmt.Printf("\n%s\n", msgReportIssue)
+		fmt.Fprintf(os.Stderr, "\n%s\n", msgReportIssue)
 		return
 	}
 
