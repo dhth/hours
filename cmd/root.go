@@ -232,8 +232,8 @@ Sorry for breaking the upgrade step!
 You can use "hours" to track time on your tasks, or view logs, reports, and
 summary statistics for your tracked time.
 `,
-		SilenceUsage:  true,
-		PreRunE:       preRun,
+		SilenceUsage: true,
+		PreRunE:      preRun,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return ui.RenderUI(db, style, types.RealTimeProvider{})
 		},
