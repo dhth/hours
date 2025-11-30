@@ -145,7 +145,7 @@ func getBuiltIn(theme string) (Theme, error) {
 	case themeNameGruvboxDark:
 		palette = paletteGruvboxDark()
 	case themeNameMonokaiClassic:
-		palette = paletteMonokai()
+		palette = paletteMonokaiClassic()
 	case themeNameTokyonight:
 		palette = paletteTokyonight()
 	default:

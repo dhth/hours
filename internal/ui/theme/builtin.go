@@ -13,13 +13,18 @@ type builtInThemePalette struct {
 	info       string
 	error      string
 	warn       string
-	tasks []string
+	tasks      []string
 }
 
 func getBuiltInTheme(palette builtInThemePalette) Theme {
 	taskColors := []string{
+		palette.primary,
+		palette.secondary,
 		palette.tertiary,
 		palette.quaternary,
+		palette.help,
+		palette.info,
+		palette.warn,
 	}
 	taskColors = append(taskColors, palette.tasks...)
 
