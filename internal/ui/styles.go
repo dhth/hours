@@ -5,6 +5,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/dhth/hours/internal/ui/theme"
+	"github.com/olekukonko/tablewriter/tw"
 )
 
 const (
@@ -126,19 +127,53 @@ type reportStyles struct {
 	headerStyle lipgloss.Style
 	footerStyle lipgloss.Style
 	borderStyle lipgloss.Style
+	plain       bool
 }
+
+func (rs reportStyles) symbols(borderStyle tw.BorderStyle) tw.Symbols {
+	base := tw.NewSymbols(borderStyle)
+	if rs.plain {
+		return base
+	}
+
+	return styledTableSymbols{base: base, style: rs.borderStyle}
+}
+
+type styledTableSymbols struct {
+	base  tw.Symbols
+	style lipgloss.Style
+}
+
+func (s styledTableSymbols) Name() string        { return s.base.Name() }
+func (s styledTableSymbols) Center() string      { return s.style.Render(s.base.Center()) }
+func (s styledTableSymbols) Row() string         { return s.style.Render(s.base.Row()) }
+func (s styledTableSymbols) Column() string      { return s.style.Render(s.base.Column()) }
+func (s styledTableSymbols) TopLeft() string     { return s.style.Render(s.base.TopLeft()) }
+func (s styledTableSymbols) TopMid() string      { return s.style.Render(s.base.TopMid()) }
+func (s styledTableSymbols) TopRight() string    { return s.style.Render(s.base.TopRight()) }
+func (s styledTableSymbols) MidLeft() string     { return s.style.Render(s.base.MidLeft()) }
+func (s styledTableSymbols) MidRight() string    { return s.style.Render(s.base.MidRight()) }
+func (s styledTableSymbols) BottomLeft() string  { return s.style.Render(s.base.BottomLeft()) }
+func (s styledTableSymbols) BottomMid() string   { return s.style.Render(s.base.BottomMid()) }
+func (s styledTableSymbols) BottomRight() string { return s.style.Render(s.base.BottomRight()) }
+func (s styledTableSymbols) HeaderLeft() string  { return s.style.Render(s.base.HeaderLeft()) }
+func (s styledTableSymbols) HeaderMid() string   { return s.style.Render(s.base.HeaderMid()) }
+func (s styledTableSymbols) HeaderRight() string { return s.style.Render(s.base.HeaderRight()) }
 
 func (s *Style) getReportStyles(plain bool) reportStyles {
 	if plain {
 		return reportStyles{
-			s.empty,
-			s.empty,
-			s.empty,
+			headerStyle: s.empty,
+			footerStyle: s.empty,
+			borderStyle: s.empty,
+			plain:       true,
 		}
 	}
+
 	return reportStyles{
-		s.recordsHeader,
-		s.recordsFooter,
-		s.recordsBorder,
+		headerStyle: s.recordsHeader,
+		footerStyle: s.recordsFooter,
+		borderStyle: s.recordsBorder,
+		plain:       false,
 	}
 }

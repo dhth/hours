@@ -210,7 +210,7 @@ func getReport(db *sql.DB, style Style, start time.Time, numDays int, taskStatus
 				},
 			},
 		}),
-		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{Symbols: tw.NewSymbols(tw.StyleASCII)})),
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{Symbols: rs.symbols(tw.StyleASCII)})),
 		tablewriter.WithHeader(headers),
 		tablewriter.WithFooter(totalTimePerDay),
 	)
@@ -369,7 +369,7 @@ func getReportAgg(db *sql.DB,
 				},
 			},
 		}),
-		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{Symbols: tw.NewSymbols(tw.StyleASCII)})),
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{Symbols: rs.symbols(tw.StyleASCII)})),
 		tablewriter.WithHeader(headers),
 		tablewriter.WithFooter(totalTimePerDay),
 	)
