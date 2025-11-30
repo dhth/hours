@@ -109,6 +109,11 @@ func NewStyle(theme theme.Theme) Style {
 }
 
 func (s *Style) getDynamicStyle(str string) lipgloss.Style {
+	if len(s.theme.Tasks) == 0 {
+		return lipgloss.NewStyle().
+			Foreground(lipgloss.Color(fallbackTaskColor))
+	}
+
 	h := fnv.New32()
 	_, err := h.Write([]byte(str))
 	if err != nil {
