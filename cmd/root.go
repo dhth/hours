@@ -65,7 +65,7 @@ func Execute() error {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		if errors.Is(err, errCouldntGetHomeDir) {
-			fmt.Printf("\n%s\n", msgReportIssue)
+			fmt.Fprintf(os.Stderr, "\n%s\n", msgReportIssue)
 		}
 		return err
 	}
