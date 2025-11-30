@@ -42,7 +42,7 @@ func TestShowConfig(t *testing.T) {
 	t.Run("works for built-in theme", func(t *testing.T) {
 		// GIVEN
 		cmd := cli.NewCmd(commonArgs)
-		cmd.AddArgs("--theme", "monokai")
+		cmd.AddArgs("--theme", "monokai-classic")
 
 		// WHEN
 		result, err := fx.RunCmd(cmd)

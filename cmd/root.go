@@ -19,6 +19,7 @@ import (
 	pers "github.com/dhth/hours/internal/persistence"
 	"github.com/dhth/hours/internal/types"
 	"github.com/dhth/hours/internal/ui"
+	"github.com/dhth/hours/internal/ui/theme"
 	"github.com/spf13/cobra"
 )
 
@@ -117,7 +118,7 @@ func setupDB(dbPathFull string) (*sql.DB, error) {
 }
 
 func getStyle(themeName string, themesDir string) (ui.Style, error) {
-	theme, err := ui.GetTheme(themeName, themesDir)
+	theme, err := theme.Get(themeName, themesDir)
 	if err != nil {
 		return ui.Style{}, err
 	}
@@ -534,7 +535,7 @@ You can choose to provide only the attributes you want to change.
 				}
 			}
 
-			theme, err := ui.GetTheme(themeName, themesDir)
+			theme, err := theme.Get(themeName, themesDir)
 			if err != nil {
 				return err
 			}
@@ -585,7 +586,7 @@ eg. hours active -t ' {{task}} ({{time}}) '
 	allowedThemeValues := []string{
 		"default",
 	}
-	allowedThemeValues = append(allowedThemeValues, ui.BuiltInThemes()...)
+	allowedThemeValues = append(allowedThemeValues, theme.BuiltIn()...)
 	allowedThemeValues = append(allowedThemeValues, "custom:<theme>")
 	allowedThemeValuesStr := strings.Join(allowedThemeValues, ", ")
 

@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/dhth/hours/internal/types"
+	"github.com/dhth/hours/internal/ui/theme"
 	"github.com/gkampitakis/go-snaps/snaps"
 	"github.com/stretchr/testify/assert"
 )
@@ -433,7 +434,7 @@ func TestTerminalWidthResizingWorks(t *testing.T) {
 }
 
 func createTestModel() Model {
-	theme := DefaultTheme()
+	theme := theme.Default()
 	style := NewStyle(theme)
 
 	testTimeProvider := types.TestTimeProvider{FixedTime: referenceTime}

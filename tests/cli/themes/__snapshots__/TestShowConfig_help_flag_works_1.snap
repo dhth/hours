@@ -14,7 +14,7 @@ Examples:
 
 Flags:
   -h, --help           help for show-config
-  -t, --theme string   UI theme to use; allowed values: [default, catppuccin, monokai, tokyonight, custom:<theme>] (default "default")
+  -t, --theme string   UI theme to use; allowed values: [default, catppuccin-mocha, gruvbox-dark, monokai-classic, solarized-dark, tokyonight, custom:<theme>] (default "default")
 
 ----- stderr -----
 

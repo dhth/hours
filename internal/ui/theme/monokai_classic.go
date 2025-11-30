@@ -1,0 +1,52 @@
+package theme
+
+const themeNameMonokaiClassic = "monokai-classic"
+
+func themeMonokai() Theme {
+	return Theme{
+		ActiveTask:              "#a6e22e",
+		ActiveTaskBeginTime:     "#f92672",
+		ActiveTasks:             "#66d9ef",
+		FormContext:             "#ae81ff",
+		FormFieldName:           "#a6e22e",
+		FormHelp:                "#75715e",
+		HelpMsg:                 "#66d9ef",
+		HelpPrimary:             "#66d9ef",
+		HelpSecondary:           "#f8f8f2",
+		InactiveTasks:           "#75715e",
+		InitialHelpMsg:          "#f92672",
+		ListItemDesc:            "#75715e",
+		ListItemTitle:           "#f8f8f2",
+		RecordsBorder:           "#75715e",
+		RecordsDateRange:        "#f8f8f2",
+		RecordsFooter:           "#f92672",
+		RecordsHeader:           "#a6e22e",
+		RecordsHelp:             "#75715e",
+		TaskEntry:               "#a6e22e",
+		TaskLogDetailsViewTitle: "#f92672",
+		TaskLogEntry:            "#ae81ff",
+		TaskLogFormError:        "#f92672",
+		TaskLogFormInfo:         "#ae81ff",
+		TaskLogFormWarn:         "#fd971f",
+		TaskLogList:             "#66d9ef",
+		Tasks: []string{
+			"#f92672",
+			"#a6e22e",
+			"#66d9ef",
+			"#ae81ff",
+			"#fd971f",
+			"#e6db74",
+			"#f8f8f2",
+			"#f92672",
+			"#a6e22e",
+			"#66d9ef",
+			"#ae81ff",
+			"#fd971f",
+			"#e6db74",
+			"#f8f8f2",
+		},
+		TitleForeground: "#272822",
+		ToolName:        "#66d9ef",
+		Tracking:        "#ae81ff",
+	}
+}

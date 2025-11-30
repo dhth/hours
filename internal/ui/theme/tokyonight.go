@@ -1,0 +1,52 @@
+package theme
+
+const themeNameTokyonight = "tokyonight"
+
+func themeTokyonight() Theme {
+	return Theme{
+		ActiveTask:              "#9ece6a",
+		ActiveTaskBeginTime:     "#f7768e",
+		ActiveTasks:             "#7aa2f7",
+		FormContext:             "#bb9af7",
+		FormFieldName:           "#9ece6a",
+		FormHelp:                "#565f89",
+		HelpMsg:                 "#7aa2f7",
+		HelpPrimary:             "#7aa2f7",
+		HelpSecondary:           "#c0caf5",
+		InactiveTasks:           "#565f89",
+		InitialHelpMsg:          "#f7768e",
+		ListItemDesc:            "#565f89",
+		ListItemTitle:           "#c0caf5",
+		RecordsBorder:           "#565f89",
+		RecordsDateRange:        "#c0caf5",
+		RecordsFooter:           "#f7768e",
+		RecordsHeader:           "#9ece6a",
+		RecordsHelp:             "#565f89",
+		TaskEntry:               "#9ece6a",
+		TaskLogDetailsViewTitle: "#f7768e",
+		TaskLogEntry:            "#bb9af7",
+		TaskLogFormError:        "#f7768e",
+		TaskLogFormInfo:         "#bb9af7",
+		TaskLogFormWarn:         "#e0af68",
+		TaskLogList:             "#7aa2f7",
+		Tasks: []string{
+			"#f7768e",
+			"#9ece6a",
+			"#7aa2f7",
+			"#bb9af7",
+			"#e0af68",
+			"#7dcfff",
+			"#73daca",
+			"#ff9e64",
+			"#c0caf5",
+			"#2ac3de",
+			"#f7768e",
+			"#9ece6a",
+			"#7aa2f7",
+			"#bb9af7",
+		},
+		TitleForeground: "#1a1b26",
+		ToolName:        "#7aa2f7",
+		Tracking:        "#bb9af7",
+	}
+}

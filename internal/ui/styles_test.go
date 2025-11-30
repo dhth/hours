@@ -3,11 +3,12 @@ package ui
 import (
 	"testing"
 
+	"github.com/dhth/hours/internal/ui/theme"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetDynamicStyle(t *testing.T) {
-	theme := DefaultTheme()
+	theme := theme.Default()
 	style := NewStyle(theme)
 	input := "abcdefghi"
 	gota := style.getDynamicStyle(input)

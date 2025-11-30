@@ -1,4 +1,4 @@
-package ui
+package theme
 
 import (
 	"encoding/json"
@@ -62,7 +62,7 @@ type Theme struct {
 	Tracking                string   `json:"tracking,omitempty"`
 }
 
-func GetTheme(themeName string, themesDir string) (Theme, error) {
+func Get(themeName string, themesDir string) (Theme, error) {
 	var zero Theme
 	themeName = strings.TrimSpace(themeName)
 
@@ -71,7 +71,7 @@ func GetTheme(themeName string, themesDir string) (Theme, error) {
 	}
 
 	if themeName == defaultThemeName {
-		return DefaultTheme(), nil
+		return Default(), nil
 	}
 
 	if customThemeName, ok := strings.CutPrefix(themeName, customThemePrefix); ok {
@@ -88,7 +88,7 @@ func GetTheme(themeName string, themesDir string) (Theme, error) {
 			return zero, fmt.Errorf("%w %q: %s", errCouldntReadCustomThemeFile, themeFilePath, err.Error())
 		}
 
-		theme, err := LoadTheme(themeBytes)
+		theme, err := loadCustom(themeBytes)
 		if err != nil {
 			return zero, fmt.Errorf("%w from file %q: %w", errCouldntLoadCustomTheme, themeFilePath, err)
 		}
@@ -96,7 +96,7 @@ func GetTheme(themeName string, themesDir string) (Theme, error) {
 		return theme, nil
 	}
 
-	builtInTheme, err := getBuiltInTheme(themeName)
+	builtInTheme, err := getBuiltIn(themeName)
 	if err != nil {
 		return zero, err
 	}
@@ -104,21 +104,22 @@ func GetTheme(themeName string, themesDir string) (Theme, error) {
 	return builtInTheme, nil
 }
 
-func getBuiltInTheme(theme string) (Theme, error) {
-	switch theme {
-	case themeNameCatppuccin:
-		return themeCatppuccin, nil
-	case themeNameMonokai:
-		return themeMonokai, nil
-	case themeNameTokyonight:
-		return themeTokyonight, nil
-	default:
-		return Theme{}, fmt.Errorf("%w: %q", ErrBuiltInThemeDoesntExist, theme)
+func Default() Theme {
+	return themeGruvboxDark()
+}
+
+func BuiltIn() []string {
+	return []string{
+		themeNameCatppuccinMocha,
+		themeNameGruvboxDark,
+		themeNameMonokaiClassic,
+		themeNameSolarizedDark,
+		themeNameTokyonight,
 	}
 }
 
-func LoadTheme(themeJSON []byte) (Theme, error) {
-	theme := DefaultTheme()
+func loadCustom(themeJSON []byte) (Theme, error) {
+	theme := Default()
 	err := json.Unmarshal(themeJSON, &theme)
 	var syntaxError *json.SyntaxError
 
@@ -135,6 +136,23 @@ func LoadTheme(themeJSON []byte) (Theme, error) {
 	}
 
 	return theme, err
+}
+
+func getBuiltIn(theme string) (Theme, error) {
+	switch theme {
+	case themeNameCatppuccinMocha:
+		return themeCatppuccinMocha(), nil
+	case themeNameGruvboxDark:
+		return themeGruvboxDark(), nil
+	case themeNameMonokaiClassic:
+		return themeMonokai(), nil
+	case themeNameSolarizedDark:
+		return themeSolarizedDark(), nil
+	case themeNameTokyonight:
+		return themeTokyonight(), nil
+	default:
+		return Theme{}, fmt.Errorf("%w: %q", ErrBuiltInThemeDoesntExist, theme)
+	}
 }
 
 func getInvalidColors(theme Theme) []string {

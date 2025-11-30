@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/dhth/hours/internal/ui"
+	"github.com/dhth/hours/internal/ui/theme"
 )
 
 func handleErrors(err error) {
@@ -21,8 +21,8 @@ Run "hours themes list" to list themes or create a new one using "hours themes a
 		return
 	}
 
-	if errors.Is(err, ui.ErrThemeFileHasInvalidSchema) {
-		defaultTheme := ui.DefaultTheme()
+	if errors.Is(err, theme.ErrThemeFileHasInvalidSchema) {
+		defaultTheme := theme.Default()
 		defaultThemeBytes, err := json.MarshalIndent(defaultTheme, "", "  ")
 		if err != nil {
 			return
@@ -36,7 +36,7 @@ A valid theme file looks like this:
 		return
 	}
 
-	if errors.Is(err, ui.ErrThemeColorsAreInvalid) {
+	if errors.Is(err, theme.ErrThemeColorsAreInvalid) {
 		fmt.Printf(`
 Colors codes can only be provided in ANSI 16, ANSI 256, or HEX formats.
 

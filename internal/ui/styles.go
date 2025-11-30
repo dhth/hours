@@ -4,6 +4,7 @@ import (
 	"hash/fnv"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/dhth/hours/internal/ui/theme"
 )
 
 const (
@@ -33,7 +34,7 @@ type Style struct {
 	taskEntryHeading     lipgloss.Style
 	taskLogDetails       lipgloss.Style
 	taskLogEntryHeading  lipgloss.Style
-	theme                Theme
+	theme                theme.Theme
 	titleForegroundColor lipgloss.Color
 	tlFormOkStyle        lipgloss.Style
 	tlFormWarnStyle      lipgloss.Style
@@ -43,7 +44,7 @@ type Style struct {
 	viewPort             lipgloss.Style
 }
 
-func NewStyle(theme Theme) Style {
+func NewStyle(theme theme.Theme) Style {
 	base := lipgloss.NewStyle().
 		PaddingLeft(1).
 		PaddingRight(1).
