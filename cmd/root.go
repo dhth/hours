@@ -526,7 +526,14 @@ You can choose to provide only the attributes you want to change.
 		Use:     "show-config",
 		Short:   "Show JSON configuration for a theme",
 		Example: strings.TrimSuffix(showThemeConfigExamples, "\n"),
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if !cmd.Flags().Changed("theme") {
+				themeFromEnv := strings.TrimSpace(os.Getenv(envVarTheme))
+				if themeFromEnv != "" {
+					themeName = themeFromEnv
+				}
+			}
+
 			theme, err := ui.GetTheme(themeName, themesDir)
 			if err != nil {
 				return err
@@ -535,10 +542,9 @@ You can choose to provide only the attributes you want to change.
 			themeBytes, err := json.MarshalIndent(theme, "", "  ")
 			if err != nil {
 				fmt.Printf("%v\n", theme)
-				return nil
+			} else {
+				fmt.Printf("%s\n", themeBytes)
 			}
-
-			fmt.Printf("%s\n", themeBytes)
 
 			return nil
 		},

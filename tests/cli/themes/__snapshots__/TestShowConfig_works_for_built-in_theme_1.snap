@@ -1,0 +1,52 @@
+success: true
+exit_code: 0
+----- stdout -----
+{
+  "activeTask": "#a6e22e",
+  "activeTaskBeginTime": "#f92672",
+  "activeTasks": "#66d9ef",
+  "formContext": "#ae81ff",
+  "formFieldName": "#a6e22e",
+  "formHelp": "#75715e",
+  "helpMsg": "#66d9ef",
+  "helpPrimary": "#66d9ef",
+  "helpSecondary": "#f8f8f2",
+  "inactiveTasks": "#75715e",
+  "initialHelpMsg": "#f92672",
+  "listItemDesc": "#75715e",
+  "listItemTitle": "#f8f8f2",
+  "recordsBorder": "#75715e",
+  "recordsDateRange": "#f8f8f2",
+  "recordsFooter": "#f92672",
+  "recordsHeader": "#a6e22e",
+  "recordsHelp": "#75715e",
+  "taskEntry": "#a6e22e",
+  "taskLogDetails": "#f92672",
+  "taskLogEntry": "#ae81ff",
+  "taskLogFormError": "#f92672",
+  "taskLogFormInfo": "#ae81ff",
+  "taskLogFormWarn": "#fd971f",
+  "taskLogList": "#66d9ef",
+  "tasks": [
+    "#f92672",
+    "#a6e22e",
+    "#66d9ef",
+    "#ae81ff",
+    "#fd971f",
+    "#e6db74",
+    "#f8f8f2",
+    "#f92672",
+    "#a6e22e",
+    "#66d9ef",
+    "#ae81ff",
+    "#fd971f",
+    "#e6db74",
+    "#f8f8f2"
+  ],
+  "titleForeground": "#272822",
+  "toolName": "#66d9ef",
+  "tracking": "#ae81ff"
+}
+
+----- stderr -----
+

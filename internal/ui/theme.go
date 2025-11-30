@@ -49,13 +49,13 @@ type Theme struct {
 	RecordsFooter           string   `json:"recordsFooter,omitempty"`
 	RecordsHeader           string   `json:"recordsHeader,omitempty"`
 	RecordsHelp             string   `json:"recordsHelp,omitempty"`
-	TaskLogDetailsViewTitle string   `json:"taskLogDetails,omitempty"`
 	TaskEntry               string   `json:"taskEntry,omitempty"`
+	TaskLogDetailsViewTitle string   `json:"taskLogDetails,omitempty"`
 	TaskLogEntry            string   `json:"taskLogEntry,omitempty"`
-	TaskLogList             string   `json:"taskLogList,omitempty"`
+	TaskLogFormError        string   `json:"taskLogFormError,omitempty"`
 	TaskLogFormInfo         string   `json:"taskLogFormInfo,omitempty"`
 	TaskLogFormWarn         string   `json:"taskLogFormWarn,omitempty"`
-	TaskLogFormError        string   `json:"taskLogFormError,omitempty"`
+	TaskLogList             string   `json:"taskLogList,omitempty"`
 	Tasks                   []string `json:"tasks,omitempty"`
 	TitleForeground         string   `json:"titleForeground,omitempty"`
 	ToolName                string   `json:"toolName,omitempty"`
