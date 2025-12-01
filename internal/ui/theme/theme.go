@@ -111,9 +111,13 @@ func Default() Theme {
 func BuiltIn() []string {
 	return []string{
 		themeNameCatppuccinMocha,
+		themeNameDracula,
+		themeNameGithubDark,
 		themeNameGruvboxDark,
 		themeNameMonokaiClassic,
+		themeNameNightOwl,
 		themeNameTokyonight,
+		themeNameXcodeDark,
 	}
 }
 
@@ -142,12 +146,20 @@ func getBuiltIn(theme string) (Theme, error) {
 	switch theme {
 	case themeNameCatppuccinMocha:
 		palette = paletteCatppuccinMocha()
+	case themeNameDracula:
+		palette = paletteDracula()
+	case themeNameGithubDark:
+		palette = paletteGithubDark()
 	case themeNameGruvboxDark:
 		palette = paletteGruvboxDark()
 	case themeNameMonokaiClassic:
 		palette = paletteMonokaiClassic()
+	case themeNameNightOwl:
+		palette = paletteNightOwl()
 	case themeNameTokyonight:
 		palette = paletteTokyonight()
+	case themeNameXcodeDark:
+		palette = paletteXcodeDark()
 	default:
 		return Theme{}, fmt.Errorf("%w: %q", ErrBuiltInThemeDoesntExist, theme)
 	}

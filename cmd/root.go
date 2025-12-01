@@ -579,16 +579,9 @@ eg. hours active -t ' {{task}} ({{time}}) '
 
 	themesDir = filepath.Join(userConfigDir, configDirName, themeDirName)
 
-	allowedThemeValues := []string{
-		"default",
-	}
-	allowedThemeValues = append(allowedThemeValues, theme.BuiltIn()...)
-	allowedThemeValues = append(allowedThemeValues, "custom:<theme>")
-	allowedThemeValuesStr := strings.Join(allowedThemeValues, ", ")
-
 	defaultDBPath := filepath.Join(userHomeDir, defaultDBName)
 	rootCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
-	rootCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName, fmt.Sprintf("UI theme to use; allowed values: [%s]", allowedThemeValuesStr))
+	rootCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName, `UI theme to use (run "hours themes list" for allowed values)`)
 
 	generateCmd.Flags().Uint8Var(&genNumDays, "num-days", 30, "number of days to generate fake data for")
 	generateCmd.Flags().Uint8Var(&genNumTasks, "num-tasks", 10, "number of tasks to generate fake data for")
@@ -600,28 +593,24 @@ eg. hours active -t ' {{task}} ({{time}}) '
 	reportCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output report without any formatting")
 	reportCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 	reportCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
-	reportCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
-		fmt.Sprintf("UI theme to use; allowed values: [%s]", allowedThemeValuesStr))
+	reportCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName, `UI theme to use (run "hours themes list" for allowed values)`)
 
 	logCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output logs without any formatting")
 	logCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view logs interactively")
 	logCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 	logCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
-	logCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
-		fmt.Sprintf("UI theme to use; allowed values: [%s]", allowedThemeValuesStr))
+	logCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName, `UI theme to use (run "hours themes list" for allowed values)`)
 
 	statsCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output stats without any formatting")
 	statsCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view stats interactively")
 	statsCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 	statsCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
-	statsCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
-		fmt.Sprintf("UI theme to use; allowed values: [%s]", allowedThemeValuesStr))
+	statsCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName, `UI theme to use (run "hours themes list" for allowed values)`)
 
 	activeCmd.Flags().StringVarP(&activeTemplate, "template", "t", ui.ActiveTaskPlaceholder, "string template to use for outputting active task")
 	activeCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 
-	showThemeConfigCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName,
-		fmt.Sprintf("UI theme to use; allowed values: [%s]", allowedThemeValuesStr))
+	showThemeConfigCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName, `UI theme to show (run "hours themes list" for allowed values)`)
 
 	themesCmd.AddCommand(addThemeCmd)
 	themesCmd.AddCommand(listThemesCmd)
