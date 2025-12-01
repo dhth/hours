@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Minor changes to default theme
 - "--theme" flag considers built-in themes by default; custom themes can be
   referenced using "custom:" prefix
 
