@@ -138,7 +138,7 @@ func loadCustom(themeJSON []byte) (Theme, error) {
 		return thm, fmt.Errorf("%w: %q", ErrThemeColorsAreInvalid, invalidColors)
 	}
 
-	return thm, err
+	return thm, nil
 }
 
 func getBuiltIn(theme string) (Theme, error) {

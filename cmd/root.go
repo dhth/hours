@@ -226,7 +226,6 @@ Sorry for breaking the upgrade step!
 	rootCmd := &cobra.Command{
 		Use:   "hours",
 		Short: "\"hours\" is a no-frills time tracking toolkit for the command line",
-		// TODO: add more context about built-in themes
 		Long: `"hours" is a no-frills time tracking toolkit for the command line.
 
 You can use "hours" to track time on your tasks, or view logs, reports, and

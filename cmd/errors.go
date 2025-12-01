@@ -46,7 +46,7 @@ A valid theme file looks like this:
 
 	if errors.Is(err, theme.ErrThemeColorsAreInvalid) {
 		fmt.Fprintf(os.Stderr, `
-Colors codes can only be provided in ANSI 16, ANSI 256, or HEX formats.
+Color codes can only be provided in ANSI 16, ANSI 256, or HEX formats.
 
 For example:
 
