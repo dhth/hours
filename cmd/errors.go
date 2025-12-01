@@ -4,31 +4,39 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 
-	"github.com/dhth/hours/internal/ui"
+	"github.com/dhth/hours/internal/ui/theme"
 )
 
-func handleErrors(err error) {
+func handleError(err error) {
 	if errors.Is(err, errCouldntGenerateData) {
-		fmt.Printf("\n%s\n", msgReportIssue)
+		fmt.Fprintf(os.Stderr, "\n%s\n", msgReportIssue)
 		return
 	}
 
-	if errors.Is(err, ErrThemeDoesntExist) {
-		fmt.Printf(`
-Run "hours themes list" to list themes or create a new one using "hours themes add".
+	if errors.Is(err, theme.ErrBuiltInThemeDoesntExist) {
+		fmt.Fprintf(os.Stderr, `
+If you intended to use a custom theme, prefix it with "custom:". Run "hours themes list" to list all themes. 
 `)
 		return
 	}
 
-	if errors.Is(err, ui.ErrThemeFileHasInvalidSchema) {
-		defaultTheme := ui.DefaultTheme()
+	if errors.Is(err, theme.ErrCustomThemeDoesntExist) {
+		fmt.Fprintf(os.Stderr, `
+Run "hours themes list" to list custom themes.
+`)
+		return
+	}
+
+	if errors.Is(err, theme.ErrThemeFileHasInvalidSchema) {
+		defaultTheme := theme.Default()
 		defaultThemeBytes, err := json.MarshalIndent(defaultTheme, "", "  ")
 		if err != nil {
 			return
 		}
 
-		fmt.Printf(`
+		fmt.Fprintf(os.Stderr, `
 A valid theme file looks like this:
 
 %s
@@ -36,9 +44,9 @@ A valid theme file looks like this:
 		return
 	}
 
-	if errors.Is(err, ui.ErrThemeColorsAreInvalid) {
-		fmt.Printf(`
-Colors codes can only be provided in ANSI 16, ANSI 256, or HEX formats.
+	if errors.Is(err, theme.ErrThemeColorsAreInvalid) {
+		fmt.Fprintf(os.Stderr, `
+Color codes can only be provided in ANSI 16, ANSI 256, or HEX formats.
 
 For example:
 

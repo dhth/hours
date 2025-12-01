@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,12 +9,15 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/dhth/hours/internal/ui"
+	"github.com/dhth/hours/internal/ui/theme"
 )
 
 const themeNameRegexPattern = `^[a-zA-Z0-9-]{1,20}$`
 
 var themeNameRegExp = regexp.MustCompile(themeNameRegexPattern)
+
+//go:embed static/sample-theme.txt
+var sampleThemeConfig string
 
 var (
 	errThemeNameInvalid        = fmt.Errorf("theme name is invalid; valid regex: %s", themeNameRegexPattern)
@@ -29,7 +33,7 @@ func addTheme(themeName string, themesDir string) (string, error) {
 		return zero, errThemeNameInvalid
 	}
 
-	defaultTheme := ui.DefaultTheme()
+	defaultTheme := theme.Default()
 	themeBytes, err := json.MarshalIndent(defaultTheme, "", "  ")
 	if err != nil {
 		return zero, fmt.Errorf("%w: %s", errMarshallingDefaultTheme, err.Error())

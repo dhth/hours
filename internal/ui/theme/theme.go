@@ -1,18 +1,31 @@
-package ui
+package theme
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
+const (
+	defaultThemeName  = "default"
+	CustomThemePrefix = "custom:"
+)
+
 var (
-	errThemeFileIsInvalidJSON    = errors.New("theme file is not valid JSON")
-	ErrThemeFileHasInvalidSchema = errors.New("theme file's schema is incorrect")
-	ErrThemeColorsAreInvalid     = errors.New("invalid colors provided")
+	errThemeFileIsInvalidJSON     = errors.New("theme file is not valid JSON")
+	ErrThemeFileHasInvalidSchema  = errors.New("theme file's schema is incorrect")
+	ErrThemeColorsAreInvalid      = errors.New("invalid colors provided")
+	errCouldntReadCustomThemeFile = errors.New("couldn't read custom theme file")
+	errCouldntLoadCustomTheme     = errors.New("couldn't load custom theme")
+	errEmptyThemeNameProvided     = errors.New("empty theme name provided")
+	ErrCustomThemeDoesntExist     = errors.New("custom theme doesn't exist")
+	ErrBuiltInThemeDoesntExist    = errors.New("built-in theme doesn't exist")
 )
 
 var hexCodeRegex = regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`)
@@ -36,86 +49,122 @@ type Theme struct {
 	RecordsFooter           string   `json:"recordsFooter,omitempty"`
 	RecordsHeader           string   `json:"recordsHeader,omitempty"`
 	RecordsHelp             string   `json:"recordsHelp,omitempty"`
-	TaskLogDetailsViewTitle string   `json:"taskLogDetails,omitempty"`
 	TaskEntry               string   `json:"taskEntry,omitempty"`
+	TaskLogDetailsViewTitle string   `json:"taskLogDetails,omitempty"`
 	TaskLogEntry            string   `json:"taskLogEntry,omitempty"`
-	TaskLogList             string   `json:"taskLogList,omitempty"`
+	TaskLogFormError        string   `json:"taskLogFormError,omitempty"`
 	TaskLogFormInfo         string   `json:"taskLogFormInfo,omitempty"`
 	TaskLogFormWarn         string   `json:"taskLogFormWarn,omitempty"`
-	TaskLogFormError        string   `json:"taskLogFormError,omitempty"`
+	TaskLogList             string   `json:"taskLogList,omitempty"`
 	Tasks                   []string `json:"tasks,omitempty"`
 	TitleForeground         string   `json:"titleForeground,omitempty"`
 	ToolName                string   `json:"toolName,omitempty"`
 	Tracking                string   `json:"tracking,omitempty"`
 }
 
-func DefaultTheme() Theme {
-	return Theme{
-		ActiveTask:          "#8ec07c",
-		ActiveTaskBeginTime: "#d3869b",
-		ActiveTasks:         "#fe8019",
-		FormContext:         "#fabd2f",
-		FormFieldName:       "#8ec07c",
-		FormHelp:            "#928374",
-		HelpMsg:             "#83a598",
-		HelpPrimary:         "#83a598",
-		HelpSecondary:       "#bdae93",
-		InactiveTasks:       "#928374",
-		InitialHelpMsg:      "#a58390",
-		ListItemDesc:        "#777777",
-		ListItemTitle:       "#dddddd",
-		RecordsBorder:       "#665c54",
-		RecordsDateRange:    "#fabd2f",
-		RecordsFooter:       "#ef8f62",
-		RecordsHeader:       "#d85d5d",
-		RecordsHelp:         "#928374",
-		Tasks: []string{
-			"#d3869b",
-			"#b5e48c",
-			"#90e0ef",
-			"#ca7df9",
-			"#ada7ff",
-			"#bbd0ff",
-			"#48cae4",
-			"#8187dc",
-			"#ffb4a2",
-			"#b8bb26",
-			"#ffc6ff",
-			"#4895ef",
-			"#83a598",
-			"#fabd2f",
-		},
-		TaskEntry:               "#8ec07c",
-		TaskLogDetailsViewTitle: "#d3869b",
-		TaskLogEntry:            "#fabd2f",
-		TaskLogList:             "#b8bb26",
-		TaskLogFormInfo:         "#d3869b",
-		TaskLogFormWarn:         "#fe8019",
-		TaskLogFormError:        "#fb4934",
-		TitleForeground:         "#282828",
-		ToolName:                "#fe8019",
-		Tracking:                "#fabd2f",
+func Get(themeName string, themesDir string) (Theme, error) {
+	var zero Theme
+	themeName = strings.TrimSpace(themeName)
+
+	if len(themeName) == 0 {
+		return zero, errEmptyThemeNameProvided
+	}
+
+	if themeName == defaultThemeName {
+		return Default(), nil
+	}
+
+	if customThemeName, ok := strings.CutPrefix(themeName, CustomThemePrefix); ok {
+		if len(customThemeName) == 0 {
+			return zero, errEmptyThemeNameProvided
+		}
+
+		themeFilePath := filepath.Join(themesDir, fmt.Sprintf("%s.json", customThemeName))
+		themeBytes, err := os.ReadFile(themeFilePath)
+		if err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				return zero, fmt.Errorf("%w: %q", ErrCustomThemeDoesntExist, customThemeName)
+			}
+			return zero, fmt.Errorf("%w (%q): %s", errCouldntReadCustomThemeFile, themeFilePath, err.Error())
+		}
+
+		theme, err := loadCustom(themeBytes)
+		if err != nil {
+			return zero, fmt.Errorf("%w from file %q: %w", errCouldntLoadCustomTheme, themeFilePath, err)
+		}
+
+		return theme, nil
+	}
+
+	builtInTheme, err := getBuiltIn(themeName)
+	if err != nil {
+		return zero, err
+	}
+
+	return builtInTheme, nil
+}
+
+func Default() Theme {
+	return getBuiltInTheme(paletteGruvboxDark())
+}
+
+func BuiltIn() []string {
+	return []string{
+		themeNameCatppuccinMocha,
+		themeNameDracula,
+		themeNameGithubDark,
+		themeNameGruvboxDark,
+		themeNameMonokaiClassic,
+		themeNameNightOwl,
+		themeNameTokyonight,
+		themeNameXcodeDark,
 	}
 }
 
-func LoadTheme(themeJSON []byte) (Theme, error) {
-	theme := DefaultTheme()
-	err := json.Unmarshal(themeJSON, &theme)
+func loadCustom(themeJSON []byte) (Theme, error) {
+	thm := Default()
+	err := json.Unmarshal(themeJSON, &thm)
 	var syntaxError *json.SyntaxError
 
 	if err != nil {
 		if errors.As(err, &syntaxError) {
-			return theme, fmt.Errorf("%w: %w", errThemeFileIsInvalidJSON, err)
+			return thm, fmt.Errorf("%w: %w", errThemeFileIsInvalidJSON, err)
 		}
-		return theme, ErrThemeFileHasInvalidSchema
+		return thm, fmt.Errorf("%w: %s", ErrThemeFileHasInvalidSchema, err.Error())
 	}
 
-	invalidColors := getInvalidColors(theme)
+	invalidColors := getInvalidColors(thm)
 	if len(invalidColors) > 0 {
-		return theme, fmt.Errorf("%w: %q", ErrThemeColorsAreInvalid, invalidColors)
+		return thm, fmt.Errorf("%w: %q", ErrThemeColorsAreInvalid, invalidColors)
 	}
 
-	return theme, err
+	return thm, nil
+}
+
+func getBuiltIn(theme string) (Theme, error) {
+	var palette builtInThemePalette
+	switch theme {
+	case themeNameCatppuccinMocha:
+		palette = paletteCatppuccinMocha()
+	case themeNameDracula:
+		palette = paletteDracula()
+	case themeNameGithubDark:
+		palette = paletteGithubDark()
+	case themeNameGruvboxDark:
+		palette = paletteGruvboxDark()
+	case themeNameMonokaiClassic:
+		palette = paletteMonokaiClassic()
+	case themeNameNightOwl:
+		palette = paletteNightOwl()
+	case themeNameTokyonight:
+		palette = paletteTokyonight()
+	case themeNameXcodeDark:
+		palette = paletteXcodeDark()
+	default:
+		return Theme{}, fmt.Errorf("%w: %q", ErrBuiltInThemeDoesntExist, theme)
+	}
+
+	return getBuiltInTheme(palette), nil
 }
 
 func getInvalidColors(theme Theme) []string {

@@ -152,7 +152,7 @@ func getTaskLog(db *sql.DB,
 				},
 			},
 		}),
-		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{Symbols: tw.NewSymbols(tw.StyleASCII)})),
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{Symbols: rs.symbols(tw.StyleASCII)})),
 		tablewriter.WithHeader(headers),
 	)
 

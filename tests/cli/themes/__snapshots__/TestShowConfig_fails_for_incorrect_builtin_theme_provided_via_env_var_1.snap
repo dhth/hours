@@ -1,0 +1,9 @@
+success: false
+exit_code: 1
+----- stdout -----
+
+----- stderr -----
+Error: built-in theme doesn't exist: "unknown"
+
+If you intended to use a custom theme, prefix it with "custom:". Run "hours themes list" to list all themes. 
+
