@@ -83,10 +83,6 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 		comment = &commentValue
 	}
 
-	for i := range m.tLInputs {
-		m.tLInputs[i].SetValue("")
-	}
-	m.tLCommentInput.SetValue("")
 	m.activeView = taskListView
 
 	return toggleTracking(m.db, m.activeTaskID, m.activeTLBeginTS, m.activeTLEndTS, comment)
@@ -95,10 +91,13 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 func (m *Model) getCmdToFinishActiveTLWithoutComment() tea.Cmd {
 	now := m.timeProvider.Now().Truncate(time.Second)
 	err := types.IsTaskLogDurationValid(m.activeTLBeginTS, now)
+
 	if errors.Is(err, types.ErrDurationNotLongEnough) {
-		m.message = infoMsg("Task log duration is too short to save; discarding it")
-		return deleteActiveTL(m.db)
-	} else if err != nil {
+		m.message = infoMsg("Task log duration is too short to save; press <ctrl+x> if you want to discard it")
+		return nil
+	}
+
+	if err != nil {
 		m.message = errMsg(fmt.Sprintf("Error: %s", err.Error()))
 		return nil
 	}
@@ -163,10 +162,6 @@ func (m *Model) handleEscapeInForms() {
 	case manualTasklogEntryView:
 		if m.tasklogSaveType == tasklogInsert {
 			m.activeView = taskListView
-		}
-		for i := range m.tLInputs {
-			m.tLInputs[i].SetValue("")
-			m.tLCommentInput.SetValue("")
 		}
 	case editSavedTLView:
 		m.activeView = taskLogView
@@ -335,6 +330,7 @@ func (m *Model) goToActiveTask() {
 }
 
 func (m *Model) handleRequestToEditActiveTL() {
+	m.clearAllTaskLogInputs()
 	m.activeView = editActiveTLView
 	m.tLInputs[entryBeginTS].SetValue(m.activeTLBeginTS.Format(timeFormat))
 	if m.activeTLComment != nil {
@@ -349,6 +345,7 @@ func (m *Model) handleRequestToEditActiveTL() {
 }
 
 func (m *Model) handleRequestToCreateManualTL() {
+	m.clearAllTaskLogInputs()
 	m.activeView = manualTasklogEntryView
 	m.tasklogSaveType = tasklogInsert
 	currentTime := m.timeProvider.Now()
@@ -450,6 +447,7 @@ func (m *Model) getCmdToStartTracking() tea.Cmd {
 }
 
 func (m *Model) handleRequestToStopTracking() {
+	m.clearAllTaskLogInputs()
 	m.activeView = finishActiveTLView
 	m.activeTLEndTS = m.timeProvider.Now()
 
@@ -874,4 +872,11 @@ func (m *Model) handleActiveTLDeletedMsg(msg activeTaskLogDeletedMsg) {
 	m.trackingActive = false
 	m.activeTLComment = nil
 	m.activeTaskID = -1
+}
+
+func (m *Model) clearAllTaskLogInputs() {
+	for i := range m.tLInputs {
+		m.tLInputs[i].SetValue("")
+	}
+	m.tLCommentInput.SetValue("")
 }
