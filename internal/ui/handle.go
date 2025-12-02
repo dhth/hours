@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -70,6 +71,14 @@ func (m *Model) getCmdToUpdateActiveTL() tea.Cmd {
 func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 	beginTS, endTS, err := types.ParseTaskLogTimes(m.tLInputs[entryBeginTS].Value(), m.tLInputs[entryEndTS].Value())
 	if err != nil {
+		if errors.Is(err, types.ErrDurationNotLongEnough) {
+			for i := range m.tLInputs {
+				m.tLInputs[i].SetValue("")
+			}
+			m.tLCommentInput.SetValue("")
+			m.activeView = taskListView
+			return deleteActiveTL(m.db)
+		}
 		return nil
 	}
 
@@ -95,6 +104,9 @@ func (m *Model) getCmdToFinishActiveTLWithoutComment() tea.Cmd {
 	now := m.timeProvider.Now().Truncate(time.Second)
 	err := types.IsTaskLogDurationValid(m.activeTLBeginTS, now)
 	if err != nil {
+		if errors.Is(err, types.ErrDurationNotLongEnough) {
+			return deleteActiveTL(m.db)
+		}
 		m.message = errMsg(fmt.Sprintf("Error: %s", err.Error()))
 		return nil
 	}
