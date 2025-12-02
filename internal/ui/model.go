@@ -172,6 +172,14 @@ func (recordsModel) Init() tea.Cmd {
 	return nil
 }
 
+func infoMsg(msg string) userMsg {
+	return userMsg{
+		value:      msg,
+		kind:       userMsgInfo,
+		framesLeft: userMsgDefaultFrames,
+	}
+}
+
 func errMsg(msg string) userMsg {
 	return userMsg{
 		value:      msg,
