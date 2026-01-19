@@ -61,8 +61,8 @@ func getHelpText(style Style) string {
   S                                       Quick switch recording; will save a task log
                                               entry for the currently active task, and
                                               start recording time for another
-  f                                       Finish the currently active task log without
-                                              comment
+  f                                       Quickly finish the currently active task log,
+											  without opening the task log entry view
   <ctrl+s>                                Edit the currently active task log/Add a new
                                               manual task log entry
   <ctrl+x>                                Discard currently active recording

@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "--theme" flag considers built-in themes by default; custom themes can be
   referenced using "custom:" prefix
 
+### Fixed
+
+- Quickly finishing a task log preserves comment, if applicable
+
 ## [v0.6.0] - Aug 18, 2025
 
 ### Added
