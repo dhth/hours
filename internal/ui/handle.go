@@ -660,7 +660,6 @@ func (m *Model) handleTasksFetchedMsg(msg tasksFetchedMsg) tea.Cmd {
 			m.taskIndexMap[task.ID] = i
 		}
 		m.activeTasksList.SetItems(tasks)
-		m.activeTasksList.Title = "Tasks"
 		m.tasksFetched = true
 		cmd = fetchActiveTask(m.db)
 
