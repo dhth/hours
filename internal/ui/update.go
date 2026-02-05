@@ -211,7 +211,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				break
 			}
 
-			handleCmd := m.getCmdToFinishActiveTLWithoutComment()
+			handleCmd := m.getCmdToFinishActiveTL()
 			if handleCmd != nil {
 				cmds = append(cmds, handleCmd)
 			}
