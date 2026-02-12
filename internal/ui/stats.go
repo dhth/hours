@@ -118,8 +118,12 @@ func getStats(db *sql.DB,
 	rs := style.getReportStyles(plain)
 	styleCache := make(map[string]lipgloss.Style)
 
+	var totalSecs int
+	var totalNumEntries int
 	for i, entry := range entries {
 		timeSpentStr = types.HumanizeDuration(entry.SecsSpent)
+		totalSecs += entry.SecsSpent
+		totalNumEntries += entry.NumEntries
 
 		if plain {
 			data[i] = []string{
@@ -146,6 +150,25 @@ func getStats(db *sql.DB,
 	for i, h := range headerValues {
 		headers[i] = rs.headerStyle.Render(h)
 	}
+
+	var footer []string
+	if len(entries) > 0 {
+		totalTimeStr := types.HumanizeDuration(totalSecs)
+		if plain {
+			footer = []string{
+				utils.RightPadTrim("Total", 20, false),
+				fmt.Sprintf("%d", totalNumEntries),
+				utils.RightPadTrim(totalTimeStr, statsTimeCharsBudget, false),
+			}
+		} else {
+			footer = []string{
+				rs.footerStyle.Render(utils.RightPadTrim("Total", 20, false)),
+				rs.footerStyle.Render(fmt.Sprintf("%d", totalNumEntries)),
+				rs.footerStyle.Render(utils.RightPadTrim(totalTimeStr, statsTimeCharsBudget, false)),
+			}
+		}
+	}
+
 	b := bytes.Buffer{}
 	table := tablewriter.NewTable(&b,
 		tablewriter.WithConfig(tablewriter.Config{
@@ -162,9 +185,17 @@ func getStats(db *sql.DB,
 					AutoWrap:  tw.WrapNone,
 				},
 			},
+			Footer: tw.CellConfig{
+				Formatting: tw.CellFormatting{
+					Alignment:  tw.AlignCenter,
+					AutoWrap:   tw.WrapNone,
+					AutoFormat: tw.Off,
+				},
+			},
 		}),
 		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{Symbols: rs.symbols(tw.StyleASCII)})),
 		tablewriter.WithHeader(headers),
+		tablewriter.WithFooter(footer),
 	)
 
 	if err := table.Bulk(data); err != nil {
