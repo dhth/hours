@@ -17,7 +17,8 @@ type builtInThemePalette struct {
 }
 
 func getBuiltInTheme(palette builtInThemePalette) Theme {
-	taskColors := []string{
+	taskColors := make([]string, 0, 8+len(palette.tasks))
+	taskColors = append(taskColors,
 		palette.primary,
 		palette.secondary,
 		palette.tertiary,
@@ -26,7 +27,7 @@ func getBuiltInTheme(palette builtInThemePalette) Theme {
 		palette.info,
 		palette.warn,
 		palette.error,
-	}
+	)
 	taskColors = append(taskColors, palette.tasks...)
 
 	return Theme{
