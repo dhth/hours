@@ -3,9 +3,11 @@ package ui
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
+	"github.com/aymanbagabas/go-osc52/v2"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -519,6 +521,28 @@ func (m *Model) handleRequestToUpdateTask() {
 	m.taskInputs[summaryField].Focus()
 	m.taskInputs[summaryField].SetValue(task.Summary)
 	m.taskMgmtContext = taskUpdateCxt
+}
+
+func (m *Model) handleCopyTaskSummary() {
+	var selectedTask *types.Task
+	var ok bool
+
+	switch m.activeView {
+	case taskListView:
+		selectedTask, ok = m.activeTasksList.SelectedItem().(*types.Task)
+	case inactiveTaskListView:
+		selectedTask, ok = m.inactiveTasksList.SelectedItem().(*types.Task)
+	default:
+		return
+	}
+
+	if !ok || selectedTask == nil {
+		m.message = errMsg("No task selected")
+		return
+	}
+
+	osc52.New(selectedTask.Summary).WriteTo(os.Stderr)
+	m.message = infoMsg("Copied to clipboard")
 }
 
 func (m *Model) handleRequestToScrollVPUp() {

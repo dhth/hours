@@ -56,6 +56,7 @@ func getHelpText(style Style) string {
 		style.helpSecondary.Render(`
   a                                       Add a task
   u                                       Update task details
+  c                                       Copy task summary to clipboard
   s                                       Start/stop recording time on a task; stopping
                                               will open up the "Task Log Entry View"
   S                                       Quick switch recording; will save a task log
@@ -85,6 +86,7 @@ func getHelpText(style Style) string {
 `),
 		style.helpPrimary.Render("Inactive Task List View"),
 		style.helpSecondary.Render(`
+  c                                       Copy task summary to clipboard
   <ctrl+d>                                Activate task
 `),
 		style.helpPrimary.Render("Task Log Entry View"),

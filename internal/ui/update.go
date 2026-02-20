@@ -275,6 +275,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.activeView == taskListView {
 				m.handleRequestToCreateTask()
 			}
+		case "c":
+			if m.activeView == taskListView || m.activeView == inactiveTaskListView {
+				m.handleCopyTaskSummary()
+			}
 		case "k":
 			m.handleRequestToScrollVPUp()
 		case "j":
