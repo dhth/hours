@@ -397,13 +397,14 @@ appear in the log for the day it ends.
 
 Accepts an argument, which can be one of the following:
 
-  today      show stats for today
-  yest       show stats for yesterday
-  3d         show stats for the last 3 days (default)
-  week       show stats for the current week
-  date       show stats for a specific date (eg. "2024/06/08")
-  range      show stats for a date range (eg. "2024/06/08...2024/06/12", "2024/06/08...today", "2024/06/08...")
-  all        show stats for all log entries
+  today       show stats for today
+  yest        show stats for yesterday
+  3d          show stats for the last 3 days (default)
+  week        show stats for the current week
+  this-month  show stats for the current month
+  date        show stats for a specific date (eg. "2024/06/08")
+  range       show stats for a date range (eg. "2024/06/08...2024/06/12", "2024/06/08...today", "2024/06/08...")
+  all         show stats for all log entries
 
 Note: If a task log continues past midnight in your local timezone, it'll
 be considered in the stats for the day it ends.

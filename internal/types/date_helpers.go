@@ -94,6 +94,11 @@ func GetDateRangeFromPeriod(period string, now time.Time, fullWeek bool, maxDays
 		}
 		end = start.AddDate(0, 0, numDays)
 
+	case "this-month":
+		start = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		end = start.AddDate(0, 1, 0)
+		numDays = int(end.Sub(start).Hours() / 24)
+
 	default:
 		var err error
 

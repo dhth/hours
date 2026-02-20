@@ -192,6 +192,22 @@ func TestGetDateRangeFromPeriod(t *testing.T) {
 			expectedNumDays:  7,
 		},
 		{
+			name:             "this-month (30 days)",
+			period:           "this-month",
+			now:              now,
+			expectedStartStr: "2024/06/01 00:00",
+			expectedEndStr:   "2024/07/01 00:00",
+			expectedNumDays:  30,
+		},
+		{
+			name:             "this-month (31 days)",
+			period:           "this-month",
+			now:              nowME,
+			expectedStartStr: "2024/05/01 00:00",
+			expectedEndStr:   "2024/06/01 00:00",
+			expectedNumDays:  31,
+		},
+		{
 			name:             "a date",
 			period:           "2024/06/20",
 			expectedStartStr: "2024/06/20 00:00",
