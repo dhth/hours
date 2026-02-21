@@ -1,4 +1,4 @@
-package themes
+package cli
 
 import (
 	"fmt"
@@ -17,11 +17,15 @@ func TestMain(m *testing.M) {
 	}
 
 	binPath := filepath.Join(tempDir, "hours")
-	buildCmd := exec.Command("go", "build", "-o", binPath, "../../..")
+	buildCmd := exec.Command("go", "build", "-o", binPath, "../..")
 	buildOutput, err := buildCmd.CombinedOutput()
 	if err != nil {
 		_ = os.RemoveAll(tempDir)
-		panic(fmt.Sprintf("couldn't build binary: %s\noutput:\n%s", err.Error(), buildOutput))
+		panic(fmt.Sprintf(`couldn't build binary: %s
+build output:
+---
+%s
+---`, err.Error(), buildOutput))
 	}
 
 	testBinaryPath = binPath
