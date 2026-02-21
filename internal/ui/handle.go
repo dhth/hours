@@ -88,7 +88,7 @@ func (m *Model) getCmdToFinishTrackingActiveTL() tea.Cmd {
 	return toggleTracking(m.db, m.activeTaskID, m.activeTLBeginTS, m.activeTLEndTS, comment)
 }
 
-func (m *Model) getCmdToFinishActiveTLWithoutComment() tea.Cmd {
+func (m *Model) getCmdToFinishActiveTL() tea.Cmd {
 	now := m.timeProvider.Now().Truncate(time.Second)
 	err := types.IsTaskLogDurationValid(m.activeTLBeginTS, now)
 
@@ -104,7 +104,7 @@ func (m *Model) getCmdToFinishActiveTLWithoutComment() tea.Cmd {
 
 	m.activeTLEndTS = now
 
-	return toggleTracking(m.db, m.activeTaskID, m.activeTLBeginTS, m.activeTLEndTS, nil)
+	return toggleTracking(m.db, m.activeTaskID, m.activeTLBeginTS, m.activeTLEndTS, m.activeTLComment)
 }
 
 func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
