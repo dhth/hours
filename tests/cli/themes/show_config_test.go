@@ -9,7 +9,7 @@ import (
 )
 
 func TestShowConfig(t *testing.T) {
-	fx := cli.NewFixture(t)
+	fx := cli.NewFixture(t, testBinaryPath)
 
 	commonArgs := []string{
 		"themes",

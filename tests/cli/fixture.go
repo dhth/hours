@@ -40,21 +40,10 @@ func (c *HoursCmd) UseDB() {
 	c.useDB = true
 }
 
-func NewFixture(t *testing.T) Fixture {
+func NewFixture(t *testing.T, binPath string) Fixture {
 	t.Helper()
 
 	tempDir := t.TempDir()
-
-	binPath := filepath.Join(tempDir, "hours")
-	buildArgs := []string{"build", "-o", binPath, "../../.."}
-
-	c := exec.Command("go", buildArgs...)
-	buildOutput, err := c.CombinedOutput()
-	if err != nil {
-		t.Fatalf(`couldn't build binary: %s
-output:
-%s`, err.Error(), buildOutput)
-	}
 
 	return Fixture{
 		tempDir: tempDir,
