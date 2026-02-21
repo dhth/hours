@@ -2,13 +2,17 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
+	"time"
 )
+
+const runCmdTimeout = 10 * time.Second
 
 type Fixture struct {
 	tempDir string
@@ -57,9 +61,15 @@ func (f Fixture) RunCmd(cmd HoursCmd) (string, error) {
 		dbPath := filepath.Join(f.tempDir, "hours.db")
 		argsToUse = append(argsToUse, "--dbpath", dbPath)
 	}
-	cmdToRun := exec.Command(f.binPath, argsToUse...)
+	ctx, cancel := context.WithTimeout(context.Background(), runCmdTimeout)
+	defer cancel()
 
-	cmdToRun.Env = os.Environ()
+	cmdToRun := exec.CommandContext(ctx, f.binPath, argsToUse...)
+
+	cmdToRun.Env = []string{
+		fmt.Sprintf("HOME=%s", f.tempDir),
+		fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
+	}
 	for key, value := range cmd.env {
 		cmdToRun.Env = append(cmdToRun.Env, fmt.Sprintf("%s=%s", key, value))
 	}
@@ -73,6 +83,10 @@ func (f Fixture) RunCmd(cmd HoursCmd) (string, error) {
 	success := true
 
 	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return "", fmt.Errorf("command timed out after %s", runCmdTimeout)
+		}
+
 		var exitError *exec.ExitError
 		if errors.As(err, &exitError) {
 			success = false
