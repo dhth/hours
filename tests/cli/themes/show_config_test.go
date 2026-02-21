@@ -9,13 +9,7 @@ import (
 )
 
 func TestShowConfig(t *testing.T) {
-	fx, err := cli.NewFixture()
-	require.NoErrorf(t, err, "error setting up fixture: %s", err)
-
-	defer func() {
-		err := fx.Cleanup()
-		require.NoErrorf(t, err, "error cleaning up fixture: %s", err)
-	}()
+	fx := cli.NewFixture(t)
 
 	commonArgs := []string{
 		"themes",

@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"testing"
 )
 
 type Fixture struct {
@@ -39,12 +40,10 @@ func (c *HoursCmd) UseDB() {
 	c.useDB = true
 }
 
-func NewFixture() (Fixture, error) {
-	var zero Fixture
-	tempDir, err := os.MkdirTemp("", "")
-	if err != nil {
-		return zero, fmt.Errorf("couldn't create temporary directory: %s", err.Error())
-	}
+func NewFixture(t *testing.T) Fixture {
+	t.Helper()
+
+	tempDir := t.TempDir()
 
 	binPath := filepath.Join(tempDir, "hours")
 	buildArgs := []string{"build", "-o", binPath, "../../.."}
@@ -52,12 +51,7 @@ func NewFixture() (Fixture, error) {
 	c := exec.Command("go", buildArgs...)
 	buildOutput, err := c.CombinedOutput()
 	if err != nil {
-		cleanupErr := os.RemoveAll(tempDir)
-		if cleanupErr != nil {
-			fmt.Fprintf(os.Stderr, "couldn't clean up temporary directory (%s): %s", tempDir, cleanupErr.Error())
-		}
-
-		return zero, fmt.Errorf(`couldn't build binary: %s
+		t.Fatalf(`couldn't build binary: %s
 output:
 %s`, err.Error(), buildOutput)
 	}
@@ -65,16 +59,7 @@ output:
 	return Fixture{
 		tempDir: tempDir,
 		binPath: binPath,
-	}, nil
-}
-
-func (f Fixture) Cleanup() error {
-	err := os.RemoveAll(f.tempDir)
-	if err != nil {
-		return fmt.Errorf("couldn't clean up temporary directory (%s): %s", f.tempDir, err.Error())
 	}
-
-	return nil
 }
 
 func (f Fixture) RunCmd(cmd HoursCmd) (string, error) {
