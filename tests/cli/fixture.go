@@ -87,8 +87,7 @@ func (f Fixture) RunCmd(cmd HoursCmd) (string, error) {
 			return "", fmt.Errorf("command timed out after %s", runCmdTimeout)
 		}
 
-		var exitError *exec.ExitError
-		if errors.As(err, &exitError) {
+		if exitError, ok := errors.AsType[*exec.ExitError](err); ok {
 			success = false
 			exitCode = exitError.ExitCode()
 		} else {
