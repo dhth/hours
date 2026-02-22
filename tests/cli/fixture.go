@@ -2,12 +2,17 @@ package cli
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"testing"
+	"time"
 )
+
+const runCmdTimeout = 10 * time.Second
 
 type Fixture struct {
 	tempDir string
@@ -22,7 +27,7 @@ type HoursCmd struct {
 
 func NewCmd(args []string) HoursCmd {
 	return HoursCmd{
-		args: args,
+		args: append([]string{}, args...),
 		env:  make(map[string]string),
 	}
 }
@@ -39,53 +44,32 @@ func (c *HoursCmd) UseDB() {
 	c.useDB = true
 }
 
-func NewFixture() (Fixture, error) {
-	var zero Fixture
-	tempDir, err := os.MkdirTemp("", "")
-	if err != nil {
-		return zero, fmt.Errorf("couldn't create temporary directory: %s", err.Error())
-	}
+func NewFixture(t *testing.T, binPath string) Fixture {
+	t.Helper()
 
-	binPath := filepath.Join(tempDir, "hours")
-	buildArgs := []string{"build", "-o", binPath, "../../.."}
-
-	c := exec.Command("go", buildArgs...)
-	buildOutput, err := c.CombinedOutput()
-	if err != nil {
-		cleanupErr := os.RemoveAll(tempDir)
-		if cleanupErr != nil {
-			fmt.Fprintf(os.Stderr, "couldn't clean up temporary directory (%s): %s", tempDir, cleanupErr.Error())
-		}
-
-		return zero, fmt.Errorf(`couldn't build binary: %s
-output:
-%s`, err.Error(), buildOutput)
-	}
+	tempDir := t.TempDir()
 
 	return Fixture{
 		tempDir: tempDir,
 		binPath: binPath,
-	}, nil
-}
-
-func (f Fixture) Cleanup() error {
-	err := os.RemoveAll(f.tempDir)
-	if err != nil {
-		return fmt.Errorf("couldn't clean up temporary directory (%s): %s", f.tempDir, err.Error())
 	}
-
-	return nil
 }
 
 func (f Fixture) RunCmd(cmd HoursCmd) (string, error) {
-	argsToUse := cmd.args
+	argsToUse := append([]string{}, cmd.args...)
 	if cmd.useDB {
 		dbPath := filepath.Join(f.tempDir, "hours.db")
 		argsToUse = append(argsToUse, "--dbpath", dbPath)
 	}
-	cmdToRun := exec.Command(f.binPath, argsToUse...)
+	ctx, cancel := context.WithTimeout(context.Background(), runCmdTimeout)
+	defer cancel()
 
-	cmdToRun.Env = os.Environ()
+	cmdToRun := exec.CommandContext(ctx, f.binPath, argsToUse...)
+
+	cmdToRun.Env = []string{
+		fmt.Sprintf("HOME=%s", f.tempDir),
+		fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
+	}
 	for key, value := range cmd.env {
 		cmdToRun.Env = append(cmdToRun.Env, fmt.Sprintf("%s=%s", key, value))
 	}
@@ -99,8 +83,11 @@ func (f Fixture) RunCmd(cmd HoursCmd) (string, error) {
 	success := true
 
 	if err != nil {
-		var exitError *exec.ExitError
-		if errors.As(err, &exitError) {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return "", fmt.Errorf("command timed out after %s", runCmdTimeout)
+		}
+
+		if exitError, ok := errors.AsType[*exec.ExitError](err); ok {
 			success = false
 			exitCode = exitError.ExitCode()
 		} else {
