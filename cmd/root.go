@@ -33,7 +33,7 @@ const (
 	reportNumDaysThreshold = 7
 
 	envVarTheme      = "HOURS_THEME"
-	envVarGenNow     = "HOURS_GEN_NOW"
+	envVarNow        = "HOURS_NOW"
 	envVarGenSeed    = "HOURS_GEN_SEED"
 	defaultThemeName = "default"
 	warningColor     = "#fb4934"
@@ -56,7 +56,7 @@ var (
 	errCouldntCheckIfThemeExists = errors.New("couldn't check if theme already exists")
 	errThemeAlreadyExists        = errors.New("theme already exists")
 	errCouldntMarshalTheme       = errors.New("couldn't marshal theme")
-	errGenNowInvalid             = errors.New("invalid HOURS_GEN_NOW")
+	errNowInvalid                = errors.New("invalid HOURS_NOW")
 	errGenSeedInvalid            = errors.New("invalid HOURS_GEN_SEED")
 
 	msgReportIssue = fmt.Sprintf("This isn't supposed to happen; let %s know about this error via \n%s.", c.Author, c.RepoIssuesURL)
@@ -253,7 +253,7 @@ this with a --dbpath/-d flag that points to a throwaway database.
 `,
 		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			now, err := getGenNowFromEnv()
+			now, err := getNow()
 			if err != nil {
 				return err
 			}
@@ -356,8 +356,13 @@ will be reported on the day it ends.
 				fullWeek = true
 			}
 
+			now, err := getNow()
+			if err != nil {
+				return err
+			}
+
 			numDaysUpperBound := reportNumDaysThreshold
-			dateRange, err := types.GetDateRangeFromPeriod(period, time.Now(), fullWeek, &numDaysUpperBound)
+			dateRange, err := types.GetDateRangeFromPeriod(period, now, fullWeek, &numDaysUpperBound)
 			if err != nil {
 				return err
 			}
@@ -398,7 +403,12 @@ appear in the log for the day it ends.
 				period = args[0]
 			}
 
-			dateRange, err := types.GetDateRangeFromPeriod(period, time.Now(), false, nil)
+			now, err := getNow()
+			if err != nil {
+				return err
+			}
+
+			dateRange, err := types.GetDateRangeFromPeriod(period, now, false, nil)
 			if err != nil {
 				return err
 			}
@@ -444,9 +454,15 @@ be considered in the stats for the day it ends.
 			if recordsInteractive {
 				fullWeek = true
 			}
+
+			now, err := getNow()
+			if err != nil {
+				return err
+			}
+
 			var dateRange *types.DateRange
 			if period != "all" {
-				dr, err := types.GetDateRangeFromPeriod(period, time.Now(), fullWeek, nil)
+				dr, err := types.GetDateRangeFromPeriod(period, now, fullWeek, nil)
 				if err != nil {
 					return err
 				}
@@ -670,22 +686,22 @@ func getConfirmation() (bool, error) {
 	return response == code, nil
 }
 
-func getGenNowFromEnv() (time.Time, error) {
-	value := strings.TrimSpace(os.Getenv(envVarGenNow))
+func getNow() (time.Time, error) {
+	value := os.Getenv(envVarNow)
 	if value == "" {
 		return time.Now().Local(), nil
 	}
 
 	ts, err := time.Parse(time.RFC3339, value)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("%w: expected RFC3339 timestamp, got %q", errGenNowInvalid, value)
+		return time.Time{}, fmt.Errorf("%w: expected RFC3339 timestamp, got %q", errNowInvalid, value)
 	}
 
 	return ts.Local(), nil
 }
 
 func getGenSeedFromEnv() (int64, error) {
-	value := strings.TrimSpace(os.Getenv(envVarGenSeed))
+	value := os.Getenv(envVarGenSeed)
 	if value == "" {
 		return time.Now().UnixNano(), nil
 	}

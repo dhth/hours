@@ -110,7 +110,7 @@ func (f Fixture) RunGen(seed int64, now time.Time) (string, error) {
 	cmd := NewCmd([]string{"gen", "-y"})
 	cmd.UseDB()
 	cmd.SetEnv("HOURS_GEN_SEED", fmt.Sprintf("%d", seed))
-	cmd.SetEnv("HOURS_GEN_NOW", now.Format(time.RFC3339))
+	cmd.SetEnv("HOURS_NOW", now.Format(time.RFC3339))
 
 	return f.RunCmd(cmd)
 }
