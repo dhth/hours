@@ -115,6 +115,22 @@ This can be used to record details about your work on this task.`
 	m.inactiveTasksList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
 	m.inactiveTasksList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
+	m.targetTasksList = list.New([]list.Item{},
+		newItemDelegate(style.listItemTitleColor,
+			style.listItemDescColor,
+			lipgloss.Color(style.theme.ActiveTasks),
+		), listWidth, 0)
+	m.targetTasksList.Title = "Select Target Task"
+	m.targetTasksList.SetStatusBarItemName("task", "tasks")
+	m.targetTasksList.DisableQuitKeybindings()
+	m.targetTasksList.SetShowHelp(false)
+	m.targetTasksList.Styles.Title = m.targetTasksList.Styles.Title.
+		Foreground(lipgloss.Color(style.theme.TitleForeground)).
+		Background(lipgloss.Color(style.theme.ActiveTasks)).
+		Bold(true)
+	m.targetTasksList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
+	m.targetTasksList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
+
 	return m
 }
 

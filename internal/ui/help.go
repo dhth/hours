@@ -78,6 +78,7 @@ func getHelpText(style Style) string {
   d                                       Show task log details
   <ctrl+s>/u                              Update task log entry
   <ctrl+d>                                Delete task log entry
+  m                                       Move task log entry to another task
 `),
 		style.helpPrimary.Render("Task Log Details View"),
 		style.helpSecondary.Render(`

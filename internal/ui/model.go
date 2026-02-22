@@ -31,6 +31,7 @@ const (
 	manualTasklogEntryView                      // Form to manually create a new task log entry
 	editSavedTLView                             // Form to edit an existing task log
 	taskInputView                               // Form to create or edit task details
+	moveTaskLogView                             // View to select target task for moving log entry
 	helpView                                    // Help documentation view
 	insufficientDimensionsView                  // Error view when terminal is too small
 )
@@ -135,6 +136,10 @@ type Model struct {
 	debug                          bool
 	frameCounter                   uint
 	logFramesCfg                   logFramesConfig
+	targetTasksList                list.Model
+	moveTLID                       int
+	moveOldTaskID                  int
+	moveSecsSpent                  int
 }
 
 func (m *Model) blurTLTrackingInputs() {

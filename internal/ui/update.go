@@ -58,6 +58,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, cmd)
 			return m, tea.Batch(cmds...)
 		}
+		if m.targetTasksList.FilterState() == list.Filtering {
+			m.targetTasksList, cmd = m.targetTasksList.Update(msg)
+			cmds = append(cmds, cmd)
+			return m, tea.Batch(cmds...)
+		}
 
 		switch keyMsg.String() {
 		case enter, "ctrl+s":
@@ -85,6 +90,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				updateCmd = m.getCmdToFinishTrackingActiveTL()
 			case manualTasklogEntryView, editSavedTLView:
 				updateCmd = m.getCmdToCreateOrEditTL()
+			case moveTaskLogView:
+				updateCmd = m.handleTargetTaskSelection()
 			}
 			if updateCmd != nil {
 				cmds = append(cmds, updateCmd)
@@ -92,7 +99,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case escape:
 			switch m.activeView {
-			case taskInputView, editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
+			case taskInputView, editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView, moveTaskLogView:
 				m.handleEscapeInForms()
 				return m, tea.Batch(cmds...)
 			}
@@ -172,6 +179,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.tLCommentInput, cmd = m.tLCommentInput.Update(msg)
 		cmds = append(cmds, cmd)
 		return m, tea.Batch(cmds...)
+	case moveTaskLogView:
+		m.targetTasksList, cmd = m.targetTasksList.Update(msg)
+		cmds = append(cmds, cmd)
 	}
 
 	switch msg := msg.(type) {
@@ -287,6 +297,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.activeView == taskLogView {
 				m.handleRequestToViewTLDetails()
 			}
+		case "m":
+			if m.activeView == taskLogView {
+				m.handleRequestToMoveTaskLog()
+			}
 		case "?":
 			m.lastView = m.activeView
 			m.activeView = helpView
@@ -351,6 +365,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if updateCmds != nil {
 			cmds = append(cmds, updateCmds...)
 		}
+	case taskLogMovedMsg:
+		if msg.err != nil {
+			m.message = errMsg(fmt.Sprintf("Error moving task log: %s", msg.err))
+		} else {
+			cmds = append(cmds, fetchTLS(m.db, nil))
+			cmds = append(cmds, fetchTasks(m.db, true))
+		}
+		m.activeView = taskLogView
+		m.targetTasksList.ResetFilter()
 	case activeTaskLogDeletedMsg:
 		m.handleActiveTLDeletedMsg(msg)
 	case taskActiveStatusUpdatedMsg:

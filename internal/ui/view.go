@@ -261,6 +261,9 @@ func (m Model) View() string {
 		for range m.terminalHeight - 34 {
 			content += "\n"
 		}
+	case moveTaskLogView:
+		helpText := "Press <enter> to move task log, <esc>/<q> to cancel"
+		content = m.style.list.Render(m.targetTasksList.View()) + "\n\n" + m.style.formHelp.Render(helpText)
 	case helpView:
 		if !m.helpVPReady {
 			content = "\n  Initializing..."

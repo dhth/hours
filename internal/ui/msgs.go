@@ -82,6 +82,13 @@ type tLDeletedMsg struct {
 	err   error
 }
 
+type taskLogMovedMsg struct {
+	tlID      int
+	oldTaskID int
+	newTaskID int
+	err       error
+}
+
 type tasksFetchedMsg struct {
 	tasks  []types.Task
 	active bool

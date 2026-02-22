@@ -732,6 +732,58 @@ WHERE id = ?;
 	})
 }
 
+func MoveTaskLog(db *sql.DB, tlID int, oldTaskID int, newTaskID int, secsSpent int) error {
+	return runInTx(db, func(tx *sql.Tx) error {
+		// Update the task_log entry's task_id
+		updateTLStmt, err := tx.Prepare(`
+UPDATE task_log
+SET task_id = ?
+WHERE id = ?;
+`)
+		if err != nil {
+			return err
+		}
+		defer updateTLStmt.Close()
+
+		_, err = updateTLStmt.Exec(newTaskID, tlID)
+		if err != nil {
+			return err
+		}
+
+		// Decrease secs_spent on old task
+		oldTaskStmt, err := tx.Prepare(`
+UPDATE task
+SET secs_spent = secs_spent - ?,
+    updated_at = ?
+WHERE id = ?;
+`)
+		if err != nil {
+			return err
+		}
+		defer oldTaskStmt.Close()
+
+		_, err = oldTaskStmt.Exec(secsSpent, time.Now().UTC(), oldTaskID)
+		if err != nil {
+			return err
+		}
+
+		// Increase secs_spent on new task
+		newTaskStmt, err := tx.Prepare(`
+UPDATE task
+SET secs_spent = secs_spent + ?,
+    updated_at = ?
+WHERE id = ?;
+`)
+		if err != nil {
+			return err
+		}
+		defer newTaskStmt.Close()
+
+		_, err = newTaskStmt.Exec(secsSpent, time.Now().UTC(), newTaskID)
+		return err
+	})
+}
+
 func runInTxAndReturnID(db *sql.DB, fn func(tx *sql.Tx) (int, error)) (int, error) {
 	tx, err := db.Begin()
 	if err != nil {

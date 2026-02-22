@@ -167,6 +167,9 @@ func (m *Model) handleEscapeInForms() {
 		}
 	case editSavedTLView:
 		m.activeView = taskLogView
+	case moveTaskLogView:
+		m.activeView = taskLogView
+		m.targetTasksList.ResetFilter()
 	}
 }
 
@@ -288,6 +291,9 @@ func (m *Model) handleRequestToGoBackOrQuit() bool {
 		}
 	case helpView:
 		m.activeView = m.lastView
+	case moveTaskLogView:
+		m.activeView = taskLogView
+		m.targetTasksList.ResetFilter()
 	}
 
 	return shouldQuit
@@ -419,6 +425,51 @@ func (m *Model) getCmdToDeleteTL() tea.Cmd {
 		return nil
 	}
 	return deleteTL(m.db, &entry)
+}
+
+func (m *Model) handleRequestToMoveTaskLog() tea.Cmd {
+	if m.taskLogList.IsFiltered() {
+		m.message = errMsg(removeFilterMsg)
+		return nil
+	}
+
+	entry, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
+	if !ok {
+		m.message = errMsg(genericErrorMsg)
+		return nil
+	}
+
+	// Store the log entry details
+	m.moveTLID = entry.ID
+	m.moveOldTaskID = entry.TaskID
+	m.moveSecsSpent = entry.SecsSpent
+
+	// Initialize target list with active tasks, excluding current parent
+	targetItems := []list.Item{}
+	for i := range m.activeTasksList.Items() {
+		task, ok := m.activeTasksList.Items()[i].(*types.Task)
+		if !ok {
+			continue
+		}
+		// Exclude the current parent task
+		if task.ID != entry.TaskID {
+			targetItems = append(targetItems, task)
+		}
+	}
+	m.targetTasksList.SetItems(targetItems)
+
+	m.activeView = moveTaskLogView
+	return nil
+}
+
+func (m *Model) handleTargetTaskSelection() tea.Cmd {
+	task, ok := m.targetTasksList.SelectedItem().(*types.Task)
+	if !ok {
+		m.message = errMsg(genericErrorMsg)
+		return nil
+	}
+
+	return moveTaskLog(m.db, m.moveTLID, m.moveOldTaskID, task.ID, m.moveSecsSpent)
 }
 
 func (m *Model) getCmdToActivateDeactivatedTask() tea.Cmd {
@@ -641,6 +692,9 @@ func (m *Model) handleWindowResizing(msg tea.WindowSizeMsg) {
 
 	m.inactiveTasksList.SetWidth(msg.Width - w)
 	m.inactiveTasksList.SetHeight(msg.Height - h - 2)
+
+	m.targetTasksList.SetWidth(msg.Width - w)
+	m.targetTasksList.SetHeight(msg.Height - h - 2)
 
 	if !m.helpVPReady {
 		m.helpVP = viewport.New(msg.Width-4, m.terminalHeight-7)

@@ -210,3 +210,10 @@ func getRecordsData(
 		}
 	}
 }
+
+func moveTaskLog(db *sql.DB, tlID int, oldTaskID int, newTaskID int, secsSpent int) tea.Cmd {
+	return func() tea.Msg {
+		err := pers.MoveTaskLog(db, tlID, oldTaskID, newTaskID, secsSpent)
+		return taskLogMovedMsg{tlID, oldTaskID, newTaskID, err}
+	}
+}
