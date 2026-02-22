@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -32,6 +33,8 @@ const (
 	reportNumDaysThreshold = 7
 
 	envVarTheme      = "HOURS_THEME"
+	envVarGenNow     = "HOURS_GEN_NOW"
+	envVarGenSeed    = "HOURS_GEN_SEED"
 	defaultThemeName = "default"
 	warningColor     = "#fb4934"
 )
@@ -53,6 +56,8 @@ var (
 	errCouldntCheckIfThemeExists = errors.New("couldn't check if theme already exists")
 	errThemeAlreadyExists        = errors.New("theme already exists")
 	errCouldntMarshalTheme       = errors.New("couldn't marshal theme")
+	errGenNowInvalid             = errors.New("invalid HOURS_GEN_NOW")
+	errGenSeedInvalid            = errors.New("invalid HOURS_GEN_SEED")
 
 	msgReportIssue = fmt.Sprintf("This isn't supposed to happen; let %s know about this error via \n%s.", c.Author, c.RepoIssuesURL)
 )
@@ -248,6 +253,18 @@ this with a --dbpath/-d flag that points to a throwaway database.
 `,
 		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, _ []string) error {
+			now, err := getGenNowFromEnv()
+			if err != nil {
+				return err
+			}
+
+			seed, err := getGenSeedFromEnv()
+			if err != nil {
+				return err
+			}
+
+			rng := rand.New(rand.NewSource(seed))
+
 			if genNumDays > genNumDaysThreshold {
 				return fmt.Errorf("%w (%d)", errNumDaysExceedsThreshold, genNumDaysThreshold)
 			}
@@ -280,7 +297,7 @@ Running with --dbpath set to: %q
 				}
 			}
 
-			genErr := ui.GenerateData(db, genNumDays, genNumTasks)
+			genErr := ui.GenerateData(db, genNumDays, genNumTasks, rng, now)
 			if genErr != nil {
 				return fmt.Errorf("%w: %s", errCouldntGenerateData, genErr.Error())
 			}
@@ -651,4 +668,32 @@ func getConfirmation() (bool, error) {
 	response = strings.TrimSpace(response)
 
 	return response == code, nil
+}
+
+func getGenNowFromEnv() (time.Time, error) {
+	value := strings.TrimSpace(os.Getenv(envVarGenNow))
+	if value == "" {
+		return time.Now().Local(), nil
+	}
+
+	ts, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("%w: expected RFC3339 timestamp, got %q", errGenNowInvalid, value)
+	}
+
+	return ts.Local(), nil
+}
+
+func getGenSeedFromEnv() (int64, error) {
+	value := strings.TrimSpace(os.Getenv(envVarGenSeed))
+	if value == "" {
+		return time.Now().UnixNano(), nil
+	}
+
+	seed, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("%w: expected base-10 integer, got %q", errGenSeedInvalid, value)
+	}
+
+	return seed, nil
 }
