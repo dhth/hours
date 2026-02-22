@@ -27,7 +27,7 @@ type HoursCmd struct {
 
 func NewCmd(args []string) HoursCmd {
 	return HoursCmd{
-		args: args,
+		args: append([]string{}, args...),
 		env:  make(map[string]string),
 	}
 }
