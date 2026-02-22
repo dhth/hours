@@ -32,7 +32,7 @@ build output:
 	code := m.Run()
 
 	if err := os.RemoveAll(tempDir); err != nil {
-		panic(fmt.Sprintf("couldn't clean up temporary directory (%s): %s", tempDir, err.Error()))
+		fmt.Fprintf(os.Stderr, "couldn't clean up temporary directory (%s): %s", tempDir, err.Error())
 	}
 
 	os.Exit(code)

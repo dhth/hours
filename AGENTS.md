@@ -24,7 +24,7 @@ just update-snapshots             # To run tests while updating snapshots
 
 ## Architecture
 
-```
+```text
 cmd/           CLI commands (Cobra). root.go is the main entry point.
 internal/
   persistence/ SQLite database layer: schema init, migrations, all SQL queries
