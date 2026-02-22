@@ -444,16 +444,16 @@ be considered in the stats for the day it ends.
 			if recordsInteractive {
 				fullWeek = true
 			}
-			var dateRange types.DateRange
+			var dateRange *types.DateRange
 			if period != "all" {
-				dateRange, err = types.GetDateRangeFromPeriod(period, time.Now(), fullWeek, nil)
+				dr, err := types.GetDateRangeFromPeriod(period, time.Now(), fullWeek, nil)
 				if err != nil {
 					return err
 				}
-
+				dateRange = &dr
 			}
 
-			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, &dateRange, period, taskStatus, recordsInteractive)
+			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, dateRange, period, taskStatus, recordsInteractive)
 		},
 	}
 
