@@ -20,7 +20,15 @@ description: Use this skill when creating or updating tests in this repository.
 - Unit tests use `testify/assert` alongside source files
 - UI components use snapshot testing (`go-snaps`); snapshots in `internal/ui/__snapshots__/`
 - `internal/types` has a `TimeProvider` interface for mocking time in tests
-- Integration tests in `tests/test.sh` validate CLI output for log/report/stats commands
+- CLI integration tests use Go tests in `tests/cli` with snapshots in `tests/cli/__snapshots__/`
+
+### CLI integration tests
+
+- Keep integration tests in package `tests/cli` (file-per-command is preferred)
+- `TestMain` builds the `hours` binary once per package run and is shared by all tests in the package
+- `NewFixture(t, testBinaryPath)` gives each test a `t.TempDir()` workspace (auto-cleaned)
+- Use `cmd.UseDB()` to append a per-test DB path under the fixture temp dir
+- `RunCmd` executes with timeout and deterministic env (`HOME` set to fixture temp dir, `PATH` propagated, explicit overrides via `SetEnv`)
 
 ### Given-When-Then Structure
 
