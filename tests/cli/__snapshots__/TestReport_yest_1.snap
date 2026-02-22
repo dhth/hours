@@ -10,8 +10,10 @@ exit_code: 0
 | clojure           1h 2m  |
 | swift             1h 1m  |
 | typescript        55m    |
+| .net              42m    |
+| rust              1h 15m |
 +--------------------------+
-|          5h 16m          |
+|          7h 13m          |
 +--------------------------+
 
 ----- stderr -----
