@@ -1,0 +1,7 @@
+success: false
+exit_code: 1
+----- stdout -----
+
+----- stderr -----
+Error: time period is not valid: start date is incorrect: parsing time "2025/1024" as "2006/01/02": cannot parse "24" as "/"
+
