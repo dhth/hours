@@ -56,7 +56,7 @@ func NewFixture(t *testing.T, binPath string) Fixture {
 }
 
 func (f Fixture) RunCmd(cmd HoursCmd) (string, error) {
-	argsToUse := cmd.args
+	argsToUse := append([]string{}, cmd.args...)
 	if cmd.useDB {
 		dbPath := filepath.Join(f.tempDir, "hours.db")
 		argsToUse = append(argsToUse, "--dbpath", dbPath)
