@@ -4,7 +4,7 @@ This file provides guidance to AI agents when working with code in this reposito
 
 ## Project Overview
 
-`hours` is a no-frills CLI time tracking toolkit written in Go. It provides a TUI (Terminal User Interface) built with BubbleTea/Lipgloss and uses SQLite for persistence. Users track time on tasks, then generate plaintext reports, stats, and logs.
+`hours` is a time tracking command line tool written in Go. It provides a TUI (Terminal User Interface) built with BubbleTea/Lipgloss and uses SQLite for persistence. Users track time on tasks, then generate plaintext reports, stats, and logs.
 
 ## Common Commands
 
