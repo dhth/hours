@@ -110,22 +110,26 @@ var (
 	}
 )
 
-func GenerateData(db *sql.DB, numDays, numTasks uint8) error {
+func GenerateData(db *sql.DB, numDays, numTasks uint8, rng *rand.Rand, now time.Time) error {
 	for i := range numTasks {
-		summary := tasks[rand.Intn(len(tasks))]
+		summary := tasks[rng.Intn(len(tasks))]
 		_, err := pers.InsertTask(db, summary)
 		if err != nil {
 			return err
 		}
-		numLogs := int(numDays/2) + rand.Intn(int(numDays/2))
+		half := int(numDays / 2)
+		numLogs := 1
+		if half > 0 {
+			numLogs = half + rng.Intn(half)
+		}
 		for range numLogs {
-			beginTs := randomTimestamp(int(numDays))
-			numMinutes := 30 + rand.Intn(60)
+			beginTs := randomTimestamp(int(numDays), now, rng)
+			numMinutes := 30 + rng.Intn(60)
 			endTs := beginTs.Add(time.Minute * time.Duration(numMinutes))
 			var comment *string
-			commentStr := fmt.Sprintf("%s %s", verbs[rand.Intn(len(verbs))], nouns[rand.Intn(len(nouns))])
-			if rand.Float64() < nonEmptyCommentChance {
-				if rand.Float64() < longCommentChance {
+			commentStr := fmt.Sprintf("%s %s", verbs[rng.Intn(len(verbs))], nouns[rng.Intn(len(nouns))])
+			if rng.Float64() < nonEmptyCommentChance {
+				if rng.Float64() < longCommentChance {
 					commentStr += sampleLongCommentBody
 				}
 				comment = &commentStr
@@ -141,11 +145,14 @@ func GenerateData(db *sql.DB, numDays, numTasks uint8) error {
 	return nil
 }
 
-func randomTimestamp(numDays int) time.Time {
-	now := time.Now().Local()
+func randomTimestamp(numDays int, now time.Time, rng *rand.Rand) time.Time {
+	if numDays <= 0 {
+		return now
+	}
 
 	maxSeconds := numDays * 24 * 60 * 60
-	randomSeconds := rand.Intn(maxSeconds)
+	randomSeconds := rng.Intn(maxSeconds)
 	randomTime := now.Add(-time.Duration(randomSeconds) * time.Second)
+
 	return randomTime
 }

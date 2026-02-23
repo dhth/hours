@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,11 +28,15 @@ const (
 	defaultDBName          = "hours.db"
 	configDirName          = "hours"
 	themeDirName           = "themes"
-	genNumDaysThreshold    = 30
-	genNumTasksThreshold   = 20
+	genNumDaysLowerLimit   = 1
+	genNumTasksLowerLimit  = 1
+	genNumDaysUpperLimit   = 30
+	genNumTasksUpperLimit  = 20
 	reportNumDaysThreshold = 7
 
 	envVarTheme      = "HOURS_THEME"
+	envVarNow        = "HOURS_NOW"
+	envVarGenSeed    = "HOURS_GEN_SEED"
 	defaultThemeName = "default"
 	warningColor     = "#fb4934"
 )
@@ -45,7 +50,9 @@ var (
 	errCouldntInitializeDB       = errors.New("couldn't initialize database")
 	errCouldntOpenDB             = errors.New("couldn't open database")
 	errCouldntGenerateData       = errors.New("couldn't generate dummy data")
+	errNumDaysBelowThreshold     = errors.New("number of days is below threshold")
 	errNumDaysExceedsThreshold   = errors.New("number of days exceeds threshold")
+	errNumTasksBelowThreshold    = errors.New("number of tasks is below threshold")
 	errNumTasksExceedsThreshold  = errors.New("number of tasks exceeds threshold")
 	errCouldntReadInput          = errors.New("couldn't read input")
 	errIncorrectCodeEntered      = errors.New("incorrect code entered")
@@ -53,6 +60,8 @@ var (
 	errCouldntCheckIfThemeExists = errors.New("couldn't check if theme already exists")
 	errThemeAlreadyExists        = errors.New("theme already exists")
 	errCouldntMarshalTheme       = errors.New("couldn't marshal theme")
+	errNowInvalid                = errors.New("invalid HOURS_NOW")
+	errGenSeedInvalid            = errors.New("invalid HOURS_GEN_SEED")
 
 	msgReportIssue = fmt.Sprintf("This isn't supposed to happen; let %s know about this error via \n%s.", c.Author, c.RepoIssuesURL)
 )
@@ -248,12 +257,31 @@ this with a --dbpath/-d flag that points to a throwaway database.
 `,
 		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			if genNumDays > genNumDaysThreshold {
-				return fmt.Errorf("%w (%d)", errNumDaysExceedsThreshold, genNumDaysThreshold)
+			if genNumDays < genNumDaysLowerLimit {
+				return fmt.Errorf("%w (%d)", errNumDaysBelowThreshold, genNumDaysLowerLimit)
 			}
-			if genNumTasks > genNumTasksThreshold {
-				return fmt.Errorf("%w (%d)", errNumTasksExceedsThreshold, genNumTasksThreshold)
+			if genNumTasks < genNumTasksLowerLimit {
+				return fmt.Errorf("%w (%d)", errNumTasksBelowThreshold, genNumTasksLowerLimit)
 			}
+
+			if genNumDays > genNumDaysUpperLimit {
+				return fmt.Errorf("%w (%d)", errNumDaysExceedsThreshold, genNumDaysUpperLimit)
+			}
+			if genNumTasks > genNumTasksUpperLimit {
+				return fmt.Errorf("%w (%d)", errNumTasksExceedsThreshold, genNumTasksUpperLimit)
+			}
+
+			now, err := getNow()
+			if err != nil {
+				return err
+			}
+
+			seed, err := getGenSeedFromEnv()
+			if err != nil {
+				return err
+			}
+
+			rng := rand.New(rand.NewSource(seed))
 
 			if !genSkipConfirmation {
 				fmt.Print(lipgloss.NewStyle().Foreground(lipgloss.Color(warningColor)).Render(`
@@ -280,7 +308,7 @@ Running with --dbpath set to: %q
 				}
 			}
 
-			genErr := ui.GenerateData(db, genNumDays, genNumTasks)
+			genErr := ui.GenerateData(db, genNumDays, genNumTasks, rng, now)
 			if genErr != nil {
 				return fmt.Errorf("%w: %s", errCouldntGenerateData, genErr.Error())
 			}
@@ -339,8 +367,13 @@ will be reported on the day it ends.
 				fullWeek = true
 			}
 
+			now, err := getNow()
+			if err != nil {
+				return err
+			}
+
 			numDaysUpperBound := reportNumDaysThreshold
-			dateRange, err := types.GetDateRangeFromPeriod(period, time.Now(), fullWeek, &numDaysUpperBound)
+			dateRange, err := types.GetDateRangeFromPeriod(period, now, fullWeek, &numDaysUpperBound)
 			if err != nil {
 				return err
 			}
@@ -381,7 +414,12 @@ appear in the log for the day it ends.
 				period = args[0]
 			}
 
-			dateRange, err := types.GetDateRangeFromPeriod(period, time.Now(), false, nil)
+			now, err := getNow()
+			if err != nil {
+				return err
+			}
+
+			dateRange, err := types.GetDateRangeFromPeriod(period, now, false, nil)
 			if err != nil {
 				return err
 			}
@@ -427,16 +465,22 @@ be considered in the stats for the day it ends.
 			if recordsInteractive {
 				fullWeek = true
 			}
-			var dateRange types.DateRange
+
+			now, err := getNow()
+			if err != nil {
+				return err
+			}
+
+			var dateRange *types.DateRange
 			if period != "all" {
-				dateRange, err = types.GetDateRangeFromPeriod(period, time.Now(), fullWeek, nil)
+				dr, err := types.GetDateRangeFromPeriod(period, now, fullWeek, nil)
 				if err != nil {
 					return err
 				}
-
+				dateRange = &dr
 			}
 
-			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, &dateRange, period, taskStatus, recordsInteractive)
+			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, dateRange, period, taskStatus, recordsInteractive)
 		},
 	}
 
@@ -651,4 +695,32 @@ func getConfirmation() (bool, error) {
 	response = strings.TrimSpace(response)
 
 	return response == code, nil
+}
+
+func getNow() (time.Time, error) {
+	value := os.Getenv(envVarNow)
+	if value == "" {
+		return time.Now().Local(), nil
+	}
+
+	ts, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("%w: expected RFC3339 timestamp, got %q", errNowInvalid, value)
+	}
+
+	return ts.Local(), nil
+}
+
+func getGenSeedFromEnv() (int64, error) {
+	value := os.Getenv(envVarGenSeed)
+	if value == "" {
+		return time.Now().UnixNano(), nil
+	}
+
+	seed, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("%w: expected base-10 integer, got %q", errGenSeedInvalid, value)
+	}
+
+	return seed, nil
 }

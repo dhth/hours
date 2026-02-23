@@ -1,0 +1,7 @@
+success: false
+exit_code: 1
+----- stdout -----
+
+----- stderr -----
+Error: time period is not valid: parsing time "blah" as "2006/01/02": cannot parse "blah" as "2006"
+

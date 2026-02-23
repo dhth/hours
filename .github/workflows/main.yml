@@ -94,26 +94,6 @@ jobs:
       - name: go test
         run: go test -v ./...
 
-  live-tests:
-    needs: [changes, test]
-    if: ${{ needs.changes.outputs.code == 'true' }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v6
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: 'go.mod'
-      - name: go install
-        run: go install .
-      - name: Run live tests
-        run: |
-          cd tests
-          ./test.sh
-
   lint-yaml:
     needs: changes
     if: ${{ needs.changes.outputs.yml == 'true' }}

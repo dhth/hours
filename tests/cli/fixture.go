@@ -67,6 +67,9 @@ func (f Fixture) RunCmd(cmd HoursCmd) (string, error) {
 	cmdToRun := exec.CommandContext(ctx, f.binPath, argsToUse...)
 
 	cmdToRun.Env = []string{
+		// The app converts timestamps to local timezone; setting the timezone to UTC
+		// makes time-based CLI snapshots deterministic.
+		"TZ=UTC",
 		fmt.Sprintf("HOME=%s", f.tempDir),
 		fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
 	}
@@ -104,4 +107,13 @@ exit_code: %d
 `, success, exitCode, stdoutBuf.String(), stderrBuf.String())
 
 	return output, nil
+}
+
+func (f Fixture) RunGen(seed int64, now time.Time) (string, error) {
+	cmd := NewCmd([]string{"gen", "-y"})
+	cmd.UseDB()
+	cmd.SetEnv("HOURS_GEN_SEED", fmt.Sprintf("%d", seed))
+	cmd.SetEnv("HOURS_NOW", now.Format(time.RFC3339))
+
+	return f.RunCmd(cmd)
 }

@@ -33,7 +33,7 @@ internal/
     theme/     Theme system with customizable colors
   utils/       String utilities (trim, padding)
   common/      Shared constants
-tests/         Integration tests (test.sh runs 28+ CLI tests)
+tests/         Integration tests (snapshot tests for CLI behavior)
 ```
 
 **Data flow**: CLI commands (cmd/) → persistence layer (queries.go) → SQLite DB. The TUI (ui/) uses BubbleTea's Elm architecture (model → update → view) with async commands in cmds.go.
