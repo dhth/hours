@@ -708,7 +708,7 @@ func getNow() (time.Time, error) {
 		return time.Time{}, fmt.Errorf("%w: expected RFC3339 timestamp, got %q", errNowInvalid, value)
 	}
 
-	return ts, nil
+	return ts.Local(), nil
 }
 
 func getGenSeedFromEnv() (int64, error) {
