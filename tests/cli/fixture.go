@@ -67,9 +67,6 @@ func (f Fixture) RunCmd(cmd HoursCmd) (string, error) {
 	cmdToRun := exec.CommandContext(ctx, f.binPath, argsToUse...)
 
 	cmdToRun.Env = []string{
-		// The app converts timestamps to local timezone; setting the timezone to UTC
-		// makes time-based CLI snapshots deterministic.
-		"TZ=UTC",
 		fmt.Sprintf("HOME=%s", f.tempDir),
 		fmt.Sprintf("PATH=%s", os.Getenv("PATH")),
 	}

@@ -4,17 +4,19 @@ exit_code: 0
 +------------------------+------------------------+------------------------+------------------------+------------------------+
 |       2025/10/20       |       2025/10/21       |       2025/10/22       |       2025/10/23       |       2025/10/24       |
 +------------------------+------------------------+------------------------+------------------------+------------------------+
-| typescript      36m    | rust            1h 4m  | haskell         1h 26m | ocaml           41m    | clojure         45m    |
-| swift           1h 19m | clojure         47m    | ocaml           44m    | typescript      49m    | clojure         50m    |
-| c               39m    | ocaml           48m    | c++             42m    | clojure         48m    |                        |
-| c++             50m    | typescript      1h 7m  | clojure         48m    | clojure         1h 2m  |                        |
-| ocaml           1h 28m | clojure         1h 19m | swift           1h 9m  | swift           1h 1m  |                        |
-| .net            33m    | .net            1h 1m  | swift           45m    | typescript      55m    |                        |
-| ocaml           36m    | haskell         37m    |                        | .net            42m    |                        |
-| ocaml           39m    | rust            34m    |                        | rust            1h 15m |                        |
+| typescript      36m    | ocaml           36m    | haskell         1h 26m | ocaml           41m    | .net            42m    |
+| swift           1h 19m | ocaml           39m    | ocaml           44m    | typescript      49m    | rust            1h 15m |
+| c               39m    | rust            1h 4m  | c++             42m    | clojure         48m    | clojure         45m    |
+| c++             50m    | clojure         47m    | clojure         48m    | clojure         1h 2m  | clojure         50m    |
+| ocaml           1h 28m | ocaml           48m    | swift           1h 9m  | swift           1h 1m  |                        |
+| .net            33m    | typescript      1h 7m  | swift           45m    | typescript      55m    |                        |
+|                        | clojure         1h 19m |                        |                        |                        |
+|                        | .net            1h 1m  |                        |                        |                        |
+|                        | haskell         37m    |                        |                        |                        |
+|                        | rust            34m    |                        |                        |                        |
 |                        | .net            57m    |                        |                        |                        |
 +------------------------+------------------------+------------------------+------------------------+------------------------+
-|         6h 40m         |         8h 14m         |         5h 34m         |         7h 13m         |         1h 35m         |
+|         5h 25m         |         9h 29m         |         5h 34m         |         5h 16m         |         3h 32m         |
 +------------------------+------------------------+------------------------+------------------------+------------------------+
 
 ----- stderr -----
