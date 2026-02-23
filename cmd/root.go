@@ -28,8 +28,10 @@ const (
 	defaultDBName          = "hours.db"
 	configDirName          = "hours"
 	themeDirName           = "themes"
-	genNumDaysThreshold    = 30
-	genNumTasksThreshold   = 20
+	genNumDaysLowerLimit   = 1
+	genNumTasksLowerLimit  = 1
+	genNumDaysUpperLimit   = 30
+	genNumTasksUpperLimit  = 20
 	reportNumDaysThreshold = 7
 
 	envVarTheme      = "HOURS_THEME"
@@ -48,7 +50,9 @@ var (
 	errCouldntInitializeDB       = errors.New("couldn't initialize database")
 	errCouldntOpenDB             = errors.New("couldn't open database")
 	errCouldntGenerateData       = errors.New("couldn't generate dummy data")
+	errNumDaysBelowThreshold     = errors.New("number of days is below threshold")
 	errNumDaysExceedsThreshold   = errors.New("number of days exceeds threshold")
+	errNumTasksBelowThreshold    = errors.New("number of tasks is below threshold")
 	errNumTasksExceedsThreshold  = errors.New("number of tasks exceeds threshold")
 	errCouldntReadInput          = errors.New("couldn't read input")
 	errIncorrectCodeEntered      = errors.New("incorrect code entered")
@@ -253,6 +257,20 @@ this with a --dbpath/-d flag that points to a throwaway database.
 `,
 		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, _ []string) error {
+			if genNumDays < genNumDaysLowerLimit {
+				return fmt.Errorf("%w (%d)", errNumDaysBelowThreshold, genNumDaysLowerLimit)
+			}
+			if genNumTasks < genNumTasksLowerLimit {
+				return fmt.Errorf("%w (%d)", errNumTasksBelowThreshold, genNumTasksLowerLimit)
+			}
+
+			if genNumDays > genNumDaysUpperLimit {
+				return fmt.Errorf("%w (%d)", errNumDaysExceedsThreshold, genNumDaysUpperLimit)
+			}
+			if genNumTasks > genNumTasksUpperLimit {
+				return fmt.Errorf("%w (%d)", errNumTasksExceedsThreshold, genNumTasksUpperLimit)
+			}
+
 			now, err := getNow()
 			if err != nil {
 				return err
@@ -264,13 +282,6 @@ this with a --dbpath/-d flag that points to a throwaway database.
 			}
 
 			rng := rand.New(rand.NewSource(seed))
-
-			if genNumDays > genNumDaysThreshold {
-				return fmt.Errorf("%w (%d)", errNumDaysExceedsThreshold, genNumDaysThreshold)
-			}
-			if genNumTasks > genNumTasksThreshold {
-				return fmt.Errorf("%w (%d)", errNumTasksExceedsThreshold, genNumTasksThreshold)
-			}
 
 			if !genSkipConfirmation {
 				fmt.Print(lipgloss.NewStyle().Foreground(lipgloss.Color(warningColor)).Render(`

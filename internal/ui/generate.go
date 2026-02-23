@@ -117,7 +117,11 @@ func GenerateData(db *sql.DB, numDays, numTasks uint8, rng *rand.Rand, now time.
 		if err != nil {
 			return err
 		}
-		numLogs := int(numDays/2) + rng.Intn(int(numDays/2))
+		half := int(numDays / 2)
+		numLogs := 1
+		if half > 0 {
+			numLogs = half + rng.Intn(half)
+		}
 		for range numLogs {
 			beginTs := randomTimestamp(int(numDays), now, rng)
 			numMinutes := 30 + rng.Intn(60)
@@ -142,8 +146,13 @@ func GenerateData(db *sql.DB, numDays, numTasks uint8, rng *rand.Rand, now time.
 }
 
 func randomTimestamp(numDays int, now time.Time, rng *rand.Rand) time.Time {
+	if numDays <= 0 {
+		return now
+	}
+
 	maxSeconds := numDays * 24 * 60 * 60
 	randomSeconds := rng.Intn(maxSeconds)
 	randomTime := now.Add(-time.Duration(randomSeconds) * time.Second)
+
 	return randomTime
 }
