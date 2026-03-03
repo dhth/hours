@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/charmbracelet/bubbles/list"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/list"
+	tea "charm.land/bubbletea/v2"
 	"github.com/dhth/hours/internal/types"
 )
 
@@ -26,7 +26,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.handleWindowResizing(msg)
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		if msg.String() == ctrlC {
 			return m, tea.Quit
 		}
@@ -51,7 +51,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	keyMsg, keyMsgOK := msg.(tea.KeyMsg)
+	keyMsg, keyMsgOK := msg.(tea.KeyPressMsg)
 	if keyMsgOK {
 		if m.activeTasksList.FilterState() == list.Filtering {
 			m.activeTasksList, cmd = m.activeTasksList.Update(msg)
@@ -175,7 +175,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "q", escape:
 			shouldQuit := m.handleRequestToGoBackOrQuit()
@@ -381,7 +381,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch msg.String() {
 		case ctrlC, "q", escape:
 			m.quitting = true

@@ -3,10 +3,10 @@ package ui
 import (
 	"database/sql"
 
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/textarea"
-	"github.com/charmbracelet/bubbles/textinput"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/textarea"
+	"charm.land/bubbles/v2/textinput"
+	"charm.land/lipgloss/v2"
 	"github.com/dhth/hours/internal/types"
 )
 
@@ -29,12 +29,12 @@ func InitialModel(db *sql.DB,
 	tLInputs[entryBeginTS] = textinput.New()
 	tLInputs[entryBeginTS].Placeholder = "09:30"
 	tLInputs[entryBeginTS].CharLimit = len(timeFormat)
-	tLInputs[entryBeginTS].Width = 30
+	tLInputs[entryBeginTS].SetWidth(30)
 
 	tLInputs[entryEndTS] = textinput.New()
 	tLInputs[entryEndTS].Placeholder = "12:30pm"
 	tLInputs[entryEndTS].CharLimit = len(timeFormat)
-	tLInputs[entryEndTS].Width = 30
+	tLInputs[entryEndTS].SetWidth(30)
 
 	tLCommentInput := textarea.New()
 	tLCommentInput.Placeholder = `Task log comment goes here.
@@ -51,7 +51,7 @@ This can be used to record details about your work on this task.`
 	taskInputs[summaryField].Placeholder = "task summary goes here"
 	taskInputs[summaryField].Focus()
 	taskInputs[summaryField].CharLimit = 100
-	taskInputs[entryBeginTS].Width = textInputWidth
+	taskInputs[summaryField].SetWidth(textInputWidth)
 
 	m := Model{
 		db:           db,

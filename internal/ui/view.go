@@ -6,7 +6,8 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/dhth/hours/internal/types"
 	"github.com/dhth/hours/internal/utils"
 )
@@ -30,7 +31,7 @@ const (
 
 var ansiRegex = regexp.MustCompile(`\x1b\[[0-9;]*m`)
 
-func (m Model) View() string {
+func (m Model) View() tea.View {
 	var content string
 	var footer string
 
@@ -271,7 +272,7 @@ func (m Model) View() string {
 				m.helpVP.View()))
 		}
 	case insufficientDimensionsView:
-		return fmt.Sprintf(`
+		v := tea.NewView(fmt.Sprintf(`
   Terminal size too small:
     Width = %d Height = %d
 
@@ -280,7 +281,9 @@ func (m Model) View() string {
 
   Press q/<ctrl+c>/<esc>
     to exit
-`, m.terminalWidth, m.terminalHeight, minWidthNeeded, minHeightNeeded)
+`, m.terminalWidth, m.terminalHeight, minWidthNeeded, minHeightNeeded))
+		v.AltScreen = true
+		return v
 	}
 
 	var helpMsg string
@@ -327,12 +330,15 @@ func (m Model) View() string {
 		logFrame(result, m.frameCounter, m.logFramesCfg.framesDir)
 	}
 
-	return result
+	v := tea.NewView(result)
+	v.AltScreen = true
+
+	return v
 }
 
-func (m recordsModel) View() string {
+func (m recordsModel) View() tea.View {
 	if m.err != nil {
-		return fmt.Sprintf("Something went wrong: %s\n", m.err)
+		return tea.NewView(fmt.Sprintf("Something went wrong: %s\n", m.err))
 	}
 	var help string
 
@@ -366,7 +372,7 @@ func (m recordsModel) View() string {
 		dateRange = m.style.recordsDateRange.Render(dateRangeStr)
 	}
 
-	return fmt.Sprintf("%s%s%s", m.report, dateRange, help)
+	return tea.NewView(fmt.Sprintf("%s%s%s", m.report, dateRange, help))
 }
 
 func getDurationValidityContext(beginStr, endStr string) (string, tlFormValidity) {

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	pers "github.com/dhth/hours/internal/persistence"
 	"github.com/dhth/hours/internal/types"
 	_ "modernc.org/sqlite" // sqlite driver
