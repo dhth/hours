@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 	c "github.com/dhth/hours/internal/common"
 	pers "github.com/dhth/hours/internal/persistence"
 	"github.com/dhth/hours/internal/types"

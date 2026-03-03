@@ -2,8 +2,9 @@ package ui
 
 import (
 	"hash/fnv"
+	"image/color"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 	"github.com/dhth/hours/internal/ui/theme"
 	"github.com/olekukonko/tablewriter/tw"
 )
@@ -25,8 +26,8 @@ type Style struct {
 	helpTitle            lipgloss.Style
 	initialHelpMsg       lipgloss.Style
 	list                 lipgloss.Style
-	listItemDescColor    lipgloss.Color
-	listItemTitleColor   lipgloss.Color
+	listItemDescColor    color.Color
+	listItemTitleColor   color.Color
 	recordsBorder        lipgloss.Style
 	recordsDateRange     lipgloss.Style
 	recordsFooter        lipgloss.Style
@@ -36,7 +37,7 @@ type Style struct {
 	taskLogDetails       lipgloss.Style
 	taskLogEntryHeading  lipgloss.Style
 	theme                theme.Theme
-	titleForegroundColor lipgloss.Color
+	titleForegroundColor color.Color
 	tlFormOkStyle        lipgloss.Style
 	tlFormWarnStyle      lipgloss.Style
 	tlFormErrStyle       lipgloss.Style

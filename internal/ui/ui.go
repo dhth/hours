@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/dhth/hours/internal/types"
 )
 
@@ -47,7 +47,6 @@ func RenderUI(db *sql.DB, style Style, timeProvider types.TimeProvider) error {
 			debug,
 			logFramesCfg,
 		),
-		tea.WithAltScreen(),
 	)
 	_, err := p.Run()
 

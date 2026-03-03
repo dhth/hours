@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"io"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	pers "github.com/dhth/hours/internal/persistence"
 	"github.com/dhth/hours/internal/types"
 	"github.com/dhth/hours/internal/utils"

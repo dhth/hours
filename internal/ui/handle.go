@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
 	c "github.com/dhth/hours/internal/common"
 	"github.com/dhth/hours/internal/types"
 )
@@ -619,24 +619,30 @@ func (m *Model) handleWindowResizing(msg tea.WindowSizeMsg) {
 	m.inactiveTasksList.SetHeight(msg.Height - h - 2)
 
 	if !m.helpVPReady {
-		m.helpVP = viewport.New(msg.Width-4, m.terminalHeight-7)
+		m.helpVP = viewport.New(
+			viewport.WithWidth(msg.Width-4),
+			viewport.WithHeight(m.terminalHeight-7),
+		)
 		m.helpVP.SetContent(getHelpText(m.style))
 		m.helpVP.KeyMap.Up.SetEnabled(false)
 		m.helpVP.KeyMap.Down.SetEnabled(false)
 		m.helpVPReady = true
 	} else {
-		m.helpVP.Height = m.terminalHeight - 7
-		m.helpVP.Width = msg.Width - 4
+		m.helpVP.SetHeight(m.terminalHeight - 7)
+		m.helpVP.SetWidth(msg.Width - 4)
 	}
 
 	if !m.tLDetailsVPReady {
-		m.tLDetailsVP = viewport.New(msg.Width-4, m.terminalHeight-6)
+		m.tLDetailsVP = viewport.New(
+			viewport.WithWidth(msg.Width-4),
+			viewport.WithHeight(m.terminalHeight-6),
+		)
 		m.tLDetailsVP.KeyMap.Up.SetEnabled(false)
 		m.tLDetailsVP.KeyMap.Down.SetEnabled(false)
 		m.tLDetailsVPReady = true
 	} else {
-		m.tLDetailsVP.Height = m.terminalHeight - 6
-		m.tLDetailsVP.Width = msg.Width - 4
+		m.tLDetailsVP.SetHeight(m.terminalHeight - 6)
+		m.tLDetailsVP.SetWidth(msg.Width - 4)
 	}
 }
 

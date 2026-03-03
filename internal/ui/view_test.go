@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/charmbracelet/bubbles/list"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/list"
+	tea "charm.land/bubbletea/v2"
 	"github.com/dhth/hours/internal/types"
 	"github.com/dhth/hours/internal/ui/theme"
 	"github.com/gkampitakis/go-snaps/snaps"
@@ -67,7 +67,7 @@ func TestTaskListViewEmpty(t *testing.T) {
 	m.tasksFetched = true
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -95,7 +95,7 @@ func TestTaskListViewWithTasks(t *testing.T) {
 	m.activeTLBeginTS = referenceTime
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -107,7 +107,7 @@ func TestTaskLogViewEmpty(t *testing.T) {
 	m.activeView = taskLogView
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -126,7 +126,7 @@ func TestTaskLogViewWithEntries(t *testing.T) {
 	m.taskLogList.SetItems(items)
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -138,7 +138,7 @@ func TestEmptyInactiveTaskListView(t *testing.T) {
 	m.activeView = inactiveTaskListView
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -156,7 +156,7 @@ func TestInactiveTaskListViewWithTasks(t *testing.T) {
 	m.inactiveTasksList.SetItems(items)
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -169,7 +169,7 @@ func TestCreateTaskViewWithNoInput(t *testing.T) {
 	m.taskMgmtContext = taskCreateCxt
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -183,7 +183,7 @@ func TestCreateTaskView(t *testing.T) {
 	m.taskInputs[summaryField].SetValue("a new task")
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -197,7 +197,7 @@ func TestUpdateTaskView(t *testing.T) {
 	m.taskInputs[summaryField].SetValue("a task to be updated")
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -213,7 +213,7 @@ func TestFinishActiveTLView(t *testing.T) {
 	m.tLCommentInput.SetValue("Test comment for finishing task")
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -228,7 +228,7 @@ func TestEditActiveTLView(t *testing.T) {
 	m.tLCommentInput.SetValue("Updated comment")
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -245,7 +245,7 @@ func TestManualTasklogEntryView(t *testing.T) {
 	m.tLCommentInput.SetValue("Manual task log entry")
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -262,7 +262,7 @@ func TestEditSavedTLView(t *testing.T) {
 	m.tLCommentInput.SetValue("Edited saved task log")
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -275,7 +275,7 @@ func TestHelpView(t *testing.T) {
 	m.helpVPReady = true
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -289,7 +289,7 @@ func TestInsufficientDimensionsView(t *testing.T) {
 	m.terminalHeight = 20
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -304,7 +304,7 @@ func TestFinishActiveTLViewWhereEndTimeBeforeBeginTime(t *testing.T) {
 	m.tLInputs[entryEndTS].SetValue("2025/08/17 09:00")
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -319,7 +319,7 @@ func TestFinishActiveTLViewWhereNoTimeTracked(t *testing.T) {
 	m.tLInputs[entryEndTS].SetValue("2025/08/17 10:30")
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -334,7 +334,7 @@ func TestFinishActiveTLViewWithWarningContext(t *testing.T) {
 	m.tLInputs[entryEndTS].SetValue("2025/08/17 18:30")
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -358,7 +358,7 @@ func TestTaskListViewWithInfoContext(t *testing.T) {
 	}
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -376,7 +376,7 @@ func TestTaskListViewWithErrorMessage(t *testing.T) {
 	}
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -402,7 +402,7 @@ func TestTaskListViewDebugMode(t *testing.T) {
 	m.activeTasksList.SetItems(items)
 
 	// WHEN
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -427,7 +427,7 @@ func TestTerminalWidthResizingWorks(t *testing.T) {
 	}
 	m.handleWindowResizing(msg)
 
-	result := m.View()
+	result := stripANSI(m.View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)

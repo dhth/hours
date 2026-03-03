@@ -1,11 +1,12 @@
 package ui
 
 import (
-	"github.com/charmbracelet/bubbles/list"
-	"github.com/charmbracelet/lipgloss"
+	"image/color"
+
+	"charm.land/bubbles/v2/list"
 )
 
-func newItemDelegate(titleColor, descColor, selectedColor lipgloss.Color) list.DefaultDelegate {
+func newItemDelegate(titleColor, descColor, selectedColor color.Color) list.DefaultDelegate {
 	d := list.NewDefaultDelegate()
 
 	d.Styles.NormalTitle = d.Styles.
