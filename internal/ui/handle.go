@@ -93,8 +93,7 @@ func (m *Model) getCmdToFinishActiveTL() tea.Cmd {
 	err := types.IsTaskLogDurationValid(m.activeTLBeginTS, now)
 
 	if errors.Is(err, types.ErrDurationNotLongEnough) {
-		m.message = infoMsg("Task log duration is too short to save; press <ctrl+x> if you want to discard it")
-		return nil
+		return deleteActiveTL(m.db)
 	}
 
 	if err != nil {
