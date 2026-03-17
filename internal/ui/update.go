@@ -249,7 +249,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "ctrl+x":
 			if m.activeView == taskListView && m.trackingActive {
-				cmds = append(cmds, deleteActiveTL(m.db))
+				cmds = append(cmds, deleteActiveTL(m.db, m.activeTLBeginTS))
 			}
 		case "s":
 			if m.activeView == taskListView {

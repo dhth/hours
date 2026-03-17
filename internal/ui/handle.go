@@ -93,7 +93,7 @@ func (m *Model) getCmdToFinishActiveTL() tea.Cmd {
 	err := types.IsTaskLogDurationValid(m.activeTLBeginTS, now)
 
 	if errors.Is(err, types.ErrDurationNotLongEnough) {
-		return deleteActiveTL(m.db)
+		return deleteActiveTL(m.db, m.activeTLBeginTS)
 	}
 
 	if err != nil {

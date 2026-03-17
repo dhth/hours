@@ -139,9 +139,9 @@ func deleteTL(db *sql.DB, entry *types.TaskLogEntry) tea.Cmd {
 	}
 }
 
-func deleteActiveTL(db *sql.DB) tea.Cmd {
+func deleteActiveTL(db *sql.DB, beginTs time.Time) tea.Cmd {
 	return func() tea.Msg {
-		err := pers.DeleteActiveTL(db)
+		err := pers.DeleteActiveTL(db, beginTs)
 		return activeTaskLogDeletedMsg{err}
 	}
 }

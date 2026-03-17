@@ -67,17 +67,17 @@ WHERE active is true;
 	return err
 }
 
-func DeleteActiveTL(db *sql.DB) error {
+func DeleteActiveTL(db *sql.DB, beginTs time.Time) error {
 	stmt, err := db.Prepare(`
 DELETE FROM task_log
-WHERE active=true;
+WHERE active=true AND begin_ts=?;
 `)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec()
+	_, err = stmt.Exec(beginTs.UTC())
 
 	return err
 }
