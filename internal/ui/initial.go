@@ -81,7 +81,7 @@ This can be used to record details about your work on this task.`
 		debug:             debug,
 		logFramesCfg:      logFramesCfg,
 	}
-	m.activeTasksList.Title = "Tasks"
+	m.activeTasksList.Title = "Tasks █ █"
 	m.activeTasksList.SetStatusBarItemName("task", "tasks")
 	m.activeTasksList.DisableQuitKeybindings()
 	m.activeTasksList.SetShowHelp(false)
@@ -92,7 +92,7 @@ This can be used to record details about your work on this task.`
 	m.activeTasksList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
 	m.activeTasksList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
-	m.taskLogList.Title = "Task Logs (last 50)"
+	m.taskLogList.Title = "█ Task Logs █"
 	m.taskLogList.SetStatusBarItemName("entry", "entries")
 	m.taskLogList.SetFilteringEnabled(false)
 	m.taskLogList.DisableQuitKeybindings()
@@ -104,7 +104,7 @@ This can be used to record details about your work on this task.`
 	m.taskLogList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
 	m.taskLogList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
-	m.inactiveTasksList.Title = "Inactive Tasks"
+	m.inactiveTasksList.Title = "█ █ Inactive Tasks"
 	m.inactiveTasksList.SetStatusBarItemName("task", "tasks")
 	m.inactiveTasksList.DisableQuitKeybindings()
 	m.inactiveTasksList.SetShowHelp(false)
