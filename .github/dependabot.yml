@@ -1,22 +1,41 @@
 version: 2
+
 updates:
   - package-ecosystem: "gomod"
     directory: "/"
     schedule:
-      interval: "monthly"
+      interval: "daily"
+      time: "19:00"
+      timezone: "Europe/Vienna"
+    open-pull-requests-limit: 1
+    cooldown:
+      semver-patch-days: 5
+      semver-minor-days: 7
+      semver-major-days: 14
     groups:
-      patch-updates:
-        update-types: ["patch"]
-      minor-updates:
-        update-types: ["minor"]
+      non-major-updates:
+        update-types:
+          - "patch"
+          - "minor"
     labels:
       - "dependencies"
     commit-message:
       prefix: "build"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "monthly"
+      interval: "weekly"
+      day: "saturday"
+      time: "20:00"
+      timezone: "Europe/Vienna"
+    open-pull-requests-limit: 1
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns:
+          - "*"
     labels:
       - "dependencies"
     commit-message:
