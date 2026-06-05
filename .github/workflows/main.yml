@@ -18,7 +18,7 @@ jobs:
       yml: ${{ steps.filter.outputs.yml }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
       - uses: dorny/paths-filter@v4
         id: filter
         with:
@@ -51,7 +51,7 @@ jobs:
     if: ${{ needs.changes.outputs.code == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - uses: dhth/composite-actions/.github/actions/lint-go@main
 
   build:
@@ -62,7 +62,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
@@ -86,7 +86,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
@@ -100,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
       - uses: dhth/composite-actions/.github/actions/lint-yaml@main
 
   lint-workflows:
@@ -109,7 +109,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.2
       - uses: dhth/composite-actions/.github/actions/lint-actions@main
 
   release-check:
@@ -117,7 +117,7 @@ jobs:
     if: ${{ needs.changes.outputs.release == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
@@ -136,7 +136,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 2
       - run: git checkout HEAD~1
@@ -179,7 +179,7 @@ jobs:
     if: ${{ needs.changes.outputs.deps == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.2
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
