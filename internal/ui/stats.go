@@ -65,6 +65,7 @@ func RenderStats(db *sql.DB,
 			period,
 			taskStatus,
 			plain,
+			false,
 			stats,
 		))
 		_, err := p.Run()
@@ -147,7 +148,8 @@ func getStats(db *sql.DB,
 		headers[i] = rs.headerStyle.Render(h)
 	}
 	b := bytes.Buffer{}
-	table := tablewriter.NewTable(&b,
+	table := tablewriter.NewTable(
+		&b,
 		tablewriter.WithConfig(tablewriter.Config{
 			Header: tw.CellConfig{
 				Formatting: tw.CellFormatting{

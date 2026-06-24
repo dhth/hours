@@ -126,6 +126,8 @@ appear in the log for the day it ends.*
 
 ![Usage](https://tools.dhruvs.space/images/hours/log-1.png)
 
+Use `--no-truncate` to show full task names, comments, and other log text.
+
 Logs can also be viewed via an interactive interface using the
 `--interactive`/`-i` flag.
 
