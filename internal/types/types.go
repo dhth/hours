@@ -12,7 +12,10 @@ import (
 
 const emptyCommentIndicator = "∅"
 
-var ErrIncorrectTaskStatusProvided = errors.New("incorrect task status provided")
+var (
+	ErrIncorrectTaskStatusProvided   = errors.New("incorrect task status provided")
+	ErrIncorrectOutputFormatProvided = errors.New("incorrect output format provided")
+)
 
 type Task struct {
 	ID             int
@@ -227,6 +230,48 @@ func ParseTaskStatus(value string) (TaskStatus, error) {
 }
 
 var ValidTaskStatusValues = []string{TSValueActive, TSValueInactive, TSValueAny}
+
+type OutputFormat uint8
+
+const (
+	OFValuePlain = "plain"
+	OFValueJSON  = "json"
+	OFValueCSV   = "csv"
+)
+
+const (
+	OutputFormatPlain OutputFormat = iota
+	OutputFormatJSON
+	OutputFormatCSV
+)
+
+func ParseOutputFormat(value string) (OutputFormat, error) {
+	switch value {
+	case OFValuePlain:
+		return OutputFormatPlain, nil
+	case OFValueJSON:
+		return OutputFormatJSON, nil
+	case OFValueCSV:
+		return OutputFormatCSV, nil
+	default:
+		return OutputFormatPlain, ErrIncorrectOutputFormatProvided
+	}
+}
+
+func (f OutputFormat) String() string {
+	switch f {
+	case OutputFormatPlain:
+		return OFValuePlain
+	case OutputFormatJSON:
+		return OFValueJSON
+	case OutputFormatCSV:
+		return OFValueCSV
+	default:
+		return OFValuePlain
+	}
+}
+
+var ValidOutputFormatValues = []string{OFValuePlain, OFValueJSON, OFValueCSV}
 
 type DateRange struct {
 	Start   time.Time

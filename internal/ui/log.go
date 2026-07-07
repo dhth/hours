@@ -34,9 +34,30 @@ func RenderTaskLog(db *sql.DB,
 	period string,
 	taskStatus types.TaskStatus,
 	interactive bool,
+	format types.OutputFormat,
 ) error {
+	if interactive && format != types.OutputFormatPlain {
+		return fmt.Errorf("%w with output format %q", errInteractiveModeNotApplicable, format)
+	}
+
 	if interactive && dateRange.NumDays > interactiveLogDayLimit {
 		return fmt.Errorf("%w (limited to %d day); use non-interactive mode to see logs for a larger time period", errInteractiveModeNotApplicable, interactiveLogDayLimit)
+	}
+
+	if format != types.OutputFormatPlain {
+		entries, err := collectLogData(db, dateRange.Start, dateRange.End, taskStatus)
+		if err != nil {
+			return fmt.Errorf("%w: %s", errCouldntGenerateLogs, err.Error())
+		}
+
+		switch format {
+		case types.OutputFormatJSON:
+			return writeLogJSON(writer, entries)
+		case types.OutputFormatCSV:
+			return writeLogCSV(writer, entries)
+		default:
+			return types.ErrIncorrectOutputFormatProvided
+		}
 	}
 
 	log, err := getTaskLog(db, style, dateRange.Start, dateRange.End, taskStatus, logLimit, plain)
@@ -64,6 +85,15 @@ func RenderTaskLog(db *sql.DB,
 		fmt.Fprint(writer, log)
 	}
 	return nil
+}
+
+func collectLogData(
+	db *sql.DB,
+	start,
+	end time.Time,
+	taskStatus types.TaskStatus,
+) ([]types.TaskLogEntry, error) {
+	return pers.FetchTLEntriesBetweenTS(db, start, end, taskStatus, logLimit)
 }
 
 func getTaskLog(db *sql.DB,

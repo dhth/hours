@@ -33,7 +33,16 @@ func RenderReport(db *sql.DB,
 	taskStatus types.TaskStatus,
 	agg bool,
 	interactive bool,
+	format types.OutputFormat,
 ) error {
+	if interactive && format != types.OutputFormatPlain {
+		return fmt.Errorf("%w with output format %q", errInteractiveModeNotApplicable, format)
+	}
+
+	if format != types.OutputFormatPlain {
+		return renderReportExport(db, writer, dateRange, taskStatus, agg, format)
+	}
+
 	var report string
 	var analyticsType recordsKind
 	var err error
@@ -71,29 +80,106 @@ func RenderReport(db *sql.DB,
 	return nil
 }
 
-func getReport(db *sql.DB, style Style, start time.Time, numDays int, taskStatus types.TaskStatus, plain bool) (string, error) {
+func renderReportExport(
+	db *sql.DB,
+	writer io.Writer,
+	dateRange types.DateRange,
+	taskStatus types.TaskStatus,
+	agg bool,
+	format types.OutputFormat,
+) error {
+	if agg {
+		reportData, err := collectReportAggData(db, dateRange.Start, dateRange.NumDays, taskStatus)
+		if err != nil {
+			return fmt.Errorf("%w: %s", errCouldntGenerateReport, err.Error())
+		}
+
+		switch format {
+		case types.OutputFormatJSON:
+			return writeReportAggJSON(writer, dateRange.Start, dateRange.NumDays, reportData)
+		case types.OutputFormatCSV:
+			return writeReportAggCSV(writer, dateRange.Start, dateRange.NumDays, reportData)
+		default:
+			return types.ErrIncorrectOutputFormatProvided
+		}
+	}
+
+	reportData, err := collectReportData(db, dateRange.Start, dateRange.NumDays, taskStatus)
+	if err != nil {
+		return fmt.Errorf("%w: %s", errCouldntGenerateReport, err.Error())
+	}
+
+	switch format {
+	case types.OutputFormatJSON:
+		return writeReportJSON(writer, dateRange.Start, dateRange.NumDays, reportData)
+	case types.OutputFormatCSV:
+		return writeReportCSV(writer, dateRange.Start, dateRange.NumDays, reportData)
+	default:
+		return types.ErrIncorrectOutputFormatProvided
+	}
+}
+
+func collectReportData(
+	db *sql.DB,
+	start time.Time,
+	numDays int,
+	taskStatus types.TaskStatus,
+) (map[int][]types.TaskLogEntry, error) {
 	day := start
-	var nextDay time.Time
+	reportData := make(map[int][]types.TaskLogEntry, numDays)
 
-	var maxEntryForADay int
-	reportData := make(map[int][]types.TaskLogEntry)
-
-	noEntriesFound := true
 	for i := range numDays {
-		nextDay = day.AddDate(0, 0, 1)
+		nextDay := day.AddDate(0, 0, 1)
 		taskLogEntries, err := pers.FetchTLEntriesBetweenTS(db, day, nextDay, taskStatus, 100)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		if noEntriesFound && len(taskLogEntries) > 0 {
+
+		reportData[i] = taskLogEntries
+		day = nextDay
+	}
+
+	return reportData, nil
+}
+
+func collectReportAggData(
+	db *sql.DB,
+	start time.Time,
+	numDays int,
+	taskStatus types.TaskStatus,
+) (map[int][]types.TaskReportEntry, error) {
+	day := start
+	reportData := make(map[int][]types.TaskReportEntry, numDays)
+
+	for i := range numDays {
+		nextDay := day.AddDate(0, 0, 1)
+		taskReportEntries, err := pers.FetchReportBetweenTS(db, day, nextDay, taskStatus, 100)
+		if err != nil {
+			return nil, err
+		}
+
+		reportData[i] = taskReportEntries
+		day = nextDay
+	}
+
+	return reportData, nil
+}
+
+func getReport(db *sql.DB, style Style, start time.Time, numDays int, taskStatus types.TaskStatus, plain bool) (string, error) {
+	reportData, err := collectReportData(db, start, numDays, taskStatus)
+	if err != nil {
+		return "", err
+	}
+
+	var maxEntryForADay int
+	noEntriesFound := true
+	for i := range numDays {
+		if noEntriesFound && len(reportData[i]) > 0 {
 			noEntriesFound = false
 		}
 
-		day = nextDay
-		reportData[i] = taskLogEntries
-
-		if len(taskLogEntries) > maxEntryForADay {
-			maxEntryForADay = len(taskLogEntries)
+		if len(reportData[i]) > maxEntryForADay {
+			maxEntryForADay = len(reportData[i])
 		}
 	}
 
@@ -172,7 +258,7 @@ func getReport(db *sql.DB, style Style, start time.Time, numDays int, taskStatus
 
 	headersValues := make([]string, numDays)
 
-	day = start
+	day := start
 	counter := 0
 
 	for counter < numDays {
@@ -234,27 +320,20 @@ func getReportAgg(db *sql.DB,
 	plain bool) (string,
 	error,
 ) {
-	day := start
-	var nextDay time.Time
+	reportData, err := collectReportAggData(db, start, numDays, taskStatus)
+	if err != nil {
+		return "", err
+	}
 
 	var maxEntryForADay int
-	reportData := make(map[int][]types.TaskReportEntry)
-
 	noEntriesFound := true
 	for i := range numDays {
-		nextDay = day.AddDate(0, 0, 1)
-		taskLogEntries, err := pers.FetchReportBetweenTS(db, day, nextDay, taskStatus, 100)
-		if err != nil {
-			return "", err
-		}
-		if noEntriesFound && len(taskLogEntries) > 0 {
+		if noEntriesFound && len(reportData[i]) > 0 {
 			noEntriesFound = false
 		}
 
-		day = nextDay
-		reportData[i] = taskLogEntries
-		if len(taskLogEntries) > maxEntryForADay {
-			maxEntryForADay = len(taskLogEntries)
+		if len(reportData[i]) > maxEntryForADay {
+			maxEntryForADay = len(reportData[i])
 		}
 	}
 
@@ -331,7 +410,7 @@ func getReportAgg(db *sql.DB,
 
 	headersValues := make([]string, numDays)
 
-	day = start
+	day := start
 	counter := 0
 
 	for counter < numDays {
