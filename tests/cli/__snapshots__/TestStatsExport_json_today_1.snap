@@ -1,0 +1,17 @@
+success: true
+exit_code: 0
+----- stdout -----
+{
+  "entries": [
+    {
+      "taskId": 3,
+      "task": "clojure",
+      "numEntries": 2,
+      "secsSpent": 5700,
+      "timeSpent": "1h 35m"
+    }
+  ]
+}
+
+----- stderr -----
+

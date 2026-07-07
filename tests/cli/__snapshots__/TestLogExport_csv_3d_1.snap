@@ -1,0 +1,62 @@
+success: true
+exit_code: 0
+----- stdout -----
+taskId,task,beginTs,endTs,secsSpent,timeSpent,comment
+1,haskell,2025-10-22T00:35:05Z,2025-10-22T02:01:05Z,5160,1h 26m,
+8,ocaml,2025-10-22T12:08:04Z,2025-10-22T12:52:04Z,2640,44m,design deployment
+10,c++,2025-10-22T14:54:01Z,2025-10-22T15:36:01Z,2520,42m,configure configuration
+3,clojure,2025-10-22T15:09:08Z,2025-10-22T15:57:08Z,2880,48m,"optimize log
+
+This is a sample task log comment. The comment can be used to record
+additional information for a task log.
+
+You can include:
+- Detailed steps taken during the task
+- Observations and notes
+- Any issues encountered and how they were resolved
+- Future actions or follow-ups required
+- References to related tasks or documents
+
+Use this section to ensure all relevant details are captured for each task,
+providing a comprehensive log that can be referred to later."
+6,swift,2025-10-22T20:07:19Z,2025-10-22T21:16:19Z,4140,1h 9m,
+6,swift,2025-10-22T20:58:08Z,2025-10-22T21:43:08Z,2700,45m,
+8,ocaml,2025-10-23T01:19:04Z,2025-10-23T02:00:04Z,2460,41m,
+4,typescript,2025-10-23T03:32:16Z,2025-10-23T04:21:16Z,2940,49m,implement tests
+3,clojure,2025-10-23T07:16:05Z,2025-10-23T08:04:05Z,2880,48m,
+2,clojure,2025-10-23T10:17:20Z,2025-10-23T11:19:20Z,3720,1h 2m,
+6,swift,2025-10-23T14:08:30Z,2025-10-23T15:09:30Z,3660,1h 1m,"design api
+
+This is a sample task log comment. The comment can be used to record
+additional information for a task log.
+
+You can include:
+- Detailed steps taken during the task
+- Observations and notes
+- Any issues encountered and how they were resolved
+- Future actions or follow-ups required
+- References to related tasks or documents
+
+Use this section to ensure all relevant details are captured for each task,
+providing a comprehensive log that can be referred to later."
+4,typescript,2025-10-23T16:32:15Z,2025-10-23T17:27:15Z,3300,55m,
+7,.net,2025-10-23T21:30:49Z,2025-10-23T22:12:49Z,2520,42m,build function
+5,rust,2025-10-23T22:27:14Z,2025-10-23T23:42:14Z,4500,1h 15m,update interface
+3,clojure,2025-10-24T07:27:40Z,2025-10-24T08:12:40Z,2700,45m,"write report
+
+This is a sample task log comment. The comment can be used to record
+additional information for a task log.
+
+You can include:
+- Detailed steps taken during the task
+- Observations and notes
+- Any issues encountered and how they were resolved
+- Future actions or follow-ups required
+- References to related tasks or documents
+
+Use this section to ensure all relevant details are captured for each task,
+providing a comprehensive log that can be referred to later."
+3,clojure,2025-10-24T08:37:55Z,2025-10-24T09:27:55Z,3000,50m,
+
+----- stderr -----
+

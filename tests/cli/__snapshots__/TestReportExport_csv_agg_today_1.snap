@@ -1,0 +1,8 @@
+success: true
+exit_code: 0
+----- stdout -----
+date,taskId,task,numEntries,secsSpent,timeSpent
+2025/10/24,3,clojure,2,5700,1h 35m
+
+----- stderr -----
+

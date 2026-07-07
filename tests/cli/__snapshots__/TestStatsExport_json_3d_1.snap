@@ -1,0 +1,73 @@
+success: true
+exit_code: 0
+----- stdout -----
+{
+  "entries": [
+    {
+      "taskId": 3,
+      "task": "clojure",
+      "numEntries": 4,
+      "secsSpent": 11460,
+      "timeSpent": "3h 11m"
+    },
+    {
+      "taskId": 6,
+      "task": "swift",
+      "numEntries": 3,
+      "secsSpent": 10500,
+      "timeSpent": "2h 55m"
+    },
+    {
+      "taskId": 4,
+      "task": "typescript",
+      "numEntries": 2,
+      "secsSpent": 6240,
+      "timeSpent": "1h 44m"
+    },
+    {
+      "taskId": 1,
+      "task": "haskell",
+      "numEntries": 1,
+      "secsSpent": 5160,
+      "timeSpent": "1h 26m"
+    },
+    {
+      "taskId": 8,
+      "task": "ocaml",
+      "numEntries": 2,
+      "secsSpent": 5100,
+      "timeSpent": "1h 25m"
+    },
+    {
+      "taskId": 5,
+      "task": "rust",
+      "numEntries": 1,
+      "secsSpent": 4500,
+      "timeSpent": "1h 15m"
+    },
+    {
+      "taskId": 2,
+      "task": "clojure",
+      "numEntries": 1,
+      "secsSpent": 3720,
+      "timeSpent": "1h 2m"
+    },
+    {
+      "taskId": 10,
+      "task": "c++",
+      "numEntries": 1,
+      "secsSpent": 2520,
+      "timeSpent": "42m"
+    },
+    {
+      "taskId": 7,
+      "task": ".net",
+      "numEntries": 1,
+      "secsSpent": 2520,
+      "timeSpent": "42m"
+    }
+  ]
+}
+
+----- stderr -----
+
