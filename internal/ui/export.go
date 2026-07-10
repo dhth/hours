@@ -55,13 +55,7 @@ type exportLogJSON struct {
 	Entries []exportLogEntry `json:"entries"`
 }
 
-type exportStatsEntry struct {
-	TaskID     int    `json:"taskId"`
-	Task       string `json:"task"`
-	NumEntries int    `json:"numEntries"`
-	SecsSpent  int    `json:"secsSpent"`
-	TimeSpent  string `json:"timeSpent"`
-}
+type exportStatsEntry = exportAggEntry
 
 type exportStatsJSON struct {
 	Entries []exportStatsEntry `json:"entries"`
@@ -89,16 +83,6 @@ func toExportLogEntry(entry types.TaskLogEntry) exportLogEntry {
 
 func toExportAggEntry(entry types.TaskReportEntry) exportAggEntry {
 	return exportAggEntry{
-		TaskID:     entry.TaskID,
-		Task:       entry.TaskSummary,
-		NumEntries: entry.NumEntries,
-		SecsSpent:  entry.SecsSpent,
-		TimeSpent:  types.HumanizeDuration(entry.SecsSpent),
-	}
-}
-
-func toExportStatsEntry(entry types.TaskReportEntry) exportStatsEntry {
-	return exportStatsEntry{
 		TaskID:     entry.TaskID,
 		Task:       entry.TaskSummary,
 		NumEntries: entry.NumEntries,
@@ -182,7 +166,6 @@ func writeReportCSV(
 	reportData map[int][]types.TaskLogEntry,
 ) error {
 	w := csv.NewWriter(writer)
-	defer w.Flush()
 
 	if err := w.Write([]string{"date", "taskId", "task", "beginTs", "endTs", "secsSpent", "timeSpent", "comment"}); err != nil {
 		return err
@@ -209,6 +192,7 @@ func writeReportCSV(
 		day = day.AddDate(0, 0, 1)
 	}
 
+	w.Flush()
 	return w.Error()
 }
 
@@ -237,7 +221,7 @@ func writeReportAggCSVRows(
 		day = day.AddDate(0, 0, 1)
 	}
 
-	return w.Error()
+	return nil
 }
 
 func writeReportAggCSV(
@@ -247,13 +231,17 @@ func writeReportAggCSV(
 	reportData map[int][]types.TaskReportEntry,
 ) error {
 	w := csv.NewWriter(writer)
-	defer w.Flush()
 
 	if err := w.Write([]string{"date", "taskId", "task", "numEntries", "secsSpent", "timeSpent"}); err != nil {
 		return err
 	}
 
-	return writeReportAggCSVRows(w, start, numDays, reportData)
+	if err := writeReportAggCSVRows(w, start, numDays, reportData); err != nil {
+		return err
+	}
+
+	w.Flush()
+	return w.Error()
 }
 
 func writeLogJSON(writer io.Writer, entries []types.TaskLogEntry) error {
@@ -267,7 +255,6 @@ func writeLogJSON(writer io.Writer, entries []types.TaskLogEntry) error {
 
 func writeLogCSV(writer io.Writer, entries []types.TaskLogEntry) error {
 	w := csv.NewWriter(writer)
-	defer w.Flush()
 
 	if err := w.Write([]string{"taskId", "task", "beginTs", "endTs", "secsSpent", "timeSpent", "comment"}); err != nil {
 		return err
@@ -288,13 +275,14 @@ func writeLogCSV(writer io.Writer, entries []types.TaskLogEntry) error {
 		}
 	}
 
+	w.Flush()
 	return w.Error()
 }
 
 func writeStatsJSON(writer io.Writer, entries []types.TaskReportEntry) error {
 	exportEntries := make([]exportStatsEntry, 0, len(entries))
 	for _, entry := range entries {
-		exportEntries = append(exportEntries, toExportStatsEntry(entry))
+		exportEntries = append(exportEntries, toExportAggEntry(entry))
 	}
 
 	return writeJSON(writer, exportStatsJSON{Entries: exportEntries})
@@ -302,14 +290,13 @@ func writeStatsJSON(writer io.Writer, entries []types.TaskReportEntry) error {
 
 func writeStatsCSV(writer io.Writer, entries []types.TaskReportEntry) error {
 	w := csv.NewWriter(writer)
-	defer w.Flush()
 
 	if err := w.Write([]string{"taskId", "task", "numEntries", "secsSpent", "timeSpent"}); err != nil {
 		return err
 	}
 
 	for _, entry := range entries {
-		exportEntry := toExportStatsEntry(entry)
+		exportEntry := toExportAggEntry(entry)
 		if err := w.Write([]string{
 			strconv.Itoa(exportEntry.TaskID),
 			exportEntry.Task,
@@ -321,5 +308,6 @@ func writeStatsCSV(writer io.Writer, entries []types.TaskReportEntry) error {
 		}
 	}
 
+	w.Flush()
 	return w.Error()
 }

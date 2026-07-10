@@ -8,6 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	flagFormat      = "--format"
+	flagInteractive = "--interactive"
+)
+
 func TestReportExport(t *testing.T) {
 	// GIVEN
 	fx := NewFixture(t, testBinaryPath)
@@ -21,12 +26,12 @@ func TestReportExport(t *testing.T) {
 		args   []string
 		period string
 	}{
-		{name: "json today", args: []string{"report", "--format", "json"}, period: "today"},
-		{name: "csv today", args: []string{"report", "--format", "csv"}, period: "today"},
-		{name: "json 3d", args: []string{"report", "--format", "json"}, period: "3d"},
-		{name: "csv 3d", args: []string{"report", "--format", "csv"}, period: "3d"},
-		{name: "json agg today", args: []string{"report", "--format", "json", "--agg"}, period: "today"},
-		{name: "csv agg today", args: []string{"report", "--format", "csv", "--agg"}, period: "today"},
+		{name: "json today", args: []string{"report", flagFormat, "json"}, period: "today"},
+		{name: "csv today", args: []string{"report", flagFormat, "csv"}, period: "today"},
+		{name: "json 3d", args: []string{"report", flagFormat, "json"}, period: "3d"},
+		{name: "csv 3d", args: []string{"report", flagFormat, "csv"}, period: "3d"},
+		{name: "json agg today", args: []string{"report", flagFormat, "json", "--agg"}, period: "today"},
+		{name: "csv agg today", args: []string{"report", flagFormat, "csv", "--agg"}, period: "today"},
 	}
 
 	for _, tc := range testCases {
@@ -68,7 +73,7 @@ func TestLogExport(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// WHEN
-			cmd := NewCmd([]string{"log", "--format", tc.format})
+			cmd := NewCmd([]string{"log", flagFormat, tc.format})
 			cmd.AddArgs(tc.period)
 			cmd.SetEnv("HOURS_NOW", now.Format(time.RFC3339))
 			cmd.UseDB()
@@ -106,7 +111,7 @@ func TestStatsExport(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// WHEN
-			cmd := NewCmd([]string{"stats", "--format", tc.format})
+			cmd := NewCmd([]string{"stats", flagFormat, tc.format})
 			cmd.AddArgs(tc.period)
 			cmd.SetEnv("HOURS_NOW", now.Format(time.RFC3339))
 			cmd.UseDB()
@@ -132,10 +137,11 @@ func TestExportFormatErrors(t *testing.T) {
 		name string
 		args []string
 	}{
-		{name: "report interactive json", args: []string{"report", "--interactive", "--format", "json", "today"}},
-		{name: "log interactive json", args: []string{"log", "--interactive", "--format", "json", "today"}},
-		{name: "stats interactive json", args: []string{"stats", "--interactive", "--format", "json", "today"}},
-		{name: "report incorrect format", args: []string{"report", "--format", "xml", "today"}},
+		{name: "report interactive json", args: []string{"report", flagInteractive, flagFormat, "json", "today"}},
+		{name: "log interactive json", args: []string{"log", flagInteractive, flagFormat, "json", "today"}},
+		{name: "stats interactive json", args: []string{"stats", flagInteractive, flagFormat, "json", "today"}},
+		{name: "report incorrect format", args: []string{"report", flagFormat, "xml", "today"}},
+		{name: "report plain json", args: []string{"report", "--plain", flagFormat, "json", "today"}},
 	}
 
 	for _, tc := range testCases {

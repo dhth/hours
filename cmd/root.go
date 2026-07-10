@@ -62,6 +62,7 @@ var (
 	errCouldntMarshalTheme       = errors.New("couldn't marshal theme")
 	errNowInvalid                = errors.New("invalid HOURS_NOW")
 	errGenSeedInvalid            = errors.New("invalid HOURS_GEN_SEED")
+	errPlainFormatConflict       = errors.New("plain and format flags cannot be used together")
 
 	msgReportIssue = fmt.Sprintf("This isn't supposed to happen; let %s know about this error via \n%s.", c.Author, c.RepoIssuesURL)
 )
@@ -134,6 +135,14 @@ func getStyle(themeName string, themesDir string) (ui.Style, error) {
 	}
 
 	return ui.NewStyle(thm), nil
+}
+
+func validateOutputOptions(plain bool, format types.OutputFormat) error {
+	if plain && format != types.OutputFormatPlain {
+		return fmt.Errorf("%w with output format %q", errPlainFormatConflict, format)
+	}
+
+	return nil
 }
 
 func NewRootCommand() (*cobra.Command, error) {
@@ -363,6 +372,10 @@ Use --format to export the report as json or csv instead of the default table.
 				return err
 			}
 
+			if err := validateOutputOptions(recordsOutputPlain, outputFormat); err != nil {
+				return err
+			}
+
 			var period string
 			if len(args) == 0 {
 				period = "3d"
@@ -422,6 +435,10 @@ Use --format to export logs as json or csv instead of the default table.
 				return err
 			}
 
+			if err := validateOutputOptions(recordsOutputPlain, outputFormat); err != nil {
+				return err
+			}
+
 			var period string
 			if len(args) == 0 {
 				period = "today"
@@ -473,6 +490,10 @@ Use --format to export stats as json or csv instead of the default table.
 
 			outputFormat, err := types.ParseOutputFormat(outputFormatStr)
 			if err != nil {
+				return err
+			}
+
+			if err := validateOutputOptions(recordsOutputPlain, outputFormat); err != nil {
 				return err
 			}
 
