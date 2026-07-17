@@ -136,7 +136,8 @@ func getTaskLog(db *sql.DB,
 	}
 
 	b := bytes.Buffer{}
-	table := tablewriter.NewTable(&b,
+	table := tablewriter.NewTable(
+		&b,
 		tablewriter.WithConfig(tablewriter.Config{
 			Header: tw.CellConfig{
 				Formatting: tw.CellFormatting{

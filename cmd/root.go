@@ -409,7 +409,7 @@ appear in the log for the day it ends.
 
 			var period string
 			if len(args) == 0 {
-				period = "today"
+				period = types.TimePeriodToday
 			} else {
 				period = args[0]
 			}

@@ -418,7 +418,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					dr.NumDays = 7
 
 				default:
-					dr.Start = m.dateRange.Start.AddDate(0, 0, 1*(m.dateRange.NumDays))
+					dr.Start = m.dateRange.Start.AddDate(0, 0, 1*m.dateRange.NumDays)
 				}
 
 				dr.NumDays = m.dateRange.NumDays

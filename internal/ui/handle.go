@@ -479,7 +479,8 @@ func (m *Model) getCmdToQuickSwitchTracking() tea.Cmd {
 	if !m.trackingActive {
 		m.changesLocked = true
 		m.activeTLBeginTS = m.timeProvider.Now().Truncate(time.Second)
-		return toggleTracking(m.db,
+		return toggleTracking(
+			m.db,
 			task.ID,
 			m.activeTLBeginTS,
 			m.activeTLEndTS,
