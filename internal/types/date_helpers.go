@@ -8,11 +8,12 @@ import (
 )
 
 const (
-	TimePeriodWeek = "week"
-	timeFormat     = "2006/01/02 15:04"
-	timeOnlyFormat = "15:04"
-	dayFormat      = "Monday"
-	dateFormat     = "2006/01/02"
+	TimePeriodToday = "today"
+	TimePeriodWeek  = "week"
+	timeFormat      = "2006/01/02 15:04"
+	timeOnlyFormat  = "15:04"
+	dayFormat       = "Monday"
+	dateFormat      = "2006/01/02"
 )
 
 var (
@@ -39,7 +40,7 @@ func parseDateRange(rangeStr string, now time.Time) (DateRange, error) {
 	}
 
 	var end time.Time
-	if elements[1] == "" || elements[1] == "today" {
+	if elements[1] == "" || elements[1] == TimePeriodToday {
 		end = now
 	} else {
 		end, err = time.ParseInLocation(string(dateFormat), elements[1], time.Local)
@@ -65,7 +66,7 @@ func GetDateRangeFromPeriod(period string, now time.Time, fullWeek bool, maxDays
 
 	switch period {
 
-	case "today":
+	case TimePeriodToday:
 		start = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 		end = start.AddDate(0, 0, 1)
 		numDays = 1

@@ -3,7 +3,8 @@ package ui
 import "fmt"
 
 func getHelpText(style Style) string {
-	return fmt.Sprintf(`%s
+	return fmt.Sprintf(
+		`%s
 %s
 %s
 

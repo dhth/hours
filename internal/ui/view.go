@@ -50,7 +50,8 @@ func (m Model) View() tea.View {
 				taskStartedSinceMsg = fmt.Sprintf("(since %s)", m.activeTLBeginTS.Format(timeOnlyFormat))
 			}
 		}
-		activeMsg = fmt.Sprintf("%s%s%s",
+		activeMsg = fmt.Sprintf(
+			"%s%s%s",
 			m.style.tracking.Render("tracking:"),
 			m.style.activeTaskSummaryMsg.Render(taskSummaryMsg),
 			m.style.activeTaskBeginTime.Render(taskStartedSinceMsg),
@@ -304,14 +305,16 @@ func (m Model) View() tea.View {
 		helpMsg += " " + m.style.helpMsg.Render("Press ? for help")
 	}
 
-	footer = fmt.Sprintf("%s%s%s",
+	footer = fmt.Sprintf(
+		"%s%s%s",
 		m.style.toolName.Render("hours"),
 		helpMsg,
 		activeMsg,
 	)
 
 	if m.debug {
-		footer = fmt.Sprintf("%s [term: %dx%d] [msg frames left: %d] [frames rendered: %d]",
+		footer = fmt.Sprintf(
+			"%s [term: %dx%d] [msg frames left: %d] [frames rendered: %d]",
 			footer,
 			m.terminalWidth,
 			m.terminalHeight,
@@ -320,7 +323,8 @@ func (m Model) View() tea.View {
 		)
 	}
 
-	result := lipgloss.JoinVertical(lipgloss.Left,
+	result := lipgloss.JoinVertical(
+		lipgloss.Left,
 		content,
 		statusBar,
 		footer,

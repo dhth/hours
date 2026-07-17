@@ -59,7 +59,8 @@ func UpgradeDBIfNeeded(db *sql.DB) error {
 	}
 
 	if latestVersionInDB.version > latestDBVersion {
-		return fmt.Errorf("%w; debug info: version=%d, created at=%q)",
+		return fmt.Errorf(
+			"%w; debug info: version=%d, created at=%q)",
 			ErrDBDowngraded,
 			latestVersionInDB.version,
 			latestVersionInDB.createdAt.Format(time.RFC3339),

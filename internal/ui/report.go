@@ -127,7 +127,8 @@ func getReport(db *sql.DB, style Style, start time.Time, numDays int, taskStatus
 		row := make([]string, numDays)
 		for colIndex := range numDays {
 			if rowIndex >= len(reportData[colIndex]) {
-				row[colIndex] = fmt.Sprintf("%s  %s",
+				row[colIndex] = fmt.Sprintf(
+					"%s  %s",
 					utils.RightPadTrim("", summaryBudget, false),
 					utils.RightPadTrim("", reportTimeCharsBudget, false),
 				)
@@ -138,7 +139,8 @@ func getReport(db *sql.DB, style Style, start time.Time, numDays int, taskStatus
 			timeSpentStr := types.HumanizeDuration(tr.SecsSpent)
 
 			if plain {
-				row[colIndex] = fmt.Sprintf("%s  %s",
+				row[colIndex] = fmt.Sprintf(
+					"%s  %s",
 					utils.RightPadTrim(tr.TaskSummary, summaryBudget, false),
 					utils.RightPadTrim(timeSpentStr, reportTimeCharsBudget, false),
 				)
@@ -150,7 +152,8 @@ func getReport(db *sql.DB, style Style, start time.Time, numDays int, taskStatus
 					styleCache[tr.TaskSummary] = rowStyle
 				}
 
-				row[colIndex] = fmt.Sprintf("%s  %s",
+				row[colIndex] = fmt.Sprintf(
+					"%s  %s",
 					rowStyle.Render(utils.RightPadTrim(tr.TaskSummary, summaryBudget, false)),
 					rowStyle.Render(utils.RightPadTrim(timeSpentStr, reportTimeCharsBudget, false)),
 				)
@@ -187,7 +190,8 @@ func getReport(db *sql.DB, style Style, start time.Time, numDays int, taskStatus
 	}
 
 	b := bytes.Buffer{}
-	table := tablewriter.NewTable(&b,
+	table := tablewriter.NewTable(
+		&b,
 		tablewriter.WithConfig(tablewriter.Config{
 			Header: tw.CellConfig{
 				Formatting: tw.CellFormatting{
@@ -288,7 +292,8 @@ func getReportAgg(db *sql.DB,
 		row := make([]string, numDays)
 		for colIndex := range numDays {
 			if rowIndex >= len(reportData[colIndex]) {
-				row[colIndex] = fmt.Sprintf("%s  %s",
+				row[colIndex] = fmt.Sprintf(
+					"%s  %s",
 					utils.RightPadTrim("", summaryBudget, false),
 					utils.RightPadTrim("", reportTimeCharsBudget, false),
 				)
@@ -299,7 +304,8 @@ func getReportAgg(db *sql.DB,
 			timeSpentStr := types.HumanizeDuration(tr.SecsSpent)
 
 			if plain {
-				row[colIndex] = fmt.Sprintf("%s  %s",
+				row[colIndex] = fmt.Sprintf(
+					"%s  %s",
 					utils.RightPadTrim(tr.TaskSummary, summaryBudget, false),
 					utils.RightPadTrim(timeSpentStr, reportTimeCharsBudget, false),
 				)
@@ -310,7 +316,8 @@ func getReportAgg(db *sql.DB,
 					styleCache[tr.TaskSummary] = rowStyle
 				}
 
-				row[colIndex] = fmt.Sprintf("%s  %s",
+				row[colIndex] = fmt.Sprintf(
+					"%s  %s",
 					rowStyle.Render(utils.RightPadTrim(tr.TaskSummary, summaryBudget, false)),
 					rowStyle.Render(utils.RightPadTrim(timeSpentStr, reportTimeCharsBudget, false)),
 				)
@@ -346,7 +353,8 @@ func getReportAgg(db *sql.DB,
 	}
 
 	b := bytes.Buffer{}
-	table := tablewriter.NewTable(&b,
+	table := tablewriter.NewTable(
+		&b,
 		tablewriter.WithConfig(tablewriter.Config{
 			Header: tw.CellConfig{
 				Formatting: tw.CellFormatting{

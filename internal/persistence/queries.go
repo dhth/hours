@@ -262,7 +262,8 @@ WHERE id=?;
 		if row.Err() != nil {
 			return -1, fmt.Errorf("%w: %s", ErrCouldntGetTaskLogDetails, row.Err().Error())
 		}
-		err := row.Scan(&tl.ID,
+		err := row.Scan(
+			&tl.ID,
 			&tl.TaskID,
 			&tl.BeginTS,
 			&tl.EndTS,
@@ -447,7 +448,8 @@ LIMIT ?;
 
 	for rows.Next() {
 		var entry types.Task
-		err = rows.Scan(&entry.ID,
+		err = rows.Scan(
+			&entry.ID,
 			&entry.Summary,
 			&entry.SecsSpent,
 			&entry.CreatedAt,
@@ -493,7 +495,8 @@ LIMIT ?;
 
 	for rows.Next() {
 		var entry types.TaskLogEntry
-		err = rows.Scan(&entry.ID,
+		err = rows.Scan(
+			&entry.ID,
 			&entry.TaskID,
 			&entry.TaskSummary,
 			&entry.BeginTS,
@@ -542,7 +545,8 @@ ORDER by tl.begin_ts ASC LIMIT ?;
 
 	for rows.Next() {
 		var entry types.TaskLogEntry
-		err = rows.Scan(&entry.ID,
+		err = rows.Scan(
+			&entry.ID,
 			&entry.TaskID,
 			&entry.TaskSummary,
 			&entry.BeginTS,
@@ -801,7 +805,8 @@ WHERE id=?;
 	if row.Err() != nil {
 		return task, row.Err()
 	}
-	err := row.Scan(&task.ID,
+	err := row.Scan(
+		&task.ID,
 		&task.Summary,
 		&task.SecsSpent,
 		&task.Active,
@@ -828,7 +833,8 @@ WHERE id=?;
 	if row.Err() != nil {
 		return tl, row.Err()
 	}
-	err := row.Scan(&tl.ID,
+	err := row.Scan(
+		&tl.ID,
 		&tl.TaskID,
 		&tl.BeginTS,
 		&tl.EndTS,
@@ -855,7 +861,8 @@ WHERE id=?;
 	if row.Err() != nil {
 		return tl, row.Err()
 	}
-	err := row.Scan(&tl.ID,
+	err := row.Scan(
+		&tl.ID,
 		&tl.TaskID,
 		&tl.BeginTS,
 		&tl.Comment,
