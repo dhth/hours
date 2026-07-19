@@ -1,4 +1,4 @@
-# Time tracked in the day so far
+# Time tracked today
 
 ## Purpose and scope
 
