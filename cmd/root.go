@@ -62,6 +62,7 @@ var (
 	errCouldntMarshalTheme       = errors.New("couldn't marshal theme")
 	errNowInvalid                = errors.New("invalid HOURS_NOW")
 	errGenSeedInvalid            = errors.New("invalid HOURS_GEN_SEED")
+	errPlainFormatConflict       = errors.New("plain and format flags cannot be used together")
 
 	msgReportIssue = fmt.Sprintf("This isn't supposed to happen; let %s know about this error via \n%s.", c.Author, c.RepoIssuesURL)
 )
@@ -136,6 +137,14 @@ func getStyle(themeName string, themesDir string) (ui.Style, error) {
 	return ui.NewStyle(thm), nil
 }
 
+func validateOutputOptions(plain bool, format types.OutputFormat) error {
+	if plain && format != types.OutputFormatPlain {
+		return fmt.Errorf("%w with output format %q", errPlainFormatConflict, format)
+	}
+
+	return nil
+}
+
 func NewRootCommand() (*cobra.Command, error) {
 	var (
 		userHomeDir         string
@@ -150,6 +159,7 @@ func NewRootCommand() (*cobra.Command, error) {
 		recordsInteractive  bool
 		recordsOutputPlain  bool
 		taskStatusStr       string
+		outputFormatStr     string
 		activeTemplate      string
 		genNumDays          uint8
 		genNumTasks         uint8
@@ -346,12 +356,23 @@ Accepts an argument, which can be one of the following:
 
 Note: If a task log continues past midnight in your local timezone, it
 will be reported on the day it ends.
+
+Use --format to export the report as json or csv instead of the default table.
 `, reportNumDaysThreshold),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, args []string) error {
 			taskStatus, err := types.ParseTaskStatus(taskStatusStr)
 			if err != nil {
+				return err
+			}
+
+			outputFormat, err := types.ParseOutputFormat(outputFormatStr)
+			if err != nil {
+				return err
+			}
+
+			if err := validateOutputOptions(recordsOutputPlain, outputFormat); err != nil {
 				return err
 			}
 
@@ -378,7 +399,7 @@ will be reported on the day it ends.
 				return err
 			}
 
-			return ui.RenderReport(db, style, os.Stdout, recordsOutputPlain, dateRange, period, taskStatus, reportAgg, recordsInteractive)
+			return ui.RenderReport(db, style, os.Stdout, recordsOutputPlain, dateRange, period, taskStatus, reportAgg, recordsInteractive, outputFormat)
 		},
 	}
 
@@ -398,12 +419,23 @@ Accepts an argument, which can be one of the following:
 
 Note: If a task log continues past midnight in your local timezone, it'll
 appear in the log for the day it ends.
+
+Use --format to export logs as json or csv instead of the default table.
 `,
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, args []string) error {
 			taskStatus, err := types.ParseTaskStatus(taskStatusStr)
 			if err != nil {
+				return err
+			}
+
+			outputFormat, err := types.ParseOutputFormat(outputFormatStr)
+			if err != nil {
+				return err
+			}
+
+			if err := validateOutputOptions(recordsOutputPlain, outputFormat); err != nil {
 				return err
 			}
 
@@ -424,7 +456,7 @@ appear in the log for the day it ends.
 				return err
 			}
 
-			return ui.RenderTaskLog(db, style, os.Stdout, recordsOutputPlain, dateRange, period, taskStatus, recordsInteractive)
+			return ui.RenderTaskLog(db, style, os.Stdout, recordsOutputPlain, dateRange, period, taskStatus, recordsInteractive, outputFormat)
 		},
 	}
 
@@ -445,12 +477,23 @@ Accepts an argument, which can be one of the following:
 
 Note: If a task log continues past midnight in your local timezone, it'll
 be considered in the stats for the day it ends.
+
+Use --format to export stats as json or csv instead of the default table.
 `,
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: preRun,
 		RunE: func(_ *cobra.Command, args []string) error {
 			taskStatus, err := types.ParseTaskStatus(taskStatusStr)
 			if err != nil {
+				return err
+			}
+
+			outputFormat, err := types.ParseOutputFormat(outputFormatStr)
+			if err != nil {
+				return err
+			}
+
+			if err := validateOutputOptions(recordsOutputPlain, outputFormat); err != nil {
 				return err
 			}
 
@@ -480,7 +523,7 @@ be considered in the stats for the day it ends.
 				dateRange = &dr
 			}
 
-			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, dateRange, period, taskStatus, recordsInteractive)
+			return ui.RenderStats(db, style, os.Stdout, recordsOutputPlain, dateRange, period, taskStatus, recordsInteractive, outputFormat)
 		},
 	}
 
@@ -634,18 +677,21 @@ eg. hours active -t ' {{task}} ({{time}}) '
 	reportCmd.Flags().BoolVarP(&reportAgg, "agg", "a", false, "whether to aggregate data by task for each day in report")
 	reportCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view report interactively")
 	reportCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output report without any formatting")
+	reportCmd.Flags().StringVarP(&outputFormatStr, "format", "f", types.OFValuePlain, fmt.Sprintf("output format [possible values: %q]", types.ValidOutputFormatValues))
 	reportCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 	reportCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
 	reportCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName, `UI theme to use (run "hours themes list" for allowed values)`)
 
 	logCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output logs without any formatting")
 	logCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view logs interactively")
+	logCmd.Flags().StringVarP(&outputFormatStr, "format", "f", types.OFValuePlain, fmt.Sprintf("output format [possible values: %q]", types.ValidOutputFormatValues))
 	logCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 	logCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
 	logCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName, `UI theme to use (run "hours themes list" for allowed values)`)
 
 	statsCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output stats without any formatting")
 	statsCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view stats interactively")
+	statsCmd.Flags().StringVarP(&outputFormatStr, "format", "f", types.OFValuePlain, fmt.Sprintf("output format [possible values: %q]", types.ValidOutputFormatValues))
 	statsCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 	statsCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
 	statsCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName, `UI theme to use (run "hours themes list" for allowed values)`)

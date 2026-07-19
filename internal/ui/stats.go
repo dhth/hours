@@ -32,13 +32,34 @@ func RenderStats(db *sql.DB,
 	period string,
 	taskStatus types.TaskStatus,
 	interactive bool,
+	format types.OutputFormat,
 ) error {
-	var stats string
-	var err error
+	if interactive && format != types.OutputFormatPlain {
+		return fmt.Errorf("%w with output format %q", errInteractiveModeNotApplicable, format)
+	}
 
 	if interactive && dateRange == nil {
 		return fmt.Errorf("%w when period=all", errInteractiveModeNotApplicable)
 	}
+
+	if format != types.OutputFormatPlain {
+		entries, err := collectStatsData(db, dateRange, taskStatus)
+		if err != nil {
+			return fmt.Errorf("%w: %s", errCouldntGenerateStats, err.Error())
+		}
+
+		switch format {
+		case types.OutputFormatJSON:
+			return writeStatsJSON(writer, entries)
+		case types.OutputFormatCSV:
+			return writeStatsCSV(writer, entries)
+		default:
+			return types.ErrIncorrectOutputFormatProvided
+		}
+	}
+
+	var stats string
+	var err error
 
 	if dateRange == nil {
 		stats, err = getStats(db, style, dateRange, taskStatus, plain)
@@ -75,6 +96,18 @@ func RenderStats(db *sql.DB,
 		fmt.Fprint(writer, stats)
 	}
 	return nil
+}
+
+func collectStatsData(
+	db *sql.DB,
+	dateRange *types.DateRange,
+	taskStatus types.TaskStatus,
+) ([]types.TaskReportEntry, error) {
+	if dateRange == nil {
+		return pers.FetchStats(db, taskStatus, statsLogEntriesLimit)
+	}
+
+	return pers.FetchStatsBetweenTS(db, dateRange.Start, dateRange.End, taskStatus, statsLogEntriesLimit)
 }
 
 func getStats(db *sql.DB,

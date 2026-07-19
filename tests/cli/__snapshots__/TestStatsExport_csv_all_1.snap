@@ -1,0 +1,17 @@
+success: true
+exit_code: 0
+----- stdout -----
+taskId,task,numEntries,secsSpent,timeSpent
+2,clojure,27,96960,26h 56m
+5,rust,25,93900,26h 5m
+4,typescript,24,84720,23h 32m
+8,ocaml,27,83640,23h 14m
+6,swift,21,79920,22h 12m
+7,.net,24,79680,22h 8m
+9,c,21,76500,21h 15m
+3,clojure,23,76020,21h 7m
+10,c++,19,63540,17h 39m
+1,haskell,17,56460,15h 41m
+
+----- stderr -----
+

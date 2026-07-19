@@ -1,0 +1,24 @@
+success: true
+exit_code: 0
+----- stdout -----
+{
+  "days": [
+    {
+      "date": "2025/10/24",
+      "totalSecsSpent": 5700,
+      "totalTimeSpent": "1h 35m",
+      "entries": [
+        {
+          "taskId": 3,
+          "task": "clojure",
+          "numEntries": 2,
+          "secsSpent": 5700,
+          "timeSpent": "1h 35m"
+        }
+      ]
+    }
+  ]
+}
+
+----- stderr -----
+

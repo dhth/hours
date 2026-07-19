@@ -1,0 +1,35 @@
+success: true
+exit_code: 0
+----- stdout -----
+{
+  "days": [
+    {
+      "date": "2025/10/24",
+      "totalSecsSpent": 5700,
+      "totalTimeSpent": "1h 35m",
+      "entries": [
+        {
+          "taskId": 3,
+          "task": "clojure",
+          "beginTs": "2025-10-24T07:27:40Z",
+          "endTs": "2025-10-24T08:12:40Z",
+          "secsSpent": 2700,
+          "timeSpent": "45m",
+          "comment": "write report\n\nThis is a sample task log comment. The comment can be used to record\nadditional information for a task log.\n\nYou can include:\n- Detailed steps taken during the task\n- Observations and notes\n- Any issues encountered and how they were resolved\n- Future actions or follow-ups required\n- References to related tasks or documents\n\nUse this section to ensure all relevant details are captured for each task,\nproviding a comprehensive log that can be referred to later."
+        },
+        {
+          "taskId": 3,
+          "task": "clojure",
+          "beginTs": "2025-10-24T08:37:55Z",
+          "endTs": "2025-10-24T09:27:55Z",
+          "secsSpent": 3000,
+          "timeSpent": "50m",
+          "comment": ""
+        }
+      ]
+    }
+  ]
+}
+
+----- stderr -----
+

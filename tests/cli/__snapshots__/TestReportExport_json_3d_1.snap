@@ -1,0 +1,175 @@
+success: true
+exit_code: 0
+----- stdout -----
+{
+  "days": [
+    {
+      "date": "2025/10/22",
+      "totalSecsSpent": 20040,
+      "totalTimeSpent": "5h 34m",
+      "entries": [
+        {
+          "taskId": 1,
+          "task": "haskell",
+          "beginTs": "2025-10-22T00:35:05Z",
+          "endTs": "2025-10-22T02:01:05Z",
+          "secsSpent": 5160,
+          "timeSpent": "1h 26m",
+          "comment": ""
+        },
+        {
+          "taskId": 8,
+          "task": "ocaml",
+          "beginTs": "2025-10-22T12:08:04Z",
+          "endTs": "2025-10-22T12:52:04Z",
+          "secsSpent": 2640,
+          "timeSpent": "44m",
+          "comment": "design deployment"
+        },
+        {
+          "taskId": 10,
+          "task": "c++",
+          "beginTs": "2025-10-22T14:54:01Z",
+          "endTs": "2025-10-22T15:36:01Z",
+          "secsSpent": 2520,
+          "timeSpent": "42m",
+          "comment": "configure configuration"
+        },
+        {
+          "taskId": 3,
+          "task": "clojure",
+          "beginTs": "2025-10-22T15:09:08Z",
+          "endTs": "2025-10-22T15:57:08Z",
+          "secsSpent": 2880,
+          "timeSpent": "48m",
+          "comment": "optimize log\n\nThis is a sample task log comment. The comment can be used to record\nadditional information for a task log.\n\nYou can include:\n- Detailed steps taken during the task\n- Observations and notes\n- Any issues encountered and how they were resolved\n- Future actions or follow-ups required\n- References to related tasks or documents\n\nUse this section to ensure all relevant details are captured for each task,\nproviding a comprehensive log that can be referred to later."
+        },
+        {
+          "taskId": 6,
+          "task": "swift",
+          "beginTs": "2025-10-22T20:07:19Z",
+          "endTs": "2025-10-22T21:16:19Z",
+          "secsSpent": 4140,
+          "timeSpent": "1h 9m",
+          "comment": ""
+        },
+        {
+          "taskId": 6,
+          "task": "swift",
+          "beginTs": "2025-10-22T20:58:08Z",
+          "endTs": "2025-10-22T21:43:08Z",
+          "secsSpent": 2700,
+          "timeSpent": "45m",
+          "comment": ""
+        }
+      ]
+    },
+    {
+      "date": "2025/10/23",
+      "totalSecsSpent": 25980,
+      "totalTimeSpent": "7h 13m",
+      "entries": [
+        {
+          "taskId": 8,
+          "task": "ocaml",
+          "beginTs": "2025-10-23T01:19:04Z",
+          "endTs": "2025-10-23T02:00:04Z",
+          "secsSpent": 2460,
+          "timeSpent": "41m",
+          "comment": ""
+        },
+        {
+          "taskId": 4,
+          "task": "typescript",
+          "beginTs": "2025-10-23T03:32:16Z",
+          "endTs": "2025-10-23T04:21:16Z",
+          "secsSpent": 2940,
+          "timeSpent": "49m",
+          "comment": "implement tests"
+        },
+        {
+          "taskId": 3,
+          "task": "clojure",
+          "beginTs": "2025-10-23T07:16:05Z",
+          "endTs": "2025-10-23T08:04:05Z",
+          "secsSpent": 2880,
+          "timeSpent": "48m",
+          "comment": ""
+        },
+        {
+          "taskId": 2,
+          "task": "clojure",
+          "beginTs": "2025-10-23T10:17:20Z",
+          "endTs": "2025-10-23T11:19:20Z",
+          "secsSpent": 3720,
+          "timeSpent": "1h 2m",
+          "comment": ""
+        },
+        {
+          "taskId": 6,
+          "task": "swift",
+          "beginTs": "2025-10-23T14:08:30Z",
+          "endTs": "2025-10-23T15:09:30Z",
+          "secsSpent": 3660,
+          "timeSpent": "1h 1m",
+          "comment": "design api\n\nThis is a sample task log comment. The comment can be used to record\nadditional information for a task log.\n\nYou can include:\n- Detailed steps taken during the task\n- Observations and notes\n- Any issues encountered and how they were resolved\n- Future actions or follow-ups required\n- References to related tasks or documents\n\nUse this section to ensure all relevant details are captured for each task,\nproviding a comprehensive log that can be referred to later."
+        },
+        {
+          "taskId": 4,
+          "task": "typescript",
+          "beginTs": "2025-10-23T16:32:15Z",
+          "endTs": "2025-10-23T17:27:15Z",
+          "secsSpent": 3300,
+          "timeSpent": "55m",
+          "comment": ""
+        },
+        {
+          "taskId": 7,
+          "task": ".net",
+          "beginTs": "2025-10-23T21:30:49Z",
+          "endTs": "2025-10-23T22:12:49Z",
+          "secsSpent": 2520,
+          "timeSpent": "42m",
+          "comment": "build function"
+        },
+        {
+          "taskId": 5,
+          "task": "rust",
+          "beginTs": "2025-10-23T22:27:14Z",
+          "endTs": "2025-10-23T23:42:14Z",
+          "secsSpent": 4500,
+          "timeSpent": "1h 15m",
+          "comment": "update interface"
+        }
+      ]
+    },
+    {
+      "date": "2025/10/24",
+      "totalSecsSpent": 5700,
+      "totalTimeSpent": "1h 35m",
+      "entries": [
+        {
+          "taskId": 3,
+          "task": "clojure",
+          "beginTs": "2025-10-24T07:27:40Z",
+          "endTs": "2025-10-24T08:12:40Z",
+          "secsSpent": 2700,
+          "timeSpent": "45m",
+          "comment": "write report\n\nThis is a sample task log comment. The comment can be used to record\nadditional information for a task log.\n\nYou can include:\n- Detailed steps taken during the task\n- Observations and notes\n- Any issues encountered and how they were resolved\n- Future actions or follow-ups required\n- References to related tasks or documents\n\nUse this section to ensure all relevant details are captured for each task,\nproviding a comprehensive log that can be referred to later."
+        },
+        {
+          "taskId": 3,
+          "task": "clojure",
+          "beginTs": "2025-10-24T08:37:55Z",
+          "endTs": "2025-10-24T09:27:55Z",
+          "secsSpent": 3000,
+          "timeSpent": "50m",
+          "comment": ""
+        }
+      ]
+    }
+  ]
+}
+
+----- stderr -----
+
