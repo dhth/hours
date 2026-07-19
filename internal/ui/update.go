@@ -18,12 +18,21 @@ const (
 )
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	model, cmd := m.processMessage(msg)
+	model.recalculateSecondsTrackedToday()
+
+	return model, cmd
+}
+
+func (m Model) processMessage(msg tea.Msg) (Model, tea.Cmd) {
 	m.frameCounter++
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 
-	// early check for window resizing and handling insufficient dimensions
+	// Handle the time-tracking tick, window resizing, and insufficient dimensions early
 	switch msg := msg.(type) {
+	case timeTrackedTodayTickMsg:
+		cmds = append(cmds, tickTimeTrackedToday(30*time.Second))
 	case tea.WindowSizeMsg:
 		m.handleWindowResizing(msg)
 	case tea.KeyPressMsg:

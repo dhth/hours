@@ -36,6 +36,7 @@ type Style struct {
 	taskEntryHeading     lipgloss.Style
 	taskLogDetails       lipgloss.Style
 	taskLogEntryHeading  lipgloss.Style
+	trackedToday         lipgloss.Style
 	theme                theme.Theme
 	titleForegroundColor color.Color
 	tlFormOkStyle        lipgloss.Style
@@ -60,14 +61,16 @@ func NewStyle(theme theme.Theme) Style {
 		PaddingRight(1).
 		Foreground(lipgloss.Color(theme.TitleForeground))
 
-	helpMsg := lipgloss.NewStyle().
-		PaddingLeft(1).
+	helpMsg := lipgloss.NewStyle().PaddingLeft(2).
 		Bold(true).
 		Foreground(lipgloss.Color(theme.HelpMsg))
 
-	tracking := lipgloss.NewStyle().
-		PaddingLeft(2).
-		Bold(true).
+	footerItem := lipgloss.NewStyle().PaddingLeft(2).Bold(true)
+
+	trackedToday := footerItem.
+		Foreground(lipgloss.Color(theme.InactiveTasks))
+
+	tracking := footerItem.
 		Foreground(lipgloss.Color(theme.Tracking))
 
 	helpTitle := base.
@@ -98,6 +101,7 @@ func NewStyle(theme theme.Theme) Style {
 		taskEntryHeading:     baseHeading.Background(lipgloss.Color(theme.TaskEntry)),
 		taskLogDetails:       helpTitle.Background(lipgloss.Color(theme.TaskLogDetailsViewTitle)),
 		taskLogEntryHeading:  baseHeading.Background(lipgloss.Color(theme.TaskLogEntry)),
+		trackedToday:         trackedToday,
 		theme:                theme,
 		titleForegroundColor: lipgloss.Color(theme.TitleForeground),
 		tlFormOkStyle:        lipgloss.NewStyle().Foreground(lipgloss.Color(theme.TaskLogFormInfo)),

@@ -32,7 +32,7 @@ fmt:
     gofumpt -l -w .
 
 install:
-    go install .
+    go install -ldflags "-w -s" .
 
 check:
     golangci-lint run

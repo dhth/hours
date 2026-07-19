@@ -292,23 +292,32 @@ func (m Model) View() tea.View {
 		// first time directions
 		if m.activeView == taskListView && len(m.activeTasksList.Items()) <= 1 {
 			if len(m.activeTasksList.Items()) == 0 {
-				helpMsg += " " + m.style.initialHelpMsg.Render("Press a to add a task")
+				helpMsg += m.style.initialHelpMsg.Render("Press a to add a task")
 			} else if len(m.taskLogList.Items()) == 0 {
 				if m.trackingActive {
-					helpMsg += " " + m.style.initialHelpMsg.Render("Press s to stop tracking time")
+					helpMsg += m.style.initialHelpMsg.Render("Press s to stop tracking time")
 				} else {
-					helpMsg += " " + m.style.initialHelpMsg.Render("Press s to start tracking time")
+					helpMsg += m.style.initialHelpMsg.Render("Press s to start tracking time")
 				}
 			}
 		}
 
-		helpMsg += " " + m.style.helpMsg.Render("Press ? for help")
+		helpMsg += m.style.helpMsg.Render("Press ? for help")
+	}
+
+	var trackedTodayMsg string
+	if m.secsTrackedToday >= 60 {
+		trackedTodayMsg = m.style.trackedToday.Render(fmt.Sprintf(
+			"tracked today: %s",
+			types.HumanizeDuration(m.secsTrackedToday),
+		))
 	}
 
 	footer = fmt.Sprintf(
-		"%s%s%s",
+		"%s%s%s%s",
 		m.style.toolName.Render("hours"),
 		helpMsg,
+		trackedTodayMsg,
 		activeMsg,
 	)
 

@@ -8,6 +8,8 @@ import (
 
 type hideHelpMsg struct{}
 
+type timeTrackedTodayTickMsg struct{}
+
 type trackingToggledMsg struct {
 	taskID    int
 	finished  bool
