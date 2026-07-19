@@ -193,6 +193,7 @@ func getRecordsData(
 	dateRange types.DateRange,
 	taskStatus types.TaskStatus,
 	plain bool,
+	noTruncate bool,
 ) tea.Cmd {
 	return func() tea.Msg {
 		var data string
@@ -204,7 +205,7 @@ func getRecordsData(
 		case reportAggRecords:
 			data, err = getReportAgg(db, style, dateRange.Start, dateRange.NumDays, taskStatus, plain)
 		case reportLogs:
-			data, err = getTaskLog(db, style, dateRange.Start, dateRange.End, taskStatus, 20, plain)
+			data, err = getTaskLog(db, style, dateRange.Start, dateRange.End, taskStatus, 20, plain, noTruncate)
 		case reportStats:
 			data, err = getStats(db, style, &dateRange, taskStatus, plain)
 		}

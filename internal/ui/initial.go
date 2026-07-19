@@ -131,6 +131,7 @@ func initialRecordsModel(
 	period string,
 	taskStatus types.TaskStatus,
 	plain bool,
+	noTruncate bool,
 	initialData string,
 ) recordsModel {
 	return recordsModel{
@@ -142,6 +143,7 @@ func initialRecordsModel(
 		period:       period,
 		taskStatus:   taskStatus,
 		plain:        plain,
+		noTruncate:   noTruncate,
 		report:       initialData,
 	}
 }

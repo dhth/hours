@@ -188,6 +188,7 @@ type recordsModel struct {
 	period       string
 	plain        bool
 	taskStatus   types.TaskStatus
+	noTruncate   bool
 	report       string
 	quitting     bool
 	busy         bool

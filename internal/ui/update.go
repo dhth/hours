@@ -411,7 +411,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				dr.NumDays = m.dateRange.NumDays
 				dr.End = dr.Start.AddDate(0, 0, m.dateRange.NumDays)
-				cmds = append(cmds, getRecordsData(m.kind, m.db, m.style, dr, m.taskStatus, m.plain))
+				cmds = append(cmds, getRecordsData(m.kind, m.db, m.style, dr, m.taskStatus, m.plain, m.noTruncate))
 				m.busy = true
 			}
 		case "right", "l":
@@ -432,7 +432,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				dr.NumDays = m.dateRange.NumDays
 				dr.End = dr.Start.AddDate(0, 0, dr.NumDays)
-				cmds = append(cmds, getRecordsData(m.kind, m.db, m.style, dr, m.taskStatus, m.plain))
+				cmds = append(cmds, getRecordsData(m.kind, m.db, m.style, dr, m.taskStatus, m.plain, m.noTruncate))
 				m.busy = true
 			}
 		case "ctrl+t":
@@ -455,7 +455,7 @@ func (m recordsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				dr.NumDays = m.dateRange.NumDays
 				dr.End = dr.Start.AddDate(0, 0, dr.NumDays)
-				cmds = append(cmds, getRecordsData(m.kind, m.db, m.style, dr, m.taskStatus, m.plain))
+				cmds = append(cmds, getRecordsData(m.kind, m.db, m.style, dr, m.taskStatus, m.plain, m.noTruncate))
 				m.busy = true
 			}
 		}

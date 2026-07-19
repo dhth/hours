@@ -65,6 +65,7 @@ func RenderStats(db *sql.DB,
 			period,
 			taskStatus,
 			plain,
+			false,
 			stats,
 		))
 		_, err := p.Run()

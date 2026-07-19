@@ -149,6 +149,7 @@ func NewRootCommand() (*cobra.Command, error) {
 		reportAgg           bool
 		recordsInteractive  bool
 		recordsOutputPlain  bool
+		recordsNoTruncate   bool
 		taskStatusStr       string
 		activeTemplate      string
 		genNumDays          uint8
@@ -424,7 +425,7 @@ appear in the log for the day it ends.
 				return err
 			}
 
-			return ui.RenderTaskLog(db, style, os.Stdout, recordsOutputPlain, dateRange, period, taskStatus, recordsInteractive)
+			return ui.RenderTaskLog(db, style, os.Stdout, recordsOutputPlain, dateRange, period, taskStatus, recordsInteractive, recordsNoTruncate)
 		},
 	}
 
@@ -640,6 +641,7 @@ eg. hours active -t ' {{task}} ({{time}}) '
 
 	logCmd.Flags().BoolVarP(&recordsOutputPlain, "plain", "p", false, "whether to output logs without any formatting")
 	logCmd.Flags().BoolVarP(&recordsInteractive, "interactive", "i", false, "whether to view logs interactively")
+	logCmd.Flags().BoolVar(&recordsNoTruncate, "no-truncate", false, "whether to output logs without truncating any text")
 	logCmd.Flags().StringVarP(&dbPath, "dbpath", "d", defaultDBPath, "location of hours' database file")
 	logCmd.Flags().StringVarP(&taskStatusStr, "task-status", "s", "any", fmt.Sprintf("only show data for tasks with this status [possible values: %q]", types.ValidTaskStatusValues))
 	logCmd.Flags().StringVarP(&themeName, "theme", "t", defaultThemeName, `UI theme to use (run "hours themes list" for allowed values)`)

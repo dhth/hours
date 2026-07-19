@@ -19,6 +19,9 @@ import (
 )
 
 const (
+	logTaskCharsBudget     = 20
+	logCommentCharsBudget  = 40
+	logDurationCharsBudget = 39
 	logTimeCharsBudget     = 6
 	interactiveLogDayLimit = 1
 	logLimit               = 10000
@@ -34,12 +37,13 @@ func RenderTaskLog(db *sql.DB,
 	period string,
 	taskStatus types.TaskStatus,
 	interactive bool,
+	noTruncate bool,
 ) error {
 	if interactive && dateRange.NumDays > interactiveLogDayLimit {
 		return fmt.Errorf("%w (limited to %d day); use non-interactive mode to see logs for a larger time period", errInteractiveModeNotApplicable, interactiveLogDayLimit)
 	}
 
-	log, err := getTaskLog(db, style, dateRange.Start, dateRange.End, taskStatus, logLimit, plain)
+	log, err := getTaskLog(db, style, dateRange.Start, dateRange.End, taskStatus, logLimit, plain, noTruncate)
 	if err != nil {
 		return fmt.Errorf("%w: %s", errCouldntGenerateLogs, err.Error())
 	}
@@ -54,6 +58,7 @@ func RenderTaskLog(db *sql.DB,
 			period,
 			taskStatus,
 			plain,
+			noTruncate,
 			log,
 		))
 		_, err := p.Run()
@@ -72,7 +77,8 @@ func getTaskLog(db *sql.DB,
 	end time.Time,
 	taskStatus types.TaskStatus,
 	limit int,
-	plain bool) (string,
+	plain bool,
+	noTruncate bool) (string,
 	error,
 ) {
 	entries, err := pers.FetchTLEntriesBetweenTS(db, start, end, taskStatus, limit)
@@ -91,11 +97,14 @@ func getTaskLog(db *sql.DB,
 	data := make([][]string, numEntriesInTable)
 
 	if len(entries) == 0 {
-		data[0] = []string{
-			utils.RightPadTrim("", 20, false),
-			utils.RightPadTrim("", 40, false),
-			utils.RightPadTrim("", 39, false),
-			utils.RightPadTrim("", logTimeCharsBudget, false),
+		data[0] = []string{"", "", "", ""}
+		if !noTruncate {
+			data[0] = []string{
+				utils.RightPadTrim("", logTaskCharsBudget, false),
+				utils.RightPadTrim("", logCommentCharsBudget, false),
+				utils.RightPadTrim("", logDurationCharsBudget, false),
+				utils.RightPadTrim("", logTimeCharsBudget, false),
+			}
 		}
 	}
 
@@ -107,13 +116,18 @@ func getTaskLog(db *sql.DB,
 	for i, entry := range entries {
 		timeSpentStr = types.HumanizeDuration(entry.SecsSpent)
 
+		taskSummary := entry.TaskSummary
+		comment := entry.GetComment()
+		duration := fmt.Sprintf("%s  ...  %s", entry.BeginTS.Format(timeFormat), entry.EndTS.Format(timeFormat))
+
+		if !noTruncate {
+			taskSummary = utils.RightPadTrim(taskSummary, logTaskCharsBudget, false)
+			comment = utils.RightPadTrimWithMoreLinesIndicator(comment, logCommentCharsBudget)
+			timeSpentStr = utils.RightPadTrim(timeSpentStr, logTimeCharsBudget, false)
+		}
+
 		if plain {
-			data[i] = []string{
-				utils.RightPadTrim(entry.TaskSummary, 20, false),
-				utils.RightPadTrimWithMoreLinesIndicator(entry.GetComment(), 40),
-				fmt.Sprintf("%s  ...  %s", entry.BeginTS.Format(timeFormat), entry.EndTS.Format(timeFormat)),
-				utils.RightPadTrim(timeSpentStr, logTimeCharsBudget, false),
-			}
+			data[i] = []string{taskSummary, comment, duration, timeSpentStr}
 		} else {
 			rowStyle, ok := styleCache[entry.TaskSummary]
 			if !ok {
@@ -121,10 +135,10 @@ func getTaskLog(db *sql.DB,
 				styleCache[entry.TaskSummary] = rowStyle
 			}
 			data[i] = []string{
-				rowStyle.Render(utils.RightPadTrim(entry.TaskSummary, 20, false)),
-				rowStyle.Render(utils.RightPadTrimWithMoreLinesIndicator(entry.GetComment(), 40)),
-				rowStyle.Render(fmt.Sprintf("%s  ...  %s", entry.BeginTS.Format(timeFormat), entry.EndTS.Format(timeFormat))),
-				rowStyle.Render(utils.RightPadTrim(timeSpentStr, logTimeCharsBudget, false)),
+				rowStyle.Render(taskSummary),
+				rowStyle.Render(comment),
+				rowStyle.Render(duration),
+				rowStyle.Render(timeSpentStr),
 			}
 		}
 	}

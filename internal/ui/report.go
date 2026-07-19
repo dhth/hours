@@ -59,6 +59,7 @@ func RenderReport(db *sql.DB,
 			period,
 			taskStatus,
 			plain,
+			false,
 			report,
 		))
 		_, err := p.Run()
