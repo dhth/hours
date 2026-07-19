@@ -120,7 +120,7 @@ func updateTaskRep(db *sql.DB, t *types.Task) tea.Cmd {
 
 func fetchTLS(db *sql.DB, tlIDToFocusOn *int) tea.Cmd {
 	return func() tea.Msg {
-		entries, err := pers.FetchTLEntries(db, true, 50)
+		entries, err := pers.FetchTLEntries(db, true, taskLogFetchLimit)
 		return tLsFetchedMsg{
 			entries:       entries,
 			tlIDToFocusOn: tlIDToFocusOn,
@@ -177,6 +177,12 @@ func fetchTasks(db *sql.DB, active bool) tea.Cmd {
 func hideHelp(interval time.Duration) tea.Cmd {
 	return tea.Tick(interval, func(time.Time) tea.Msg {
 		return hideHelpMsg{}
+	})
+}
+
+func tickTimeTrackedToday(interval time.Duration) tea.Cmd {
+	return tea.Tick(interval, func(time.Time) tea.Msg {
+		return timeTrackedTodayTickMsg{}
 	})
 }
 

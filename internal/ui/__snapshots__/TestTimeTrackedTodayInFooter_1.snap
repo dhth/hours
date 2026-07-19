@@ -1,16 +1,11 @@
                                                                                                 
    Task Logs (last 100)                                                                         
                                                                                                 
-  3 entries                                                                                     
+  1 entry                                                                                       
                                                                                                 
 │ Test work on task                                                                             
 │ Implement feature A                                          06:30  ...  08:00             …  
                                                                                                 
-  Test work on task                                                                             
-  Fix bug in module B                                          06:30  ...  08:00             …  
-                                                                                                
-  Test work on task                                                                             
-  Implement feature A                                          06:30  ...  08:00             …  
                                                                                                 
                                                                                                 
                                                                                                 
@@ -29,4 +24,9 @@
                                                                                                 
                                                                                                 
                                                                                                 
- hours   Press ? for help                                                                       
+                                                                                                
+                                                                                                
+                                                                                                
+                                                                                                
+                                                                                                
+ hours   Press ? for help  tracked today: 1h 30m                                                

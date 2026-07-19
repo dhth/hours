@@ -162,6 +162,22 @@ func TestInactiveTaskListViewWithTasks(t *testing.T) {
 	snaps.MatchStandaloneSnapshot(t, result)
 }
 
+func TestTimeTrackedTodayInFooter(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.activeView = taskLogView
+	m.secsTrackedToday = 90 * 60
+
+	entry1 := createTestTaskLogEntry(1, 1, "Implement feature A", m.timeProvider)
+	m.taskLogList.SetItems([]list.Item{entry1})
+
+	// WHEN
+	result := stripANSI(m.View().Content)
+
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
+}
+
 func TestCreateTaskViewWithNoInput(t *testing.T) {
 	// GIVEN
 	m := createTestModel()

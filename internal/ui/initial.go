@@ -2,6 +2,7 @@ package ui
 
 import (
 	"database/sql"
+	"fmt"
 
 	"charm.land/bubbles/v2/list"
 	"charm.land/bubbles/v2/textarea"
@@ -95,7 +96,7 @@ This can be used to record details about your work on this task.`
 	m.activeTasksList.KeyMap.PrevPage.SetKeys("left", "h", "pgup")
 	m.activeTasksList.KeyMap.NextPage.SetKeys("right", "l", "pgdown")
 
-	m.taskLogList.Title = "Task Logs (last 50)"
+	m.taskLogList.Title = fmt.Sprintf("Task Logs (last %d)", taskLogFetchLimit)
 	m.taskLogList.SetStatusBarItemName("entry", "entries")
 	m.taskLogList.SetFilteringEnabled(false)
 	m.taskLogList.DisableQuitKeybindings()

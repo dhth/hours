@@ -9,6 +9,7 @@ import (
 	"charm.land/bubbles/v2/textinput"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
+	"github.com/dhth/hours/internal/domain"
 	"github.com/dhth/hours/internal/types"
 )
 
@@ -77,6 +78,7 @@ const (
 	timeOnlyFormat       = "15:04"
 	dateFormat           = "2006/01/02"
 	userMsgDefaultFrames = 3
+	taskLogFetchLimit    = 100
 )
 
 type userMsgKind uint
@@ -131,6 +133,7 @@ type Model struct {
 	showHelpIndicator              bool
 	terminalWidth                  int
 	terminalHeight                 int
+	secsTrackedToday               int
 	trackingActive                 bool
 	debug                          bool
 	frameCounter                   uint
@@ -147,9 +150,32 @@ func (m *Model) blurTLTrackingInputs() {
 func (m Model) Init() tea.Cmd {
 	return tea.Batch(
 		hideHelp(time.Minute*1),
+		tickTimeTrackedToday(30*time.Second),
 		fetchTasks(m.db, true),
 		fetchTLS(m.db, nil),
 		fetchTasks(m.db, false),
+	)
+}
+
+func (m *Model) recalculateSecondsTrackedToday() {
+	items := m.taskLogList.Items()
+	finishedTaskLogs := make([]types.TaskLogEntry, 0, len(items))
+	for _, item := range items {
+		entry, ok := item.(types.TaskLogEntry)
+		if ok {
+			finishedTaskLogs = append(finishedTaskLogs, entry)
+		}
+	}
+
+	var activeTaskLogBeginTS *time.Time
+	if m.trackingActive {
+		activeTaskLogBeginTS = &m.activeTLBeginTS
+	}
+
+	m.secsTrackedToday = domain.SecondsTrackedToday(
+		finishedTaskLogs,
+		activeTaskLogBeginTS,
+		m.timeProvider.Now(),
 	)
 }
 
