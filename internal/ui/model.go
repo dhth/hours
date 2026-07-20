@@ -108,7 +108,7 @@ type Model struct {
 	timeProvider                   types.TimeProvider
 	activeTasksList                list.Model
 	inactiveTasksList              list.Model
-	taskMap                        map[int]*types.Task
+	taskMap                        map[int]*taskListItem
 	taskIndexMap                   map[int]int
 	activeTLBeginTS                time.Time
 	activeTLEndTS                  time.Time

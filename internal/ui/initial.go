@@ -70,7 +70,7 @@ This can be used to record details about your work on this task.`
 				style.listItemDescColor,
 				lipgloss.Color(style.theme.InactiveTasks),
 			), listWidth, 0),
-		taskMap:      make(map[int]*types.Task),
+		taskMap:      make(map[int]*taskListItem),
 		taskIndexMap: make(map[int]int),
 		taskLogList: list.New(tasklogListItems,
 			newItemDelegate(

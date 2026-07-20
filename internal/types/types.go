@@ -14,18 +14,6 @@ const emptyCommentIndicator = "∅"
 
 var ErrIncorrectTaskStatusProvided = errors.New("incorrect task status provided")
 
-type Task struct {
-	ID             int
-	Summary        string
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	TrackingActive bool
-	SecsSpent      int
-	Active         bool
-	ListTitle      string
-	ListDesc       string
-}
-
 type TaskLogEntry struct {
 	ID          int
 	TaskID      int
@@ -78,28 +66,6 @@ func (t TestTimeProvider) Now() time.Time {
 	return t.FixedTime
 }
 
-func (t *Task) UpdateListTitle() {
-	var trackingIndicator string
-	if t.TrackingActive {
-		trackingIndicator = "⏲ "
-	}
-
-	t.ListTitle = trackingIndicator + t.Summary
-}
-
-func (t *Task) UpdateListDesc(timeProvider TimeProvider) {
-	var timeSpent string
-
-	if t.SecsSpent != 0 {
-		timeSpent = "worked on for " + HumanizeDuration(t.SecsSpent)
-	} else {
-		timeSpent = "no time spent"
-	}
-	lastUpdated := fmt.Sprintf("last updated: %s", humanize.RelTime(t.UpdatedAt, timeProvider.Now(), "ago", "from now"))
-
-	t.ListDesc = fmt.Sprintf("%s %s", utils.RightPadTrim(lastUpdated, 60, true), timeSpent)
-}
-
 func (tl *TaskLogEntry) UpdateListTitle() {
 	tl.ListTitle = utils.TrimWithMoreLinesIndicator(tl.GetComment(), 60)
 }
@@ -137,18 +103,6 @@ func (tl *TaskLogEntry) GetComment() string {
 	}
 
 	return *tl.Comment
-}
-
-func (t Task) Title() string {
-	return t.ListTitle
-}
-
-func (t Task) Description() string {
-	return t.ListDesc
-}
-
-func (t Task) FilterValue() string {
-	return t.Summary
 }
 
 func (tl TaskLogEntry) Title() string {

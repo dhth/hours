@@ -108,9 +108,9 @@ func fetchActiveTask(db *sql.DB) tea.Cmd {
 	}
 }
 
-func updateTaskRep(db *sql.DB, t *types.Task) tea.Cmd {
+func updateTaskRep(db *sql.DB, t *taskListItem) tea.Cmd {
 	return func() tea.Msg {
-		err := pers.UpdateTaskData(db, t)
+		err := pers.UpdateTaskData(db, &t.Task)
 		return taskRepUpdatedMsg{
 			tsk: t,
 			err: err,
@@ -153,14 +153,14 @@ func createTask(db *sql.DB, summary string) tea.Cmd {
 	}
 }
 
-func updateTask(db *sql.DB, task *types.Task, summary string) tea.Cmd {
+func updateTask(db *sql.DB, task *taskListItem, summary string) tea.Cmd {
 	return func() tea.Msg {
 		err := pers.UpdateTask(db, task.ID, summary)
 		return taskUpdatedMsg{task, summary, err}
 	}
 }
 
-func updateTaskActiveStatus(db *sql.DB, task *types.Task, active bool) tea.Cmd {
+func updateTaskActiveStatus(db *sql.DB, task *taskListItem, active bool) tea.Cmd {
 	return func() tea.Msg {
 		err := pers.UpdateTaskActiveStatus(db, task.ID, active)
 		return taskActiveStatusUpdatedMsg{task, active, err}
