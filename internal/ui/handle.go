@@ -692,11 +692,9 @@ func (m *Model) handleManualTLInsertedMsg(msg manualTLInsertedMsg) []tea.Cmd {
 		return nil
 	}
 
-	task, ok := m.taskMap[msg.taskID]
-
 	var cmds []tea.Cmd
-	if ok {
-		cmds = append(cmds, updateTaskRep(m.db, task))
+	if _, ok := m.taskMap[msg.taskID]; ok {
+		cmds = append(cmds, fetchTaskTrackingData(m.db, msg.taskID))
 	}
 	cmds = append(cmds, fetchTLS(m.db, nil))
 
@@ -709,11 +707,9 @@ func (m *Model) handleSavedTLEditedMsg(msg savedTLEditedMsg) []tea.Cmd {
 		return nil
 	}
 
-	task, ok := m.taskMap[msg.taskID]
-
 	var cmds []tea.Cmd
-	if ok {
-		cmds = append(cmds, updateTaskRep(m.db, task))
+	if _, ok := m.taskMap[msg.taskID]; ok {
+		cmds = append(cmds, fetchTaskTrackingData(m.db, msg.taskID))
 	}
 	cmds = append(cmds, fetchTLS(m.db, &msg.tlID))
 
@@ -802,7 +798,7 @@ func (m *Model) handleTrackingToggledMsg(msg trackingToggledMsg) []tea.Cmd {
 		m.activeTLComment = nil
 		m.trackingActive = false
 		m.activeTaskID = -1
-		cmds = append(cmds, updateTaskRep(m.db, task))
+		cmds = append(cmds, fetchTaskTrackingData(m.db, msg.taskID))
 		cmds = append(cmds, fetchTLS(m.db, nil))
 	case false:
 		m.lastTrackingChange = trackingStarted
@@ -855,9 +851,8 @@ func (m *Model) handleTLDeleted(msg tLDeletedMsg) []tea.Cmd {
 	}
 
 	var cmds []tea.Cmd
-	task, ok := m.taskMap[msg.entry.TaskID]
-	if ok {
-		cmds = append(cmds, updateTaskRep(m.db, task))
+	if _, ok := m.taskMap[msg.entry.TaskID]; ok {
+		cmds = append(cmds, fetchTaskTrackingData(m.db, msg.entry.TaskID))
 	}
 	cmds = append(cmds, fetchTLS(m.db, nil))
 

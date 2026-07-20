@@ -109,12 +109,15 @@ func fetchActiveTask(db *sql.DB) tea.Cmd {
 	}
 }
 
-func updateTaskRep(db *sql.DB, t *taskListItem) tea.Cmd {
+func fetchTaskTrackingData(db *sql.DB, taskID int) tea.Cmd {
 	return func() tea.Msg {
-		err := pers.UpdateTaskData(db, &t.Task)
-		return taskRepUpdatedMsg{
-			tsk: t,
-			err: err,
+		data, err := pers.FetchTaskTrackingData(db, taskID)
+
+		return taskTrackingDataFetchedMsg{
+			taskID:    taskID,
+			secsSpent: data.SecsSpent,
+			updatedAt: data.UpdatedAt,
+			err:       err,
 		}
 	}
 }
