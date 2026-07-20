@@ -11,8 +11,6 @@ const (
 	TimePeriodToday = "today"
 	TimePeriodWeek  = "week"
 	timeFormat      = "2006/01/02 15:04"
-	timeOnlyFormat  = "15:04"
-	dayFormat       = "Monday"
 	dateFormat      = "2006/01/02"
 )
 
@@ -147,41 +145,4 @@ func GetShiftedTime(ts time.Time, direction TimeShiftDirection, duration TimeShi
 		d = -1 * d
 	}
 	return ts.Add(d)
-}
-
-type tsRelative uint8
-
-const (
-	tsFromFuture tsRelative = iota
-	tsFromToday
-	tsFromYesterday
-	tsFromThisWeek
-	tsFromBeforeThisWeek
-)
-
-func getTSRelative(ts time.Time, reference time.Time) tsRelative {
-	if ts.Sub(reference) > 0 {
-		return tsFromFuture
-	}
-
-	startOfReferenceDay := time.Date(reference.Year(), reference.Month(), reference.Day(), 0, 0, 0, 0, reference.Location())
-
-	if ts.Sub(startOfReferenceDay) > 0 {
-		return tsFromToday
-	}
-
-	startOfYest := startOfReferenceDay.AddDate(0, 0, -1)
-
-	if ts.Sub(startOfYest) > 0 {
-		return tsFromYesterday
-	}
-
-	weekday := reference.Weekday()
-	offset := (7 + weekday - time.Monday) % 7
-	startOfWeek := startOfReferenceDay.AddDate(0, 0, -int(offset))
-
-	if ts.Sub(startOfWeek) > 0 {
-		return tsFromThisWeek
-	}
-	return tsFromBeforeThisWeek
 }

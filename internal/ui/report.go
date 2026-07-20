@@ -10,6 +10,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/dhth/hours/internal/domain"
 	pers "github.com/dhth/hours/internal/persistence"
 	"github.com/dhth/hours/internal/types"
 	"github.com/dhth/hours/internal/utils"
@@ -76,7 +77,7 @@ func getReport(db *sql.DB, style Style, start time.Time, numDays int, taskStatus
 	var nextDay time.Time
 
 	var maxEntryForADay int
-	reportData := make(map[int][]types.TaskLogEntry)
+	reportData := make(map[int][]domain.TaskLogEntry)
 
 	noEntriesFound := true
 	for i := range numDays {
@@ -242,7 +243,7 @@ func getReportAgg(db *sql.DB,
 	var nextDay time.Time
 
 	var maxEntryForADay int
-	reportData := make(map[int][]types.TaskReportEntry)
+	reportData := make(map[int][]domain.TaskReportEntry)
 
 	noEntriesFound := true
 	for i := range numDays {

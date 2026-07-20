@@ -159,11 +159,11 @@ func (m Model) Init() tea.Cmd {
 
 func (m *Model) recalculateSecondsTrackedToday() {
 	items := m.taskLogList.Items()
-	finishedTaskLogs := make([]types.TaskLogEntry, 0, len(items))
+	finishedTaskLogs := make([]domain.TaskLogEntry, 0, len(items))
 	for _, item := range items {
-		entry, ok := item.(types.TaskLogEntry)
+		entry, ok := item.(taskLogListItem)
 		if ok {
-			finishedTaskLogs = append(finishedTaskLogs, entry)
+			finishedTaskLogs = append(finishedTaskLogs, entry.TaskLogEntry)
 		}
 	}
 

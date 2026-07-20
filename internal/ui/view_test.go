@@ -486,22 +486,24 @@ func createTestTask(id int, summary string, active bool, trackingActive bool, tp
 	return task
 }
 
-func createTestTaskLogEntry(id int, taskID int, taskSummary string, tp types.TimeProvider) *types.TaskLogEntry {
+func createTestTaskLogEntry(id int, taskID int, taskSummary string, tp types.TimeProvider) taskLogListItem {
 	comment := "Test work on task"
 	entryEndTime := referenceTime.Add(-1 * time.Hour)
 
-	entry := &types.TaskLogEntry{
-		ID:          id,
-		TaskID:      taskID,
-		TaskSummary: taskSummary,
-		BeginTS:     entryEndTime.Add(-90 * time.Minute),
-		EndTS:       entryEndTime,
-		SecsSpent:   5400,
-		Comment:     &comment,
+	entry := taskLogListItem{
+		TaskLogEntry: domain.TaskLogEntry{
+			ID:          id,
+			TaskID:      taskID,
+			TaskSummary: taskSummary,
+			BeginTS:     entryEndTime.Add(-90 * time.Minute),
+			EndTS:       entryEndTime,
+			SecsSpent:   5400,
+			Comment:     &comment,
+		},
 	}
 
-	entry.UpdateListTitle()
-	entry.UpdateListDesc(tp)
+	entry.updateListTitle()
+	entry.updateListDesc(tp)
 
 	return entry
 }

@@ -9,6 +9,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/dhth/hours/internal/domain"
 	pers "github.com/dhth/hours/internal/persistence"
 	"github.com/dhth/hours/internal/types"
 	"github.com/dhth/hours/internal/utils"
@@ -84,7 +85,7 @@ func getStats(db *sql.DB,
 	plain bool) (string,
 	error,
 ) {
-	var entries []types.TaskReportEntry
+	var entries []domain.TaskReportEntry
 	var err error
 
 	if dateRange == nil {

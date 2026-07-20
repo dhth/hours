@@ -27,6 +27,13 @@ type QuickSwitchResult struct {
 	CurrentlyActiveTLID int
 }
 
+type activeTaskLogEntry struct {
+	ID      int
+	TaskID  int
+	BeginTS time.Time
+	Comment *string
+}
+
 func InsertNewTL(db *sql.DB, taskID int, beginTs time.Time) (int, error) {
 	return runInTxAndReturnID(db, func(tx *sql.Tx) (int, error) {
 		stmt, err := tx.Prepare(`
@@ -253,7 +260,7 @@ WHERE id = ?;
 
 func EditSavedTL(db *sql.DB, tlID int, beginTs time.Time, endTs time.Time, comment *string) (int, error) {
 	return runInTxAndReturnID(db, func(tx *sql.Tx) (int, error) {
-		var tl types.TaskLogEntry
+		var tl domain.TaskLogEntry
 		row := tx.QueryRow(`
 SELECT id, task_id, begin_ts, end_ts, secs_spent, comment
 FROM task_log
@@ -327,14 +334,14 @@ WHERE id = ?;
 	})
 }
 
-func FetchActiveTaskDetails(db *sql.DB) (types.ActiveTaskDetails, error) {
+func FetchActiveTaskDetails(db *sql.DB) (domain.ActiveTaskDetails, error) {
 	row := db.QueryRow(`
 SELECT t.id, t.summary, tl.begin_ts, tl.comment
 FROM task_log tl left join task t on tl.task_id = t.id
 WHERE tl.active=true;
 `)
 
-	var activeTaskDetails types.ActiveTaskDetails
+	var activeTaskDetails domain.ActiveTaskDetails
 	err := row.Scan(
 		&activeTaskDetails.TaskID,
 		&activeTaskDetails.TaskSummary,
@@ -471,8 +478,8 @@ LIMIT ?;
 	return tasks, nil
 }
 
-func FetchTLEntries(db *sql.DB, desc bool, limit int) ([]types.TaskLogEntry, error) {
-	var logEntries []types.TaskLogEntry
+func FetchTLEntries(db *sql.DB, desc bool, limit int) ([]domain.TaskLogEntry, error) {
+	var logEntries []domain.TaskLogEntry
 
 	var order string
 	if desc {
@@ -495,7 +502,7 @@ LIMIT ?;
 	defer rows.Close()
 
 	for rows.Next() {
-		var entry types.TaskLogEntry
+		var entry domain.TaskLogEntry
 		err = rows.Scan(
 			&entry.ID,
 			&entry.TaskID,
@@ -519,7 +526,7 @@ LIMIT ?;
 	return logEntries, nil
 }
 
-func FetchTLEntriesBetweenTS(db *sql.DB, beginTs, endTs time.Time, taskStatus types.TaskStatus, limit int) ([]types.TaskLogEntry, error) {
+func FetchTLEntriesBetweenTS(db *sql.DB, beginTs, endTs time.Time, taskStatus types.TaskStatus, limit int) ([]domain.TaskLogEntry, error) {
 	var tsFilter string
 	switch taskStatus {
 	case types.TaskStatusActive:
@@ -528,7 +535,7 @@ func FetchTLEntriesBetweenTS(db *sql.DB, beginTs, endTs time.Time, taskStatus ty
 		tsFilter = "AND t.active is false"
 	}
 
-	var logEntries []types.TaskLogEntry
+	var logEntries []domain.TaskLogEntry
 
 	rows, err := db.Query(`
 SELECT tl.id, tl.task_id, t.summary, tl.begin_ts, tl.end_ts, tl.secs_spent, tl.comment
@@ -545,7 +552,7 @@ ORDER by tl.begin_ts ASC LIMIT ?;
 	defer rows.Close()
 
 	for rows.Next() {
-		var entry types.TaskLogEntry
+		var entry domain.TaskLogEntry
 		err = rows.Scan(
 			&entry.ID,
 			&entry.TaskID,
@@ -569,7 +576,7 @@ ORDER by tl.begin_ts ASC LIMIT ?;
 	return logEntries, nil
 }
 
-func FetchStats(db *sql.DB, taskStatus types.TaskStatus, limit int) ([]types.TaskReportEntry, error) {
+func FetchStats(db *sql.DB, taskStatus types.TaskStatus, limit int) ([]domain.TaskReportEntry, error) {
 	var tsFilter string
 	switch taskStatus {
 	case types.TaskStatusActive:
@@ -592,10 +599,10 @@ limit ?;
 	}
 	defer rows.Close()
 
-	var tLE []types.TaskReportEntry
+	var tLE []domain.TaskReportEntry
 
 	for rows.Next() {
-		var entry types.TaskReportEntry
+		var entry domain.TaskReportEntry
 		err = rows.Scan(
 			&entry.TaskID,
 			&entry.TaskSummary,
@@ -614,7 +621,7 @@ limit ?;
 	return tLE, nil
 }
 
-func FetchStatsBetweenTS(db *sql.DB, beginTs, endTs time.Time, taskStatus types.TaskStatus, limit int) ([]types.TaskReportEntry, error) {
+func FetchStatsBetweenTS(db *sql.DB, beginTs, endTs time.Time, taskStatus types.TaskStatus, limit int) ([]domain.TaskReportEntry, error) {
 	var activeFilter string
 	switch taskStatus {
 	case types.TaskStatusActive:
@@ -637,10 +644,10 @@ LIMIT ?;
 	}
 	defer rows.Close()
 
-	var tLE []types.TaskReportEntry
+	var tLE []domain.TaskReportEntry
 
 	for rows.Next() {
-		var entry types.TaskReportEntry
+		var entry domain.TaskReportEntry
 		err = rows.Scan(
 			&entry.TaskID,
 			&entry.TaskSummary,
@@ -659,7 +666,7 @@ LIMIT ?;
 	return tLE, nil
 }
 
-func FetchReportBetweenTS(db *sql.DB, beginTs, endTs time.Time, taskStatus types.TaskStatus, limit int) ([]types.TaskReportEntry, error) {
+func FetchReportBetweenTS(db *sql.DB, beginTs, endTs time.Time, taskStatus types.TaskStatus, limit int) ([]domain.TaskReportEntry, error) {
 	var tsFilter string
 	switch taskStatus {
 	case types.TaskStatusActive:
@@ -683,10 +690,10 @@ LIMIT ?;
 	}
 	defer rows.Close()
 
-	var tLE []types.TaskReportEntry
+	var tLE []domain.TaskReportEntry
 
 	for rows.Next() {
-		var entry types.TaskReportEntry
+		var entry domain.TaskReportEntry
 		err = rows.Scan(
 			&entry.TaskID,
 			&entry.TaskSummary,
@@ -705,7 +712,7 @@ LIMIT ?;
 	return tLE, nil
 }
 
-func DeleteTL(db *sql.DB, entry *types.TaskLogEntry) error {
+func DeleteTL(db *sql.DB, entry *domain.TaskLogEntry) error {
 	return runInTx(db, func(tx *sql.Tx) error {
 		stmt, err := tx.Prepare(`
 DELETE from task_log
@@ -823,8 +830,8 @@ WHERE id=?;
 	return task, nil
 }
 
-func fetchTLByID(db *sql.DB, id int) (types.TaskLogEntry, error) {
-	var tl types.TaskLogEntry
+func fetchTLByID(db *sql.DB, id int) (domain.TaskLogEntry, error) {
+	var tl domain.TaskLogEntry
 	row := db.QueryRow(`
 SELECT id, task_id, begin_ts, end_ts, secs_spent, comment
 FROM task_log
@@ -851,8 +858,8 @@ WHERE id=?;
 	return tl, nil
 }
 
-func fetchActiveTLByID(db *sql.DB, id int) (types.ActiveTaskLogEntry, error) {
-	var tl types.ActiveTaskLogEntry
+func fetchActiveTLByID(db *sql.DB, id int) (activeTaskLogEntry, error) {
+	var tl activeTaskLogEntry
 	row := db.QueryRow(`
 SELECT id, task_id, begin_ts, comment
 FROM task_log

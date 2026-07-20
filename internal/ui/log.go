@@ -110,7 +110,7 @@ func getTaskLog(db *sql.DB,
 		if plain {
 			data[i] = []string{
 				utils.RightPadTrim(entry.TaskSummary, 20, false),
-				utils.RightPadTrimWithMoreLinesIndicator(entry.GetComment(), 40),
+				utils.RightPadTrimWithMoreLinesIndicator(taskLogComment(entry.Comment), 40),
 				fmt.Sprintf("%s  ...  %s", entry.BeginTS.Format(timeFormat), entry.EndTS.Format(timeFormat)),
 				utils.RightPadTrim(timeSpentStr, logTimeCharsBudget, false),
 			}
@@ -122,7 +122,7 @@ func getTaskLog(db *sql.DB,
 			}
 			data[i] = []string{
 				rowStyle.Render(utils.RightPadTrim(entry.TaskSummary, 20, false)),
-				rowStyle.Render(utils.RightPadTrimWithMoreLinesIndicator(entry.GetComment(), 40)),
+				rowStyle.Render(utils.RightPadTrimWithMoreLinesIndicator(taskLogComment(entry.Comment), 40)),
 				rowStyle.Render(fmt.Sprintf("%s  ...  %s", entry.BeginTS.Format(timeFormat), entry.EndTS.Format(timeFormat))),
 				rowStyle.Render(utils.RightPadTrim(timeSpentStr, logTimeCharsBudget, false)),
 			}

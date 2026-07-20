@@ -6,6 +6,7 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/dhth/hours/internal/domain"
 	pers "github.com/dhth/hours/internal/persistence"
 	"github.com/dhth/hours/internal/types"
 	_ "modernc.org/sqlite" // sqlite driver
@@ -129,7 +130,7 @@ func fetchTLS(db *sql.DB, tlIDToFocusOn *int) tea.Cmd {
 	}
 }
 
-func deleteTL(db *sql.DB, entry *types.TaskLogEntry) tea.Cmd {
+func deleteTL(db *sql.DB, entry *domain.TaskLogEntry) tea.Cmd {
 	return func() tea.Msg {
 		err := pers.DeleteTL(db, entry)
 		return tLDeletedMsg{

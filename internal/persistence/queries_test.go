@@ -826,7 +826,7 @@ func cleanupDB(t *testing.T, testDB *sql.DB) {
 
 type testData struct {
 	tasks    []domain.Task
-	taskLogs []types.TaskLogEntry
+	taskLogs []domain.TaskLogEntry
 }
 
 func getTestData(referenceTS time.Time) testData {
@@ -854,7 +854,7 @@ func getTestData(referenceTS time.Time) testData {
 	commentTask1TL1 := "task 1 tl 1"
 	commentTask1TL2 := "task 1 tl 2"
 	commentTask2TL1 := "task 2 tl 1"
-	taskLogs := []types.TaskLogEntry{
+	taskLogs := []domain.TaskLogEntry{
 		{
 			ID:        1,
 			TaskID:    1,
