@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dhth/hours/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -97,7 +96,7 @@ func TestOverlappingSeconds(t *testing.T) {
 
 func TestSecondsTrackedToday(t *testing.T) {
 	now := timestamp(t, "2026-01-16T14:00:00+01:00")
-	taskLogsWithinDay := []types.TaskLogEntry{
+	taskLogsWithinDay := []TaskLogEntry{
 		{
 			BeginTS: timestamp(t, "2026-01-16T09:15:00+01:00"),
 			EndTS:   timestamp(t, "2026-01-16T10:45:00+01:00"),
@@ -107,7 +106,7 @@ func TestSecondsTrackedToday(t *testing.T) {
 			EndTS:   timestamp(t, "2026-01-16T12:15:00+01:00"),
 		},
 	}
-	taskLogsCrossingMidnight := []types.TaskLogEntry{
+	taskLogsCrossingMidnight := []TaskLogEntry{
 		{
 			BeginTS: timestamp(t, "2026-01-15T23:15:00+01:00"),
 			EndTS:   timestamp(t, "2026-01-16T00:45:00+01:00"),
@@ -119,7 +118,7 @@ func TestSecondsTrackedToday(t *testing.T) {
 
 	testCases := []struct {
 		name                 string
-		finishedTaskLogs     []types.TaskLogEntry
+		finishedTaskLogs     []TaskLogEntry
 		activeTaskLogBeginTS *time.Time
 		expectedSeconds      int
 	}{

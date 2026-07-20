@@ -2,12 +2,10 @@ package domain
 
 import (
 	"time"
-
-	"github.com/dhth/hours/internal/types"
 )
 
 func SecondsTrackedToday(
-	finishedTaskLogs []types.TaskLogEntry,
+	finishedTaskLogs []TaskLogEntry,
 	activeTaskLogBeginTS *time.Time,
 	now time.Time,
 ) int {

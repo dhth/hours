@@ -5,48 +5,9 @@ import (
 	"fmt"
 	"math"
 	"time"
-
-	"github.com/dhth/hours/internal/utils"
-	"github.com/dustin/go-humanize"
 )
 
-const emptyCommentIndicator = "∅"
-
 var ErrIncorrectTaskStatusProvided = errors.New("incorrect task status provided")
-
-type TaskLogEntry struct {
-	ID          int
-	TaskID      int
-	TaskSummary string
-	BeginTS     time.Time
-	EndTS       time.Time
-	SecsSpent   int
-	Comment     *string
-	ListTitle   string
-	ListDesc    string
-}
-
-type ActiveTaskLogEntry struct {
-	ID          int
-	TaskID      int
-	TaskSummary string
-	BeginTS     time.Time
-	Comment     *string
-}
-
-type ActiveTaskDetails struct {
-	TaskID            int
-	TaskSummary       string
-	CurrentLogBeginTS time.Time
-	CurrentLogComment *string
-}
-
-type TaskReportEntry struct {
-	TaskID      int
-	TaskSummary string
-	NumEntries  int
-	SecsSpent   int
-}
 
 type TimeProvider interface {
 	Now() time.Time
@@ -64,57 +25,6 @@ type TestTimeProvider struct {
 
 func (t TestTimeProvider) Now() time.Time {
 	return t.FixedTime
-}
-
-func (tl *TaskLogEntry) UpdateListTitle() {
-	tl.ListTitle = utils.TrimWithMoreLinesIndicator(tl.GetComment(), 60)
-}
-
-func (tl *TaskLogEntry) UpdateListDesc(timeProvider TimeProvider) {
-	timeSpentStr := HumanizeDuration(tl.SecsSpent)
-
-	var timeStr string
-	var durationMsg string
-
-	now := timeProvider.Now()
-	endTSRelative := getTSRelative(tl.EndTS, now)
-
-	switch endTSRelative {
-	case tsFromToday:
-		durationMsg = fmt.Sprintf("%s  ...  %s", tl.BeginTS.Format(timeOnlyFormat), tl.EndTS.Format(timeOnlyFormat))
-	case tsFromYesterday:
-		durationMsg = "Yesterday"
-	case tsFromThisWeek:
-		durationMsg = tl.EndTS.Format(dayFormat)
-	default:
-		durationMsg = humanize.RelTime(tl.EndTS, now, "ago", "from now")
-	}
-
-	timeStr = fmt.Sprintf("%s (%s)",
-		utils.RightPadTrim(durationMsg, 40, true),
-		timeSpentStr)
-
-	tl.ListDesc = fmt.Sprintf("%s %s", utils.RightPadTrim(tl.TaskSummary, 60, true), timeStr)
-}
-
-func (tl *TaskLogEntry) GetComment() string {
-	if tl.Comment == nil {
-		return emptyCommentIndicator
-	}
-
-	return *tl.Comment
-}
-
-func (tl TaskLogEntry) Title() string {
-	return tl.ListTitle
-}
-
-func (tl TaskLogEntry) Description() string {
-	return tl.ListDesc
-}
-
-func (tl TaskLogEntry) FilterValue() string {
-	return fmt.Sprintf("%d", tl.ID)
 }
 
 func HumanizeDuration(durationInSecs int) string {

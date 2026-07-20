@@ -53,13 +53,13 @@ type activeTaskLogDeletedMsg struct {
 }
 
 type activeTaskFetchedMsg struct {
-	activeTask types.ActiveTaskDetails
+	activeTask domain.ActiveTaskDetails
 	noneActive bool
 	err        error
 }
 
 type tLsFetchedMsg struct {
-	entries       []types.TaskLogEntry
+	entries       []domain.TaskLogEntry
 	tlIDToFocusOn *int
 	err           error
 }
@@ -81,7 +81,7 @@ type taskActiveStatusUpdatedMsg struct {
 }
 
 type tLDeletedMsg struct {
-	entry *types.TaskLogEntry
+	entry *domain.TaskLogEntry
 	err   error
 }
 

@@ -135,7 +135,7 @@ func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
 		cmd = insertManualTL(m.db, task.ID, beginTS, endTS, comment)
 	case tasklogUpdate:
 		m.activeView = taskLogView
-		tl, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
+		tl, ok := m.taskLogList.SelectedItem().(taskLogListItem)
 		if !ok {
 			m.message = errMsg(genericErrorMsg)
 			return nil
@@ -364,7 +364,7 @@ func (m *Model) handleRequestToEditSavedTL() {
 		return
 	}
 
-	tl, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
+	tl, ok := m.taskLogList.SelectedItem().(taskLogListItem)
 	if !ok {
 		m.message = errMsg(genericErrorMsg)
 		return
@@ -411,12 +411,12 @@ func (m *Model) getCmdToDeactivateTask() tea.Cmd {
 }
 
 func (m *Model) getCmdToDeleteTL() tea.Cmd {
-	entry, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
+	entry, ok := m.taskLogList.SelectedItem().(taskLogListItem)
 	if !ok {
 		m.message = errMsg("Couldn't delete task log entry")
 		return nil
 	}
-	return deleteTL(m.db, &entry)
+	return deleteTL(m.db, &entry.TaskLogEntry)
 }
 
 func (m *Model) getCmdToActivateDeactivatedTask() tea.Cmd {
@@ -561,7 +561,7 @@ func (m *Model) handleRequestToViewTLDetails() {
 		return
 	}
 
-	tl, ok := m.taskLogList.SelectedItem().(types.TaskLogEntry)
+	tl, ok := m.taskLogList.SelectedItem().(taskLogListItem)
 	if !ok {
 		m.message = errMsg(genericErrorMsg)
 		return
@@ -586,7 +586,7 @@ func (m *Model) handleRequestToViewTLDetails() {
 		tl.BeginTS.Format(timeFormat),
 		tl.EndTS.Format(timeFormat),
 		timeSpentStr,
-		tl.GetComment())
+		taskLogComment(tl.Comment))
 
 	m.tLDetailsVP.SetContent(details)
 	m.activeView = taskLogDetailsView
@@ -730,9 +730,10 @@ func (m *Model) handleTLSFetchedMsg(msg tLsFetchedMsg) {
 	var indexToFocusOn *int
 	var indexToFocusOnFound bool
 	for i, e := range msg.entries {
-		e.UpdateListTitle()
-		e.UpdateListDesc(m.timeProvider)
-		items[i] = e
+		item := taskLogListItem{TaskLogEntry: e}
+		item.updateListTitle()
+		item.updateListDesc(m.timeProvider)
+		items[i] = item
 		if !indexToFocusOnFound && msg.tlIDToFocusOn != nil && e.ID == *msg.tlIDToFocusOn {
 			indexToFocusOn = &i
 			indexToFocusOnFound = true
