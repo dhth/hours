@@ -841,7 +841,10 @@ func (m *Model) handleActiveTLSwitchedMsg(msg activeTLSwitchedMsg) tea.Cmd {
 	m.activeTaskID = msg.currentlyActiveTaskID
 	m.activeTLBeginTS = msg.ts
 
-	return fetchTLS(m.db, nil)
+	return tea.Batch(
+		fetchTaskTrackingData(m.db, msg.lastActiveTaskID),
+		fetchTLS(m.db, nil),
+	)
 }
 
 func (m *Model) handleTLDeleted(msg tLDeletedMsg) []tea.Cmd {
