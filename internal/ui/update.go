@@ -345,11 +345,18 @@ func (m Model) processMessage(msg tea.Msg) (Model, tea.Cmd) {
 		if updateCmd != nil {
 			cmds = append(cmds, updateCmd)
 		}
-	case taskRepUpdatedMsg:
+	case taskTrackingDataFetchedMsg:
 		if msg.err != nil {
 			m.message = errMsg(fmt.Sprintf("Error updating task status: %s", msg.err))
 		} else {
-			msg.tsk.updateListDesc(m.timeProvider)
+			task, ok := m.taskMap[msg.taskID]
+			if !ok {
+				break
+			}
+
+			task.SecsSpent = msg.secsSpent
+			task.UpdatedAt = msg.updatedAt
+			task.updateListDesc(m.timeProvider)
 		}
 	case tLDeletedMsg:
 		updateCmds := m.handleTLDeleted(msg)

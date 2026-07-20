@@ -27,6 +27,11 @@ type QuickSwitchResult struct {
 	CurrentlyActiveTLID int
 }
 
+type TaskTrackingData struct {
+	SecsSpent int
+	UpdatedAt time.Time
+}
+
 type activeTaskLogEntry struct {
 	ID      int
 	TaskID  int
@@ -422,21 +427,20 @@ WHERE id = ?
 	return nil
 }
 
-func UpdateTaskData(db *sql.DB, t *domain.Task) error {
+func FetchTaskTrackingData(db *sql.DB, taskID int) (TaskTrackingData, error) {
 	row := db.QueryRow(`
 SELECT secs_spent, updated_at
 FROM task
 WHERE id=?;
-    `, t.ID)
+    `, taskID)
 
-	err := row.Scan(
-		&t.SecsSpent,
-		&t.UpdatedAt,
-	)
+	var data TaskTrackingData
+	err := row.Scan(&data.SecsSpent, &data.UpdatedAt)
 	if err != nil {
-		return err
+		return TaskTrackingData{}, err
 	}
-	return nil
+
+	return data, nil
 }
 
 func FetchTasks(db *sql.DB, active bool, limit int) ([]domain.Task, error) {

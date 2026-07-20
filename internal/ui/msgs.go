@@ -26,9 +26,11 @@ type activeTLSwitchedMsg struct {
 	err                   error
 }
 
-type taskRepUpdatedMsg struct {
-	tsk *taskListItem
-	err error
+type taskTrackingDataFetchedMsg struct {
+	taskID    int
+	secsSpent int
+	updatedAt time.Time
+	err       error
 }
 
 type manualTLInsertedMsg struct {
