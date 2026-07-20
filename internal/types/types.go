@@ -47,22 +47,6 @@ func HumanizeDuration(durationInSecs int) string {
 	return fmt.Sprintf("%dh %dm", int(duration.Hours()), modMins)
 }
 
-type TimeShiftDirection uint8
-
-const (
-	ShiftForward TimeShiftDirection = iota
-	ShiftBackward
-)
-
-type TimeShiftDuration uint8
-
-const (
-	ShiftMinute TimeShiftDuration = iota
-	ShiftFiveMinutes
-	ShiftHour
-	ShiftDay
-)
-
 type TaskStatus uint8
 
 const (
