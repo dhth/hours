@@ -126,23 +126,3 @@ func GetDateRangeFromPeriod(period string, now time.Time, fullWeek bool, maxDays
 		NumDays: numDays,
 	}, nil
 }
-
-func GetShiftedTime(ts time.Time, direction TimeShiftDirection, duration TimeShiftDuration) time.Time {
-	var d time.Duration
-
-	switch duration {
-	case ShiftMinute:
-		d = time.Minute
-	case ShiftFiveMinutes:
-		d = time.Minute * 5
-	case ShiftHour:
-		d = time.Hour
-	case ShiftDay:
-		d = time.Hour * 24
-	}
-
-	if direction == ShiftBackward {
-		d = -1 * d
-	}
-	return ts.Add(d)
-}

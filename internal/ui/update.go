@@ -112,7 +112,7 @@ func (m Model) processMessage(msg tea.Msg) (Model, tea.Cmd) {
 		case "k":
 			switch m.activeView {
 			case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
-				err := m.shiftTime(types.ShiftBackward, types.ShiftMinute)
+				err := m.shiftTime(shiftBackward, shiftMinute)
 				if err != nil {
 					return m, tea.Batch(cmds...)
 				}
@@ -120,7 +120,7 @@ func (m Model) processMessage(msg tea.Msg) (Model, tea.Cmd) {
 		case "j":
 			switch m.activeView {
 			case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
-				err := m.shiftTime(types.ShiftForward, types.ShiftMinute)
+				err := m.shiftTime(shiftForward, shiftMinute)
 				if err != nil {
 					return m, tea.Batch(cmds...)
 				}
@@ -128,7 +128,7 @@ func (m Model) processMessage(msg tea.Msg) (Model, tea.Cmd) {
 		case "K":
 			switch m.activeView {
 			case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
-				err := m.shiftTime(types.ShiftBackward, types.ShiftFiveMinutes)
+				err := m.shiftTime(shiftBackward, shiftFiveMinutes)
 				if err != nil {
 					return m, tea.Batch(cmds...)
 				}
@@ -136,7 +136,7 @@ func (m Model) processMessage(msg tea.Msg) (Model, tea.Cmd) {
 		case "J":
 			switch m.activeView {
 			case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
-				err := m.shiftTime(types.ShiftForward, types.ShiftFiveMinutes)
+				err := m.shiftTime(shiftForward, shiftFiveMinutes)
 				if err != nil {
 					return m, tea.Batch(cmds...)
 				}
@@ -144,7 +144,7 @@ func (m Model) processMessage(msg tea.Msg) (Model, tea.Cmd) {
 		case "h":
 			switch m.activeView {
 			case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
-				err := m.shiftTime(types.ShiftBackward, types.ShiftDay)
+				err := m.shiftTime(shiftBackward, shiftDay)
 				if err != nil {
 					return m, tea.Batch(cmds...)
 				}
@@ -155,7 +155,7 @@ func (m Model) processMessage(msg tea.Msg) (Model, tea.Cmd) {
 		case "l":
 			switch m.activeView {
 			case editActiveTLView, finishActiveTLView, manualTasklogEntryView, editSavedTLView:
-				err := m.shiftTime(types.ShiftForward, types.ShiftDay)
+				err := m.shiftTime(shiftForward, shiftDay)
 				if err != nil {
 					return m, tea.Batch(cmds...)
 				}

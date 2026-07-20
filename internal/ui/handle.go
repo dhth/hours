@@ -242,7 +242,7 @@ func (m *Model) goBackwardInView() {
 	}
 }
 
-func (m *Model) shiftTime(direction types.TimeShiftDirection, duration types.TimeShiftDuration) error {
+func (m *Model) shiftTime(direction timeShiftDirection, duration timeShiftDuration) error {
 	switch m.trackingFocussedField {
 	case entryBeginTS, entryEndTS:
 		ts, err := time.ParseInLocation(timeFormat, m.tLInputs[m.trackingFocussedField].Value(), time.Local)
@@ -250,7 +250,7 @@ func (m *Model) shiftTime(direction types.TimeShiftDirection, duration types.Tim
 			return err
 		}
 
-		newTs := types.GetShiftedTime(ts, direction, duration)
+		newTs := getShiftedTime(ts, direction, duration)
 
 		m.tLInputs[m.trackingFocussedField].SetValue(newTs.Format(timeFormat))
 	}
