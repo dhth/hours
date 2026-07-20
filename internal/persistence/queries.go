@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dhth/hours/internal/domain"
 	"github.com/dhth/hours/internal/types"
 )
 
@@ -414,7 +415,7 @@ WHERE id = ?
 	return nil
 }
 
-func UpdateTaskData(db *sql.DB, t *types.Task) error {
+func UpdateTaskData(db *sql.DB, t *domain.Task) error {
 	row := db.QueryRow(`
 SELECT secs_spent, updated_at
 FROM task
@@ -431,8 +432,8 @@ WHERE id=?;
 	return nil
 }
 
-func FetchTasks(db *sql.DB, active bool, limit int) ([]types.Task, error) {
-	var tasks []types.Task
+func FetchTasks(db *sql.DB, active bool, limit int) ([]domain.Task, error) {
+	var tasks []domain.Task
 
 	rows, err := db.Query(`
 SELECT id, summary, secs_spent, created_at, updated_at, active
@@ -447,7 +448,7 @@ LIMIT ?;
 	defer rows.Close()
 
 	for rows.Next() {
-		var entry types.Task
+		var entry domain.Task
 		err = rows.Scan(
 			&entry.ID,
 			&entry.Summary,
@@ -794,8 +795,8 @@ func runInTxAndReturnA[A any](db *sql.DB, fn func(tx *sql.Tx) (A, error)) (A, er
 	return zero, err
 }
 
-func fetchTaskByID(db *sql.DB, id int) (types.Task, error) {
-	var task types.Task
+func fetchTaskByID(db *sql.DB, id int) (domain.Task, error) {
+	var task domain.Task
 	row := db.QueryRow(`
 SELECT id, summary, secs_spent, active, created_at, updated_at
 FROM task

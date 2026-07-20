@@ -6,6 +6,7 @@ import (
 
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
+	"github.com/dhth/hours/internal/domain"
 	"github.com/dhth/hours/internal/types"
 	"github.com/dhth/hours/internal/ui/theme"
 	"github.com/gkampitakis/go-snaps/snaps"
@@ -465,20 +466,22 @@ func createTestModel() Model {
 	return m
 }
 
-func createTestTask(id int, summary string, active bool, trackingActive bool, tp types.TimeProvider) *types.Task {
+func createTestTask(id int, summary string, active bool, trackingActive bool, tp types.TimeProvider) *taskListItem {
 	taskUpdateTime := referenceTime.Add(-3 * time.Hour)
-	task := &types.Task{
-		ID:             id,
-		Summary:        summary,
-		CreatedAt:      taskUpdateTime,
-		UpdatedAt:      taskUpdateTime,
-		TrackingActive: trackingActive,
-		SecsSpent:      0,
-		Active:         active,
+	task := &taskListItem{
+		Task: domain.Task{
+			ID:        id,
+			Summary:   summary,
+			CreatedAt: taskUpdateTime,
+			UpdatedAt: taskUpdateTime,
+			SecsSpent: 0,
+			Active:    active,
+		},
+		trackingActive: trackingActive,
 	}
 
-	task.UpdateListTitle()
-	task.UpdateListDesc(tp)
+	task.updateListTitle()
+	task.updateListDesc(tp)
 
 	return task
 }

@@ -307,7 +307,7 @@ func (m Model) processMessage(msg tea.Msg) (Model, tea.Cmd) {
 			m.message = errMsg(fmt.Sprintf("Error updating task: %s", msg.err))
 		} else {
 			msg.tsk.Summary = msg.summary
-			msg.tsk.UpdateListTitle()
+			msg.tsk.updateListTitle()
 		}
 	case tasksFetchedMsg:
 		handleCmd := m.handleTasksFetchedMsg(msg)
@@ -349,7 +349,7 @@ func (m Model) processMessage(msg tea.Msg) (Model, tea.Cmd) {
 		if msg.err != nil {
 			m.message = errMsg(fmt.Sprintf("Error updating task status: %s", msg.err))
 		} else {
-			msg.tsk.UpdateListDesc(m.timeProvider)
+			msg.tsk.updateListDesc(m.timeProvider)
 		}
 	case tLDeletedMsg:
 		updateCmds := m.handleTLDeleted(msg)

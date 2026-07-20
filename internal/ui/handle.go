@@ -33,7 +33,7 @@ func (m *Model) getCmdToCreateOrUpdateTask() tea.Cmd {
 		cmd = createTask(m.db, m.taskInputs[summaryField].Value())
 		m.taskInputs[summaryField].SetValue("")
 	case taskUpdateCxt:
-		selectedTask, ok := m.activeTasksList.SelectedItem().(*types.Task)
+		selectedTask, ok := m.activeTasksList.SelectedItem().(*taskListItem)
 		if !ok {
 			m.message = errMsg("Something went wrong")
 			return nil
@@ -127,7 +127,7 @@ func (m *Model) getCmdToCreateOrEditTL() tea.Cmd {
 	switch m.tasklogSaveType {
 	case tasklogInsert:
 		m.activeView = taskListView
-		task, ok := m.activeTasksList.SelectedItem().(*types.Task)
+		task, ok := m.activeTasksList.SelectedItem().(*taskListItem)
 		if !ok {
 			m.message = errMsg(genericErrorMsg)
 			return nil
@@ -401,7 +401,7 @@ func (m *Model) getCmdToDeactivateTask() tea.Cmd {
 		return nil
 	}
 
-	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
+	task, ok := m.activeTasksList.SelectedItem().(*taskListItem)
 	if !ok {
 		m.message = errMsg(msgCouldntSelectATask)
 		return nil
@@ -425,7 +425,7 @@ func (m *Model) getCmdToActivateDeactivatedTask() tea.Cmd {
 		return nil
 	}
 
-	task, ok := m.inactiveTasksList.SelectedItem().(*types.Task)
+	task, ok := m.inactiveTasksList.SelectedItem().(*taskListItem)
 	if !ok {
 		m.message = errMsg(genericErrorMsg)
 		return nil
@@ -435,7 +435,7 @@ func (m *Model) getCmdToActivateDeactivatedTask() tea.Cmd {
 }
 
 func (m *Model) getCmdToStartTracking() tea.Cmd {
-	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
+	task, ok := m.activeTasksList.SelectedItem().(*taskListItem)
 	if !ok {
 		m.message = errMsg(genericErrorMsg)
 		return nil
@@ -466,7 +466,7 @@ func (m *Model) handleRequestToStopTracking() {
 }
 
 func (m *Model) getCmdToQuickSwitchTracking() tea.Cmd {
-	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
+	task, ok := m.activeTasksList.SelectedItem().(*taskListItem)
 	if !ok {
 		m.message = errMsg(genericErrorMsg)
 		return nil
@@ -509,7 +509,7 @@ func (m *Model) handleRequestToUpdateTask() {
 		return
 	}
 
-	task, ok := m.activeTasksList.SelectedItem().(*types.Task)
+	task, ok := m.activeTasksList.SelectedItem().(*taskListItem)
 	if !ok {
 		m.message = errMsg(genericErrorMsg)
 		return
@@ -656,15 +656,16 @@ func (m *Model) handleTasksFetchedMsg(msg tasksFetchedMsg) tea.Cmd {
 	var cmd tea.Cmd
 	switch msg.active {
 	case true:
-		m.taskMap = make(map[int]*types.Task)
+		m.taskMap = make(map[int]*taskListItem)
 		m.taskIndexMap = make(map[int]int)
 		tasks := make([]list.Item, len(msg.tasks))
 		for i, task := range msg.tasks {
-			task.UpdateListTitle()
-			task.UpdateListDesc(m.timeProvider)
-			tasks[i] = &task
-			m.taskMap[task.ID] = &task
-			m.taskIndexMap[task.ID] = i
+			item := &taskListItem{Task: task}
+			item.updateListTitle()
+			item.updateListDesc(m.timeProvider)
+			tasks[i] = item
+			m.taskMap[item.ID] = item
+			m.taskIndexMap[item.ID] = i
 		}
 		m.activeTasksList.SetItems(tasks)
 		m.activeTasksList.Title = "Tasks"
@@ -674,9 +675,10 @@ func (m *Model) handleTasksFetchedMsg(msg tasksFetchedMsg) tea.Cmd {
 	case false:
 		inactiveTasks := make([]list.Item, len(msg.tasks))
 		for i, inactiveTask := range msg.tasks {
-			inactiveTask.UpdateListTitle()
-			inactiveTask.UpdateListDesc(m.timeProvider)
-			inactiveTasks[i] = &inactiveTask
+			item := &taskListItem{Task: inactiveTask}
+			item.updateListTitle()
+			item.updateListDesc(m.timeProvider)
+			inactiveTasks[i] = item
 		}
 		m.inactiveTasksList.SetItems(inactiveTasks)
 	}
@@ -763,8 +765,8 @@ func (m *Model) handleActiveTaskFetchedMsg(msg activeTaskFetchedMsg) {
 
 	activeTask, ok := m.taskMap[m.activeTaskID]
 	if ok {
-		activeTask.TrackingActive = true
-		activeTask.UpdateListTitle()
+		activeTask.trackingActive = true
+		activeTask.updateListTitle()
 
 		// go to tracked item on startup
 		activeIndex, aOk := m.taskIndexMap[msg.activeTask.TaskID]
@@ -795,7 +797,7 @@ func (m *Model) handleTrackingToggledMsg(msg trackingToggledMsg) []tea.Cmd {
 	switch msg.finished {
 	case true:
 		m.lastTrackingChange = trackingFinished
-		task.TrackingActive = false
+		task.trackingActive = false
 		m.activeTLComment = nil
 		m.trackingActive = false
 		m.activeTaskID = -1
@@ -803,12 +805,12 @@ func (m *Model) handleTrackingToggledMsg(msg trackingToggledMsg) []tea.Cmd {
 		cmds = append(cmds, fetchTLS(m.db, nil))
 	case false:
 		m.lastTrackingChange = trackingStarted
-		task.TrackingActive = true
+		task.trackingActive = true
 		m.trackingActive = true
 		m.activeTaskID = msg.taskID
 	}
 
-	task.UpdateListTitle()
+	task.updateListTitle()
 
 	return cmds
 }
@@ -826,8 +828,8 @@ func (m *Model) handleActiveTLSwitchedMsg(msg activeTLSwitchedMsg) tea.Cmd {
 		return nil
 	}
 
-	lastActiveTask.TrackingActive = false
-	lastActiveTask.UpdateListTitle()
+	lastActiveTask.trackingActive = false
+	lastActiveTask.updateListTitle()
 
 	currentlyActiveTask, ok := m.taskMap[msg.currentlyActiveTaskID]
 
@@ -835,8 +837,8 @@ func (m *Model) handleActiveTLSwitchedMsg(msg activeTLSwitchedMsg) tea.Cmd {
 		m.message = errMsg(suggestReloadingMsg)
 		return nil
 	}
-	currentlyActiveTask.TrackingActive = true
-	currentlyActiveTask.UpdateListTitle()
+	currentlyActiveTask.trackingActive = true
+	currentlyActiveTask.updateListTitle()
 
 	m.activeTLComment = nil
 	m.activeTaskID = msg.currentlyActiveTaskID
@@ -873,8 +875,8 @@ func (m *Model) handleActiveTLDeletedMsg(msg activeTaskLogDeletedMsg) {
 		return
 	}
 
-	activeTask.TrackingActive = false
-	activeTask.UpdateListTitle()
+	activeTask.trackingActive = false
+	activeTask.updateListTitle()
 	m.lastTrackingChange = trackingFinished
 	m.trackingActive = false
 	m.activeTLComment = nil

@@ -3,6 +3,7 @@ package ui
 import (
 	"time"
 
+	"github.com/dhth/hours/internal/domain"
 	"github.com/dhth/hours/internal/types"
 )
 
@@ -26,7 +27,7 @@ type activeTLSwitchedMsg struct {
 }
 
 type taskRepUpdatedMsg struct {
-	tsk *types.Task
+	tsk *taskListItem
 	err error
 }
 
@@ -68,13 +69,13 @@ type taskCreatedMsg struct {
 }
 
 type taskUpdatedMsg struct {
-	tsk     *types.Task
+	tsk     *taskListItem
 	summary string
 	err     error
 }
 
 type taskActiveStatusUpdatedMsg struct {
-	tsk    *types.Task
+	tsk    *taskListItem
 	active bool
 	err    error
 }
@@ -85,7 +86,7 @@ type tLDeletedMsg struct {
 }
 
 type tasksFetchedMsg struct {
-	tasks  []types.Task
+	tasks  []domain.Task
 	active bool
 	err    error
 }

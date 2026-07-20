@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dhth/hours/internal/domain"
 	"github.com/dhth/hours/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -824,14 +825,14 @@ func cleanupDB(t *testing.T, testDB *sql.DB) {
 }
 
 type testData struct {
-	tasks    []types.Task
+	tasks    []domain.Task
 	taskLogs []types.TaskLogEntry
 }
 
 func getTestData(referenceTS time.Time) testData {
 	ua := referenceTS.UTC()
 	ca := ua.Add(time.Hour * 24 * 7 * -1)
-	tasks := []types.Task{
+	tasks := []domain.Task{
 		{
 			ID:        1,
 			Summary:   "seeded task 1",
