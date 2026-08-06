@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+curl -fsSL https://mise.run/bash | sh
+
+"$HOME/.local/bin/mise" trust
+"$HOME/.local/bin/mise" install --locked \
+	actionlint \
+	go \
+	"go:golang.org/x/vuln/cmd/govulncheck" \
+	gofumpt \
+	golangci-lint \
+	yamlfmt

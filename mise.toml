@@ -1,0 +1,115 @@
+[settings]
+task.run_auto_install = false
+
+[tools]
+actionlint = "1.7.12"
+cosign = "2.5.3"
+go = "1.26.5"
+"go:golang.org/x/vuln/cmd/govulncheck" = "latest"
+gofumpt = "0.11.0"
+golangci-lint = "2.12.2"
+goreleaser = "2.9.0"
+yamlfmt = "0.21.0"
+
+[tasks.all]
+alias = "a"
+description = "Format, lint, and test"
+run = [
+	{ task = "fmt" },
+	{ task = "lint" },
+	{ task = "test" },
+	{ task = "build" },
+]
+
+[tasks.run]
+alias = "r"
+description = "Run the application"
+run = "go run ."
+
+[tasks.build]
+alias = "b"
+description = "Build the application"
+run = 'go build -ldflags "-w -s" .'
+
+[tasks.test]
+alias = "t"
+description = "Run all tests"
+run = "go test ./..."
+
+[tasks.fmt]
+alias = "f"
+description = "Format Go source files"
+run = "gofumpt -l -w ."
+
+[tasks.install]
+alias = "i"
+description = "Install the application"
+run = 'go install -ldflags "-w -s" .'
+
+[tasks.lint]
+alias = ["l", "check", "c"]
+description = "Lint the codebase"
+run = "golangci-lint run"
+
+[tasks.upgrade]
+alias = "up"
+description = "Upgrade Go dependencies"
+run = "go get -u ./..."
+
+[tasks.upgradet]
+alias = "upt"
+description = "Upgrade Go test dependencies"
+run = "go get -t -u ./..."
+
+[tasks.tidy]
+alias = "ti"
+description = "Tidy Go module dependencies"
+run = "go mod tidy"
+
+[tasks.vulncheck]
+alias = ["vuln", "v"]
+description = "Check for known vulnerabilities"
+run = "govulncheck ./..."
+
+[tasks.update-snapshots]
+alias = "us"
+description = "Update test snapshots"
+env = { UPDATE_SNAPS = "true" }
+run = [{ task = "test" }]
+
+[tasks."lint:actions"]
+description = "Lint GitHub Actions workflows"
+run = "actionlint"
+
+[tasks."lint:yaml"]
+description = "Lint YAML files"
+run = '''
+yamlfmt \
+	-lint \
+	-quiet \
+	-formatter 'retain_line_breaks_single=true' \
+	$(git ls-files '*.yml' '*.yaml')
+'''
+
+[tasks.smoke]
+description = "Run CLI smoke checks"
+depends = ["build"]
+run = '''
+./hours --dbpath=/var/tmp/throwaway-1.db report 3d -p
+./hours --dbpath=/var/tmp/throwaway-2.db gen -y
+./hours --dbpath=/var/tmp/throwaway-2.db report 3d -p
+./hours --dbpath=/var/tmp/throwaway-2.db log 3d -p
+./hours --dbpath=/var/tmp/throwaway-2.db stats 3d -p
+'''
+
+[tasks."release:check"]
+description = "Validate the GoReleaser configuration"
+run = "goreleaser check"
+
+[tasks."release:build"]
+description = "Build release artifacts without publishing"
+run = "goreleaser build --snapshot"
+
+[tasks.release]
+description = "Create and publish a release"
+run = "goreleaser release --clean"
