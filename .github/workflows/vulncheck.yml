@@ -10,11 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Set up Go
-        uses: actions/setup-go@v6
+      - name: Set up mise
+        uses: jdx/mise-action@v4
         with:
-          go-version-file: 'go.mod'
-      - name: install govulncheck
-        run: go install golang.org/x/vuln/cmd/govulncheck@latest
-      - name: govulncheck
-        run: govulncheck ./...
+          install_args: go go:golang.org/x/vuln/cmd/govulncheck
+      - name: Vulnerability check
+        run: mise run vulncheck

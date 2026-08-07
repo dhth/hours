@@ -10,15 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Set up Go
-        uses: actions/setup-go@v6
+      - name: Set up mise
+        uses: jdx/mise-action@v4
         with:
-          go-version-file: 'go.mod'
-      - name: Build Binaries
-        uses: goreleaser/goreleaser-action@v7
-        with:
-          version: 'v2.9.0'
-          args: build --snapshot
+          install_args: go goreleaser
+      - name: Build binaries
+        run: mise run release:build
       - name: List binaries
         run: |
           ls -lh ./dist/hours_*/hours

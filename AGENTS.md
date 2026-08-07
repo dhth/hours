@@ -6,21 +6,10 @@ This file provides guidance to AI agents when working with code in this reposito
 
 `hours` is a time tracking command line tool written in Go. It provides a TUI (Terminal User Interface) built with BubbleTea/Lipgloss and uses SQLite for persistence. Users track time on tasks, then generate plaintext reports, stats, and logs.
 
-## Common Commands
+## Commands
 
-All commands available via `justfile` aliases:
-
-```bash
-just all                          # Format + lint + test (all-in-one)
-just fmt                          # Format: gofumpt -l -w .
-just check                        # Lint: golangci-lint run
-just build                        # Build: go build .
-just test                         # Run tests (no cache): go test -count=1 ./...
-just run                          # Run: go run .
-just update-snapshots             # To run tests while updating snapshots
-```
-
-**Important**: always use the `just` recipes to invoke Go commands.
+- Run all project commands via mise.
+- See `mise.toml` for the list of tasks.
 
 ## Architecture
 

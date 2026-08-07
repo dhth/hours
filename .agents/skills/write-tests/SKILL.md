@@ -12,8 +12,8 @@ description: Use this skill when creating or updating tests in this repository.
 
 ## Commands
 
-- Run tests with `just test`.
-- Update snapshots with `just update-snapshots`.
+- Run tests with `mise run test`.
+- Update snapshots with `mise run update-snapshots`.
 
 ## Testing Patterns
 

@@ -675,11 +675,11 @@ eg. hours active -t ' {{task}} ({{time}}) '
 func getRandomChars(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyz"
 
-	var code strings.Builder
-	for range length {
-		code.WriteString(string(charset[rand.Intn(len(charset))]))
+	code := make([]byte, length)
+	for i := range length {
+		code[i] = charset[rand.Intn(len(charset))]
 	}
-	return code.String()
+	return string(code)
 }
 
 func getConfirmation() (bool, error) {
