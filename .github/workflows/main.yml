@@ -144,8 +144,7 @@ jobs:
 
   back-compat:
     needs: changes
-    # Re-enable after mise is available in both compared revisions.
-    if: ${{ false && needs.changes.outputs.code == 'true' }}
+    if: ${{ needs.changes.outputs.code == 'true' }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
