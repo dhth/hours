@@ -152,16 +152,16 @@ func getStats(db *sql.DB,
 		&b,
 		tablewriter.WithConfig(tablewriter.Config{
 			Header: tw.CellConfig{
+				Alignment: tw.CellAlignment{Global: tw.AlignCenter},
 				Formatting: tw.CellFormatting{
-					Alignment:  tw.AlignCenter,
 					AutoWrap:   tw.WrapNone,
 					AutoFormat: tw.Off,
 				},
 			},
 			Row: tw.CellConfig{
+				Alignment: tw.CellAlignment{Global: tw.AlignLeft},
 				Formatting: tw.CellFormatting{
-					Alignment: tw.AlignLeft,
-					AutoWrap:  tw.WrapNone,
+					AutoWrap: tw.WrapNone,
 				},
 			},
 		}),
