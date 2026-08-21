@@ -4,11 +4,25 @@ set -euo pipefail
 
 curl -fsSL https://mise.run/bash | sh
 
+if [[ -n "${USER_ENV_SETUP_REPO:-}" ]]; then
+    if ! (
+        user_env_dir="$(mktemp -d)"
+        trap 'rm -rf "$user_env_dir"' EXIT
+
+        git clone --depth 1 --quiet -- \
+            "$USER_ENV_SETUP_REPO" \
+            "$user_env_dir" &&
+            "$user_env_dir/setup.sh"
+    ); then
+        echo "warning: user environment could not be set up; continuing" >&2
+    fi
+fi
+
 "$HOME/.local/bin/mise" trust
 "$HOME/.local/bin/mise" install --locked \
-	actionlint \
-	go \
-	"go:golang.org/x/vuln/cmd/govulncheck" \
-	gofumpt \
-	golangci-lint \
-	yamlfmt
+    actionlint \
+    go \
+    "go:golang.org/x/vuln/cmd/govulncheck" \
+    gofumpt \
+    golangci-lint \
+    yamlfmt
