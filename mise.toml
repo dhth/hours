@@ -1,10 +1,10 @@
 [settings]
-idiomatic_version_file_enable_tools = ["go"]
 task.run_auto_install = false
 
 [tools]
 actionlint = "1.7.12"
 cosign = "2.5.3"
+go = "1.27.0"
 "go:golang.org/x/vuln/cmd/govulncheck" = "latest"
 gofumpt = "0.11.0"
 golangci-lint = "2.13.1"
