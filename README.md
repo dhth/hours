@@ -29,20 +29,20 @@ precisely fit these needs, so I decided to build one for myself.
 💾 Install
 ---
 
-**homebrew**:
+### Pre-built binaries
 
-```sh
-brew install dhth/tap/hours
-```
+Download a pre-built binary from the [latest
+release](https://github.com/dhth/hours/releases/latest). See [Verifying release
+artifacts](#-verifying-release-artifacts) for instructions on verifying your
+download.
 
-**go**:
+### Install from source
+
+You can also install from source using the `go` toolchain:
 
 ```sh
 go install github.com/dhth/hours@latest
 ```
-
-Or get the binaries directly from a
-[release](https://github.com/dhth/hours/releases).
 
 ⚡️ Usage
 ---
@@ -352,11 +352,45 @@ Here's a sampling of custom themes in action.
 | `h`                | Move timestamp backwards by a day        |
 | `l`                | Move timestamp forwards by a day         |
 
-Acknowledgements
+🔐 Verifying release artifacts
 ---
 
-`hours` is built using [bubbletea][1], and is released using [goreleaser][2],
-both of which are amazing tools.
+Each release includes checksums for all artifacts. The checksum file is signed
+using [cosign](https://docs.sigstore.dev/cosign/installation/).
+
+Replace `x.y.z` below with the release version you want to verify.
+
+1. Download the following files from the release:
+
+    - `hours_x.y.z_checksums.txt`
+    - `hours_x.y.z_checksums.txt.pem`
+    - `hours_x.y.z_checksums.txt.sig`
+
+2. Verify the checksum file's signature:
+
+    ```shell
+    cosign verify-blob hours_x.y.z_checksums.txt \
+       --certificate hours_x.y.z_checksums.txt.pem \
+       --signature hours_x.y.z_checksums.txt.sig \
+       --certificate-identity-regexp 'https://github\.com/dhth/hours/\.github/workflows/.+' \
+       --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+    ```
+
+3. Download the archive for your platform and validate its checksum. For example,
+   for Linux x86-64:
+
+    ```shell
+    curl -sSLO https://github.com/dhth/hours/releases/download/vx.y.z/hours_x.y.z_linux_amd64.tar.gz
+    sha256sum --ignore-missing -c hours_x.y.z_checksums.txt
+    ```
+
+4. Once both checks pass, extract the archive:
+
+    ```shell
+    tar -xzf hours_x.y.z_linux_amd64.tar.gz
+    ./hours -h
+    # profit!
+    ```
 
 [1]: https://github.com/charmbracelet/bubbletea
 [2]: https://github.com/goreleaser/goreleaser
