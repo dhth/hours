@@ -5,15 +5,10 @@ set -euo pipefail
 curl -fsSL https://mise.run/bash | sh
 
 if [[ -n "${USER_ENV_SETUP_REPO:-}" ]]; then
-    if ! (
-        user_env_dir="$(mktemp -d)"
-        trap 'rm -rf "$user_env_dir"' EXIT
-
-        git clone --depth 1 --quiet -- \
-            "$USER_ENV_SETUP_REPO" \
-            "$user_env_dir" &&
-            "$user_env_dir/setup.sh"
-    ); then
+    if ! "$HOME/.local/bin/mise" --locked -C "$HOME" bootstrap \
+        --adopt "$USER_ENV_SETUP_REPO" \
+        --update \
+        --yes; then
         echo "warning: user environment could not be set up; continuing" >&2
     fi
 fi
