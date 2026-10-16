@@ -202,7 +202,7 @@ will lose data by doing that), or upgrade hours to the latest version.
 			fmt.Fprintf(os.Stderr, `Something went wrong migrating hours' database.
 
 You can try running hours by passing it a custom database file path (using
---db-path; this will create a new database) to see if that fixes things. If that
+--dbpath; this will create a new database) to see if that fixes things. If that
 works, you can either delete the previous database, or keep using this new
 database (both are not ideal).
 

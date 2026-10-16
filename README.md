@@ -268,7 +268,7 @@ Here's a sampling of custom themes in action.
 📋 TUI Reference Manual
 ---
 
-`hours` has 6 views:
+`hours` has 7 views:
 
   - Tasks List View                       Shows active tasks
   - Task Management View                  Shows a form to create/update tasks
