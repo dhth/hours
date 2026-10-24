@@ -1,6 +1,6 @@
 module github.com/dhth/hours
 
-go 1.27.0
+go 1.27.3
 
 require (
 	charm.land/bubbles/v2 v2.1.0
