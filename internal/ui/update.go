@@ -20,6 +20,7 @@ const (
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	model, cmd := m.processMessage(msg)
 	model.recalculateSecondsTrackedToday()
+	model.refreshActiveTaskDesc()
 
 	return model, cmd
 }
@@ -356,7 +357,7 @@ func (m Model) processMessage(msg tea.Msg) (Model, tea.Cmd) {
 
 			task.SecsSpent = msg.secsSpent
 			task.UpdatedAt = msg.updatedAt
-			task.updateListDesc(m.timeProvider)
+			task.updateListDesc(nil, m.timeProvider.Now())
 		}
 	case tLDeletedMsg:
 		updateCmds := m.handleTLDeleted(msg)

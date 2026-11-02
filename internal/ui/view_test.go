@@ -102,6 +102,102 @@ func TestTaskListViewWithTasks(t *testing.T) {
 	snaps.MatchStandaloneSnapshot(t, result)
 }
 
+func TestTaskListViewWhenTrackingTaskWithTimeSpent(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.handleWindowResizing(tea.WindowSizeMsg{Width: minWidthNeeded, Height: minHeightNeeded})
+	m.activeView = taskListView
+	m.tasksFetched = true
+
+	task1 := createTestTask(1, "Implement feature A", true, false, m.timeProvider)
+	task1.SecsSpent = 90 * 60
+	task1.updateListDesc(nil, m.timeProvider.Now())
+	task2 := createTestTask(2, "Fix bug in module B", true, false, m.timeProvider)
+	task2.SecsSpent = 130 * 60
+	task2.updateListDesc(nil, m.timeProvider.Now())
+	task3 := createTestTask(3, "Write documentation", true, false, m.timeProvider)
+
+	m.taskMap[1] = task1
+	m.taskMap[2] = task2
+	m.taskMap[3] = task3
+	m.activeTasksList.SetItems([]list.Item{task1, task2, task3})
+
+	m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
+		activeTask: domain.ActiveTaskDetails{TaskID: 2, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
+	})
+
+	// WHEN
+	updated, _ := m.Update(timeTrackedTodayTickMsg{})
+	result := stripANSI(updated.(Model).View().Content)
+
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
+}
+
+func TestTaskListViewWhenTrackingTaskWithNoTimeSpent(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.activeView = taskListView
+	m.tasksFetched = true
+
+	task1 := createTestTask(1, "Implement feature A", true, false, m.timeProvider)
+	task2 := createTestTask(2, "Fix bug in module B", true, false, m.timeProvider)
+
+	m.taskMap[1] = task1
+	m.taskMap[2] = task2
+	m.activeTasksList.SetItems([]list.Item{task1, task2})
+
+	m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
+		activeTask: domain.ActiveTaskDetails{TaskID: 2, CurrentLogBeginTS: referenceTime.Add(-20 * time.Second)},
+	})
+
+	// WHEN
+	updated, _ := m.Update(timeTrackedTodayTickMsg{})
+	result := stripANSI(updated.(Model).View().Content)
+
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
+}
+
+func TestTaskListViewAfterTrackingStops(t *testing.T) {
+	testCases := []struct {
+		name string
+		msg  tea.Msg
+	}{
+		{name: "finished", msg: trackingToggledMsg{taskID: 2, finished: true}},
+		{name: "cancelled", msg: activeTaskLogDeletedMsg{}},
+		{name: "switched", msg: activeTLSwitchedMsg{lastActiveTaskID: 2, currentlyActiveTaskID: 1, ts: referenceTime}},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			// GIVEN
+			m := createTestModel()
+			m.activeView = taskListView
+			m.tasksFetched = true
+
+			task1 := createTestTask(1, "Implement feature A", true, false, m.timeProvider)
+			task2 := createTestTask(2, "Fix bug in module B", true, false, m.timeProvider)
+
+			m.taskMap[1] = task1
+			m.taskMap[2] = task2
+			m.activeTasksList.SetItems([]list.Item{task1, task2})
+
+			m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
+				activeTask: domain.ActiveTaskDetails{TaskID: 2, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
+			})
+			tracking, _ := m.Update(timeTrackedTodayTickMsg{})
+
+			// WHEN
+			updated, _ := tracking.Update(tt.msg)
+			result := stripANSI(updated.(Model).View().Content)
+
+			// THEN
+			snaps.MatchStandaloneSnapshot(t, result)
+		})
+	}
+}
+
 func TestTaskLogViewEmpty(t *testing.T) {
 	// GIVEN
 	m := createTestModel()
@@ -481,7 +577,7 @@ func createTestTask(id int, summary string, active bool, trackingActive bool, tp
 	}
 
 	task.updateListTitle()
-	task.updateListDesc(tp)
+	task.updateListDesc(nil, tp.Now())
 
 	return task
 }

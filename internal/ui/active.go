@@ -28,16 +28,18 @@ func ShowActiveTask(db *sql.DB, writer io.Writer, template string) error {
 		return nil
 	}
 
-	timeSpent := time.Since(activeTaskDetails.CurrentLogBeginTS).Seconds()
-	var timeSpentStr string
-	if timeSpent <= activeSecsThreshold {
-		timeSpentStr = activeSecsThresholdStr
-	} else {
-		timeSpentStr = types.HumanizeDuration(int(timeSpent))
-	}
+	timeSpentStr := humanizeActiveDuration(int(time.Since(activeTaskDetails.CurrentLogBeginTS).Seconds()))
 
 	activeStr := strings.Replace(template, ActiveTaskPlaceholder, activeTaskDetails.TaskSummary, 1)
 	activeStr = strings.Replace(activeStr, ActiveTaskTimePlaceholder, timeSpentStr, 1)
 	fmt.Fprint(writer, activeStr)
 	return nil
+}
+
+func humanizeActiveDuration(secs int) string {
+	if secs <= activeSecsThreshold {
+		return activeSecsThresholdStr
+	}
+
+	return types.HumanizeDuration(secs)
 }

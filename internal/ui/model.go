@@ -179,6 +179,19 @@ func (m *Model) recalculateSecondsTrackedToday() {
 	)
 }
 
+func (m *Model) refreshActiveTaskDesc() {
+	if !m.trackingActive {
+		return
+	}
+
+	task, ok := m.taskMap[m.activeTaskID]
+	if !ok {
+		return
+	}
+
+	task.updateListDesc(&m.activeTLBeginTS, m.timeProvider.Now())
+}
+
 type recordsModel struct {
 	db           *sql.DB
 	style        Style
