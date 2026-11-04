@@ -219,6 +219,8 @@ func TestTaskListViewMovesTrackedTimeWhenTrackingIsSwitched(t *testing.T) {
 	snaps.MatchStandaloneSnapshot(t, stripANSI(tracking.(Model).View().Content))
 
 	// WHEN
+	// The old task's saved total stays at 2h 10m here. In the app, switching also returns a
+	// command that refetches the total from the DB; this test doesn't run commands.
 	updated, _ := tracking.Update(activeTLSwitchedMsg{lastActiveTaskID: 1, currentlyActiveTaskID: 2, ts: referenceTime})
 	result := stripANSI(updated.(Model).View().Content)
 
