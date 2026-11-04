@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/dhth/hours/internal/domain"
@@ -26,26 +27,20 @@ func (t *taskListItem) updateListTitle() {
 // updateListDesc sets the task's list description. trackingSince is the begin
 // time of the active task log when this task is being tracked, and nil otherwise.
 func (t *taskListItem) updateListDesc(trackingSince *time.Time, now time.Time) {
-	var timeSpent string
-	if t.SecsSpent != 0 {
-		timeSpent = "worked on for " + types.HumanizeDuration(t.SecsSpent)
+	switch {
+	case trackingSince == nil && t.SecsSpent == 0:
+		t.listDesc = "no time spent"
+	case trackingSince == nil:
+		t.listDesc = "worked on for " + types.HumanizeDuration(t.SecsSpent)
+	case t.SecsSpent == 0:
+		t.listDesc = "currently tracking " + types.HumanizeDuration(int(now.Sub(*trackingSince).Seconds()))
+	default:
+		t.listDesc = fmt.Sprintf(
+			"worked on for %s (currently tracking %s)",
+			types.HumanizeDuration(t.SecsSpent),
+			types.HumanizeDuration(int(now.Sub(*trackingSince).Seconds())),
+		)
 	}
-
-	if trackingSince == nil {
-		if timeSpent == "" {
-			timeSpent = "no time spent"
-		}
-		t.listDesc = timeSpent
-		return
-	}
-
-	currentlyTracking := "currently tracking " + types.HumanizeDuration(int(now.Sub(*trackingSince).Seconds()))
-	if timeSpent == "" {
-		t.listDesc = currentlyTracking
-		return
-	}
-
-	t.listDesc = timeSpent + " (" + currentlyTracking + ")"
 }
 
 func (t *taskListItem) Title() string {
