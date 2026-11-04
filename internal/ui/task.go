@@ -39,7 +39,7 @@ func (t *taskListItem) updateListDesc(trackingSince *time.Time, now time.Time) {
 		return
 	}
 
-	currentlyTracking := "currently tracking " + humanizeActiveDuration(int(now.Sub(*trackingSince).Seconds()))
+	currentlyTracking := "currently tracking " + types.HumanizeDuration(int(now.Sub(*trackingSince).Seconds()))
 	if timeSpent == "" {
 		t.listDesc = currentlyTracking
 		return
