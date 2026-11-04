@@ -165,7 +165,8 @@ func TestTaskListViewClearsTrackedTimeWhenTrackingIsFinished(t *testing.T) {
 	snaps.MatchStandaloneSnapshot(t, stripANSI(tracking.(Model).View().Content))
 
 	// WHEN
-	// finishing also refetches the task's saved total, which isn't run here
+	// The saved total stays at 2h 10m here. In the app, finishing also returns a
+	// command that refetches the total from the DB; this test doesn't run commands.
 	updated, _ := tracking.Update(trackingToggledMsg{taskID: 1, finished: true})
 	result := stripANSI(updated.(Model).View().Content)
 
