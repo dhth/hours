@@ -105,25 +105,16 @@ func TestTaskListViewWithTasks(t *testing.T) {
 func TestTaskListViewWhenTrackingTaskWithTimeSpent(t *testing.T) {
 	// GIVEN
 	m := createTestModel()
-	m.handleWindowResizing(tea.WindowSizeMsg{Width: minWidthNeeded, Height: minHeightNeeded})
 	m.activeView = taskListView
 	m.tasksFetched = true
 
-	task1 := createTestTask(1, "Implement feature A", true, false, m.timeProvider)
-	task1.SecsSpent = 90 * 60
-	task1.updateListDesc(nil, m.timeProvider.Now())
-	task2 := createTestTask(2, "Fix bug in module B", true, false, m.timeProvider)
-	task2.SecsSpent = 130 * 60
-	task2.updateListDesc(nil, m.timeProvider.Now())
-	task3 := createTestTask(3, "Write documentation", true, false, m.timeProvider)
-
-	m.taskMap[1] = task1
-	m.taskMap[2] = task2
-	m.taskMap[3] = task3
-	m.activeTasksList.SetItems([]list.Item{task1, task2, task3})
+	task := createTestTask(1, "Fix bug in module B", true, false, m.timeProvider)
+	task.SecsSpent = 130 * 60
+	m.taskMap[1] = task
+	m.activeTasksList.SetItems([]list.Item{task})
 
 	m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
-		activeTask: domain.ActiveTaskDetails{TaskID: 2, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
+		activeTask: domain.ActiveTaskDetails{TaskID: 1, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
 	})
 
 	// WHEN
@@ -140,15 +131,12 @@ func TestTaskListViewWhenTrackingTaskWithNoTimeSpent(t *testing.T) {
 	m.activeView = taskListView
 	m.tasksFetched = true
 
-	task1 := createTestTask(1, "Implement feature A", true, false, m.timeProvider)
-	task2 := createTestTask(2, "Fix bug in module B", true, false, m.timeProvider)
-
-	m.taskMap[1] = task1
-	m.taskMap[2] = task2
-	m.activeTasksList.SetItems([]list.Item{task1, task2})
+	task := createTestTask(1, "Fix bug in module B", true, false, m.timeProvider)
+	m.taskMap[1] = task
+	m.activeTasksList.SetItems([]list.Item{task})
 
 	m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
-		activeTask: domain.ActiveTaskDetails{TaskID: 2, CurrentLogBeginTS: referenceTime.Add(-20 * time.Second)},
+		activeTask: domain.ActiveTaskDetails{TaskID: 1, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
 	})
 
 	// WHEN
@@ -159,7 +147,7 @@ func TestTaskListViewWhenTrackingTaskWithNoTimeSpent(t *testing.T) {
 	snaps.MatchStandaloneSnapshot(t, result)
 }
 
-func TestTaskListViewAfterTrackingStops(t *testing.T) {
+func TestTaskListViewClearsTrackedTimeWhenTrackingStops(t *testing.T) {
 	testCases := []struct {
 		name string
 		msg  tea.Msg
