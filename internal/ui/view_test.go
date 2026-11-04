@@ -147,43 +147,82 @@ func TestTaskListViewWhenTrackingTaskWithNoTimeSpent(t *testing.T) {
 	snaps.MatchStandaloneSnapshot(t, result)
 }
 
-func TestTaskListViewClearsTrackedTimeWhenTrackingStops(t *testing.T) {
-	testCases := []struct {
-		name string
-		msg  tea.Msg
-	}{
-		{name: "finished", msg: trackingToggledMsg{taskID: 2, finished: true}},
-		{name: "cancelled", msg: activeTaskLogDeletedMsg{}},
-		{name: "switched", msg: activeTLSwitchedMsg{lastActiveTaskID: 2, currentlyActiveTaskID: 1, ts: referenceTime}},
-	}
+func TestTaskListViewClearsTrackedTimeWhenTrackingIsFinished(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.activeView = taskListView
+	m.tasksFetched = true
 
-	for _, tt := range testCases {
-		t.Run(tt.name, func(t *testing.T) {
-			// GIVEN
-			m := createTestModel()
-			m.activeView = taskListView
-			m.tasksFetched = true
+	task := createTestTask(1, "Fix bug in module B", true, false, m.timeProvider)
+	task.SecsSpent = 130 * 60
+	m.taskMap[1] = task
+	m.activeTasksList.SetItems([]list.Item{task})
 
-			task1 := createTestTask(1, "Implement feature A", true, false, m.timeProvider)
-			task2 := createTestTask(2, "Fix bug in module B", true, false, m.timeProvider)
+	m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
+		activeTask: domain.ActiveTaskDetails{TaskID: 1, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
+	})
+	tracking, _ := m.Update(timeTrackedTodayTickMsg{})
+	snaps.MatchStandaloneSnapshot(t, stripANSI(tracking.(Model).View().Content))
 
-			m.taskMap[1] = task1
-			m.taskMap[2] = task2
-			m.activeTasksList.SetItems([]list.Item{task1, task2})
+	// WHEN
+	// finishing also refetches the task's saved total, which isn't run here
+	updated, _ := tracking.Update(trackingToggledMsg{taskID: 1, finished: true})
+	result := stripANSI(updated.(Model).View().Content)
 
-			m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
-				activeTask: domain.ActiveTaskDetails{TaskID: 2, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
-			})
-			tracking, _ := m.Update(timeTrackedTodayTickMsg{})
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
+}
 
-			// WHEN
-			updated, _ := tracking.Update(tt.msg)
-			result := stripANSI(updated.(Model).View().Content)
+func TestTaskListViewClearsTrackedTimeWhenTrackingIsCancelled(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.activeView = taskListView
+	m.tasksFetched = true
 
-			// THEN
-			snaps.MatchStandaloneSnapshot(t, result)
-		})
-	}
+	task := createTestTask(1, "Fix bug in module B", true, false, m.timeProvider)
+	task.SecsSpent = 130 * 60
+	m.taskMap[1] = task
+	m.activeTasksList.SetItems([]list.Item{task})
+
+	m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
+		activeTask: domain.ActiveTaskDetails{TaskID: 1, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
+	})
+	tracking, _ := m.Update(timeTrackedTodayTickMsg{})
+	snaps.MatchStandaloneSnapshot(t, stripANSI(tracking.(Model).View().Content))
+
+	// WHEN
+	updated, _ := tracking.Update(activeTaskLogDeletedMsg{})
+	result := stripANSI(updated.(Model).View().Content)
+
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
+}
+
+func TestTaskListViewMovesTrackedTimeWhenTrackingIsSwitched(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.activeView = taskListView
+	m.tasksFetched = true
+
+	task1 := createTestTask(1, "Fix bug in module B", true, false, m.timeProvider)
+	task1.SecsSpent = 130 * 60
+	task2 := createTestTask(2, "Write documentation", true, false, m.timeProvider)
+	m.taskMap[1] = task1
+	m.taskMap[2] = task2
+	m.activeTasksList.SetItems([]list.Item{task1, task2})
+
+	m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
+		activeTask: domain.ActiveTaskDetails{TaskID: 1, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
+	})
+	tracking, _ := m.Update(timeTrackedTodayTickMsg{})
+	snaps.MatchStandaloneSnapshot(t, stripANSI(tracking.(Model).View().Content))
+
+	// WHEN
+	updated, _ := tracking.Update(activeTLSwitchedMsg{lastActiveTaskID: 1, currentlyActiveTaskID: 2, ts: referenceTime})
+	result := stripANSI(updated.(Model).View().Content)
+
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
 }
 
 func TestTaskLogViewEmpty(t *testing.T) {

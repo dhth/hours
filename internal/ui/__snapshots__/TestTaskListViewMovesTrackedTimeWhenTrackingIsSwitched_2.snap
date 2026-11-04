@@ -3,13 +3,11 @@
                                                                       
   2 tasks                                                             
                                                                       
-│ ⏲ Implement feature A                                               
-│ currently tracking <1m                                              
+│ Fix bug in module B                                                 
+│ worked on for 2h 10m                                                
                                                                       
-  Fix bug in module B                                                 
-  no time spent                                                       
-                                                                      
-                                                                      
+  ⏲ Write documentation                                               
+  currently tracking <1m                                              
                                                                       
                                                                       
                                                                       
@@ -29,4 +27,6 @@
                                                                       
                                                                       
                                                                       
- hours   Press ? for help  tracking: Implement feature A (since 09:00)
+                                                                      
+                                                                      
+ hours   Press ? for help  tracking: Write documentation (since 09:00)
