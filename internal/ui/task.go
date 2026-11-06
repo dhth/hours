@@ -33,10 +33,10 @@ func (t *taskListItem) updateListDesc(trackingSince *time.Time, now time.Time) {
 	case trackingSince == nil:
 		t.listDesc = "worked on for " + types.HumanizeDuration(t.SecsSpent)
 	case t.SecsSpent == 0:
-		t.listDesc = "currently tracking " + types.HumanizeDuration(int(now.Sub(*trackingSince).Seconds()))
+		t.listDesc = "tracking " + types.HumanizeDuration(int(now.Sub(*trackingSince).Seconds()))
 	default:
 		t.listDesc = fmt.Sprintf(
-			"worked on for %s (currently tracking %s)",
+			"worked on for %s · tracking %s",
 			types.HumanizeDuration(t.SecsSpent),
 			types.HumanizeDuration(int(now.Sub(*trackingSince).Seconds())),
 		)
