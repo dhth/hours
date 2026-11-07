@@ -2,11 +2,10 @@ package ui
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/dhth/hours/internal/domain"
 	"github.com/dhth/hours/internal/types"
-	"github.com/dhth/hours/internal/utils"
-	"github.com/dustin/go-humanize"
 )
 
 type taskListItem struct {
@@ -25,16 +24,23 @@ func (t *taskListItem) updateListTitle() {
 	t.listTitle = trackingIndicator + t.Summary
 }
 
-func (t *taskListItem) updateListDesc(timeProvider types.TimeProvider) {
-	var timeSpent string
-	if t.SecsSpent != 0 {
-		timeSpent = "worked on for " + types.HumanizeDuration(t.SecsSpent)
-	} else {
-		timeSpent = "no time spent"
+// updateListDesc sets the task's list description. trackingSince is the begin
+// time of the active task log when this task is being tracked, and nil otherwise.
+func (t *taskListItem) updateListDesc(trackingSince *time.Time, now time.Time) {
+	switch {
+	case trackingSince == nil && t.SecsSpent == 0:
+		t.listDesc = "no time spent"
+	case trackingSince == nil:
+		t.listDesc = "worked on for " + types.HumanizeDuration(t.SecsSpent)
+	case t.SecsSpent == 0:
+		t.listDesc = "tracking " + types.HumanizeDuration(int(now.Sub(*trackingSince).Seconds()))
+	default:
+		t.listDesc = fmt.Sprintf(
+			"worked on for %s · tracking %s",
+			types.HumanizeDuration(t.SecsSpent),
+			types.HumanizeDuration(int(now.Sub(*trackingSince).Seconds())),
+		)
 	}
-
-	lastUpdated := fmt.Sprintf("last updated: %s", humanize.RelTime(t.UpdatedAt, timeProvider.Now(), "ago", "from now"))
-	t.listDesc = fmt.Sprintf("%s %s", utils.RightPadTrim(lastUpdated, 60, true), timeSpent)
 }
 
 func (t *taskListItem) Title() string {

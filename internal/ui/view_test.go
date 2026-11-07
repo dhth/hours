@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -97,6 +98,160 @@ func TestTaskListViewWithTasks(t *testing.T) {
 
 	// WHEN
 	result := stripANSI(m.View().Content)
+
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
+}
+
+func TestTaskListViewWhenTrackingTaskWithTimeSpent(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.activeView = taskListView
+	m.tasksFetched = true
+
+	task := createTestTask(1, "Fix bug in module B", true, false, m.timeProvider)
+	task.SecsSpent = 130 * 60
+	m.taskMap[1] = task
+	m.activeTasksList.SetItems([]list.Item{task})
+
+	m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
+		activeTask: domain.ActiveTaskDetails{TaskID: 1, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
+	})
+
+	// WHEN
+	updated, _ := m.Update(timeTrackedTodayTickMsg{})
+	result := stripANSI(updated.(Model).View().Content)
+
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
+}
+
+func TestTaskListViewWhenTrackingTaskWithNoTimeSpent(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.activeView = taskListView
+	m.tasksFetched = true
+
+	task := createTestTask(1, "Fix bug in module B", true, false, m.timeProvider)
+	m.taskMap[1] = task
+	m.activeTasksList.SetItems([]list.Item{task})
+
+	m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
+		activeTask: domain.ActiveTaskDetails{TaskID: 1, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
+	})
+
+	// WHEN
+	updated, _ := m.Update(timeTrackedTodayTickMsg{})
+	result := stripANSI(updated.(Model).View().Content)
+
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
+}
+
+func TestTaskListViewClearsTrackedTimeWhenTrackingIsFinished(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.activeView = taskListView
+	m.tasksFetched = true
+
+	task := createTestTask(1, "Fix bug in module B", true, false, m.timeProvider)
+	task.SecsSpent = 130 * 60
+	m.taskMap[1] = task
+	m.activeTasksList.SetItems([]list.Item{task})
+
+	m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
+		activeTask: domain.ActiveTaskDetails{TaskID: 1, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
+	})
+	tracking, _ := m.Update(timeTrackedTodayTickMsg{})
+	snaps.MatchStandaloneSnapshot(t, stripANSI(tracking.(Model).View().Content))
+
+	// WHEN
+	// The saved total stays at 2h 10m here. In the app, finishing also returns a
+	// command that refetches the total from the DB; this test doesn't run commands.
+	updated, _ := tracking.Update(trackingToggledMsg{taskID: 1, finished: true})
+	result := stripANSI(updated.(Model).View().Content)
+
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
+}
+
+func TestTaskListViewKeepsTrackingWhenFinishingFails(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.activeView = taskListView
+	m.tasksFetched = true
+
+	task := createTestTask(1, "Fix bug in module B", true, false, m.timeProvider)
+	task.SecsSpent = 130 * 60
+	m.taskMap[1] = task
+	m.activeTasksList.SetItems([]list.Item{task})
+
+	m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
+		activeTask: domain.ActiveTaskDetails{TaskID: 1, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
+	})
+	tracking, _ := m.Update(timeTrackedTodayTickMsg{})
+
+	// WHEN
+	failed, _ := tracking.Update(trackingToggledMsg{taskID: 1, finished: true, err: errors.New("couldn't finish task log")})
+	// Advance the clock so the next tick shows whether the row's timer still updates.
+	later := failed.(Model)
+	later.timeProvider = types.TestTimeProvider{FixedTime: referenceTime.Add(5 * time.Minute)}
+	updated, _ := later.Update(timeTrackedTodayTickMsg{})
+	result := stripANSI(updated.(Model).View().Content)
+
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
+}
+
+func TestTaskListViewClearsTrackedTimeWhenTrackingIsCancelled(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.activeView = taskListView
+	m.tasksFetched = true
+
+	task := createTestTask(1, "Fix bug in module B", true, false, m.timeProvider)
+	task.SecsSpent = 130 * 60
+	m.taskMap[1] = task
+	m.activeTasksList.SetItems([]list.Item{task})
+
+	m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
+		activeTask: domain.ActiveTaskDetails{TaskID: 1, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
+	})
+	tracking, _ := m.Update(timeTrackedTodayTickMsg{})
+	snaps.MatchStandaloneSnapshot(t, stripANSI(tracking.(Model).View().Content))
+
+	// WHEN
+	updated, _ := tracking.Update(activeTaskLogDeletedMsg{})
+	result := stripANSI(updated.(Model).View().Content)
+
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
+}
+
+func TestTaskListViewMovesTrackedTimeWhenTrackingIsSwitched(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.activeView = taskListView
+	m.tasksFetched = true
+
+	task1 := createTestTask(1, "Fix bug in module B", true, false, m.timeProvider)
+	task1.SecsSpent = 130 * 60
+	task2 := createTestTask(2, "Write documentation", true, false, m.timeProvider)
+	m.taskMap[1] = task1
+	m.taskMap[2] = task2
+	m.activeTasksList.SetItems([]list.Item{task1, task2})
+
+	m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
+		activeTask: domain.ActiveTaskDetails{TaskID: 1, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
+	})
+	tracking, _ := m.Update(timeTrackedTodayTickMsg{})
+	snaps.MatchStandaloneSnapshot(t, stripANSI(tracking.(Model).View().Content))
+
+	// WHEN
+	// The old task's saved total stays at 2h 10m here. In the app, switching also returns a
+	// command that refetches the total from the DB; this test doesn't run commands.
+	updated, _ := tracking.Update(activeTLSwitchedMsg{lastActiveTaskID: 1, currentlyActiveTaskID: 2, ts: referenceTime})
+	result := stripANSI(updated.(Model).View().Content)
 
 	// THEN
 	snaps.MatchStandaloneSnapshot(t, result)
@@ -228,6 +383,30 @@ func TestFinishActiveTLView(t *testing.T) {
 	m.tLInputs[entryBeginTS].SetValue("2025/08/17 09:00")
 	m.tLInputs[entryEndTS].SetValue("2025/08/17 10:30")
 	m.tLCommentInput.SetValue("Test comment for finishing task")
+
+	// WHEN
+	result := stripANSI(m.View().Content)
+
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
+}
+
+func TestFinishActiveTLViewHidesTrackingTimesInFooter(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.tasksFetched = true
+
+	task := createTestTask(1, "Fix bug in module B", true, false, m.timeProvider)
+	m.taskMap[1] = task
+	m.activeTasksList.SetItems([]list.Item{task})
+
+	m.trackingActive = true
+	m.activeTaskID = 1
+	m.activeTLBeginTS = referenceTime.Add(-38 * time.Minute)
+
+	m.activeView = finishActiveTLView
+	m.tLInputs[entryBeginTS].SetValue(m.activeTLBeginTS.Format(timeFormat))
+	m.tLInputs[entryEndTS].SetValue(referenceTime.Format(timeFormat))
 
 	// WHEN
 	result := stripANSI(m.View().Content)
@@ -481,7 +660,7 @@ func createTestTask(id int, summary string, active bool, trackingActive bool, tp
 	}
 
 	task.updateListTitle()
-	task.updateListDesc(tp)
+	task.updateListDesc(nil, tp.Now())
 
 	return task
 }

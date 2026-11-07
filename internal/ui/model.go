@@ -126,7 +126,6 @@ type Model struct {
 	tLDetailsVP                    viewport.Model
 	tLDetailsVPReady               bool
 	lastTrackingChange             trackingChange
-	changesLocked                  bool
 	activeTaskID                   int
 	tasklogSaveType                tasklogSaveType
 	message                        userMsg
@@ -177,6 +176,30 @@ func (m *Model) recalculateSecondsTrackedToday() {
 		activeTaskLogBeginTS,
 		m.timeProvider.Now(),
 	)
+}
+
+// refreshTrackedTaskDesc clears the timer on the previously tracked task's row
+// if tracking stopped or moved to another task, and redraws the timer on the
+// currently tracked task's row.
+func (m *Model) refreshTrackedTaskDesc(wasTracking bool, prevTrackedTaskID int) {
+	now := m.timeProvider.Now()
+
+	if wasTracking && (!m.trackingActive || prevTrackedTaskID != m.activeTaskID) {
+		if prevTask, ok := m.taskMap[prevTrackedTaskID]; ok {
+			prevTask.updateListDesc(nil, now)
+		}
+	}
+
+	if !m.trackingActive {
+		return
+	}
+
+	task, ok := m.taskMap[m.activeTaskID]
+	if !ok {
+		return
+	}
+
+	task.updateListDesc(&m.activeTLBeginTS, now)
 }
 
 type recordsModel struct {

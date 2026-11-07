@@ -441,7 +441,6 @@ func (m *Model) getCmdToStartTracking() tea.Cmd {
 		return nil
 	}
 
-	m.changesLocked = true
 	m.activeTLBeginTS = m.timeProvider.Now().Truncate(time.Second)
 	return toggleTracking(m.db, task.ID, m.activeTLBeginTS, m.activeTLEndTS, nil)
 }
@@ -477,7 +476,6 @@ func (m *Model) getCmdToQuickSwitchTracking() tea.Cmd {
 	}
 
 	if !m.trackingActive {
-		m.changesLocked = true
 		m.activeTLBeginTS = m.timeProvider.Now().Truncate(time.Second)
 		return toggleTracking(
 			m.db,
@@ -662,7 +660,7 @@ func (m *Model) handleTasksFetchedMsg(msg tasksFetchedMsg) tea.Cmd {
 		for i, task := range msg.tasks {
 			item := &taskListItem{Task: task}
 			item.updateListTitle()
-			item.updateListDesc(m.timeProvider)
+			item.updateListDesc(nil, m.timeProvider.Now())
 			tasks[i] = item
 			m.taskMap[item.ID] = item
 			m.taskIndexMap[item.ID] = i
@@ -677,7 +675,7 @@ func (m *Model) handleTasksFetchedMsg(msg tasksFetchedMsg) tea.Cmd {
 		for i, inactiveTask := range msg.tasks {
 			item := &taskListItem{Task: inactiveTask}
 			item.updateListTitle()
-			item.updateListDesc(m.timeProvider)
+			item.updateListDesc(nil, m.timeProvider.Now())
 			inactiveTasks[i] = item
 		}
 		m.inactiveTasksList.SetItems(inactiveTasks)
@@ -777,11 +775,8 @@ func (m *Model) handleActiveTaskFetchedMsg(msg activeTaskFetchedMsg) {
 func (m *Model) handleTrackingToggledMsg(msg trackingToggledMsg) []tea.Cmd {
 	if msg.err != nil {
 		m.message = errMsg(msg.err.Error())
-		m.trackingActive = false
 		return nil
 	}
-
-	m.changesLocked = false
 
 	task, ok := m.taskMap[msg.taskID]
 

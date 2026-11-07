@@ -47,7 +47,8 @@ func (m Model) View() tea.View {
 		if ok {
 			taskSummaryMsg = utils.Trim(task.Summary, 50)
 			if m.activeView != finishActiveTLView {
-				taskStartedSinceMsg = fmt.Sprintf("(since %s)", m.activeTLBeginTS.Format(timeOnlyFormat))
+				elapsed := types.HumanizeDuration(int(m.timeProvider.Now().Sub(m.activeTLBeginTS).Seconds()))
+				taskStartedSinceMsg = fmt.Sprintf("(%s · since %s)", elapsed, m.activeTLBeginTS.Format(timeOnlyFormat))
 			}
 		}
 		activeMsg = fmt.Sprintf(

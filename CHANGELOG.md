@@ -10,12 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Built-in themes
+- The task being tracked shows the duration of the current session in the task
+  list and the footer
 
 ### Changed
 
 - Minor changes to default theme
 - "--theme" flag considers built-in themes by default; custom themes can be
   referenced using "custom:" prefix
+
+### Removed
+
+- "last updated" from task list entries
 
 ### Fixed
 

@@ -13,14 +13,24 @@ func TestHumanizeDuration(t *testing.T) {
 		expected string
 	}{
 		{
+			name:     "negative seconds",
+			input:    -90,
+			expected: "<1m",
+		},
+		{
 			name:     "0 seconds",
 			input:    0,
-			expected: "0s",
+			expected: "<1m",
 		},
 		{
 			name:     "30 seconds",
 			input:    30,
-			expected: "30s",
+			expected: "<1m",
+		},
+		{
+			name:     "59 seconds",
+			input:    59,
+			expected: "<1m",
 		},
 		{
 			name:     "60 seconds",

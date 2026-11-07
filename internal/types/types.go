@@ -27,12 +27,14 @@ func (t TestTimeProvider) Now() time.Time {
 	return t.FixedTime
 }
 
+// HumanizeDuration formats a duration in minutes and hours. Anything under a
+// minute, including negative durations (eg, after a clock change), is "<1m".
 func HumanizeDuration(durationInSecs int) string {
-	duration := time.Duration(durationInSecs) * time.Second
-
-	if duration.Seconds() < 60 {
-		return fmt.Sprintf("%ds", int(duration.Seconds()))
+	if durationInSecs < 60 {
+		return "<1m"
 	}
+
+	duration := time.Duration(durationInSecs) * time.Second
 
 	if duration.Minutes() < 60 {
 		return fmt.Sprintf("%dm", int(duration.Minutes()))
