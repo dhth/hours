@@ -362,6 +362,30 @@ func TestFinishActiveTLView(t *testing.T) {
 	snaps.MatchStandaloneSnapshot(t, result)
 }
 
+func TestFinishActiveTLViewHidesTrackingTimesInFooter(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.tasksFetched = true
+
+	task := createTestTask(1, "Fix bug in module B", true, false, m.timeProvider)
+	m.taskMap[1] = task
+	m.activeTasksList.SetItems([]list.Item{task})
+
+	m.trackingActive = true
+	m.activeTaskID = 1
+	m.activeTLBeginTS = referenceTime.Add(-38 * time.Minute)
+
+	m.activeView = finishActiveTLView
+	m.tLInputs[entryBeginTS].SetValue(m.activeTLBeginTS.Format(timeFormat))
+	m.tLInputs[entryEndTS].SetValue(referenceTime.Format(timeFormat))
+
+	// WHEN
+	result := stripANSI(m.View().Content)
+
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
+}
+
 func TestEditActiveTLView(t *testing.T) {
 	// GIVEN
 	m := createTestModel()

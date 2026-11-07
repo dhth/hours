@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Built-in themes
 - The task being tracked shows the duration of the current session in the task
-  list
+  list and the footer
 
 ### Changed
 
