@@ -126,7 +126,6 @@ type Model struct {
 	tLDetailsVP                    viewport.Model
 	tLDetailsVPReady               bool
 	lastTrackingChange             trackingChange
-	changesLocked                  bool
 	activeTaskID                   int
 	tasklogSaveType                tasklogSaveType
 	message                        userMsg

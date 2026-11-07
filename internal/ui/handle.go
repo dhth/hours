@@ -441,7 +441,6 @@ func (m *Model) getCmdToStartTracking() tea.Cmd {
 		return nil
 	}
 
-	m.changesLocked = true
 	m.activeTLBeginTS = m.timeProvider.Now().Truncate(time.Second)
 	return toggleTracking(m.db, task.ID, m.activeTLBeginTS, m.activeTLEndTS, nil)
 }
@@ -477,7 +476,6 @@ func (m *Model) getCmdToQuickSwitchTracking() tea.Cmd {
 	}
 
 	if !m.trackingActive {
-		m.changesLocked = true
 		m.activeTLBeginTS = m.timeProvider.Now().Truncate(time.Second)
 		return toggleTracking(
 			m.db,
@@ -775,8 +773,6 @@ func (m *Model) handleActiveTaskFetchedMsg(msg activeTaskFetchedMsg) {
 }
 
 func (m *Model) handleTrackingToggledMsg(msg trackingToggledMsg) []tea.Cmd {
-	m.changesLocked = false
-
 	if msg.err != nil {
 		m.message = errMsg(msg.err.Error())
 		return nil
