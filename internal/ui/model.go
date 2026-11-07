@@ -178,7 +178,18 @@ func (m *Model) recalculateSecondsTrackedToday() {
 	)
 }
 
-func (m *Model) refreshActiveTaskDesc() {
+// refreshTrackedTaskDesc clears the timer on the previously tracked task's row
+// if tracking stopped or moved to another task, and redraws the timer on the
+// currently tracked task's row.
+func (m *Model) refreshTrackedTaskDesc(wasTracking bool, prevTrackedTaskID int) {
+	now := m.timeProvider.Now()
+
+	if wasTracking && (!m.trackingActive || prevTrackedTaskID != m.activeTaskID) {
+		if prevTask, ok := m.taskMap[prevTrackedTaskID]; ok {
+			prevTask.updateListDesc(nil, now)
+		}
+	}
+
 	if !m.trackingActive {
 		return
 	}
@@ -188,7 +199,7 @@ func (m *Model) refreshActiveTaskDesc() {
 		return
 	}
 
-	task.updateListDesc(&m.activeTLBeginTS, m.timeProvider.Now())
+	task.updateListDesc(&m.activeTLBeginTS, now)
 }
 
 type recordsModel struct {

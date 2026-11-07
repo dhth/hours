@@ -18,9 +18,12 @@ const (
 )
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// captured before processing so the refresh can clear the previously tracked
+	// row's timer when tracking stops or moves to another task
+	wasTracking, prevTrackedTaskID := m.trackingActive, m.activeTaskID
 	model, cmd := m.processMessage(msg)
 	model.recalculateSecondsTrackedToday()
-	model.refreshActiveTaskDesc()
+	model.refreshTrackedTaskDesc(wasTracking, prevTrackedTaskID)
 
 	return model, cmd
 }

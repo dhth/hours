@@ -790,7 +790,6 @@ func (m *Model) handleTrackingToggledMsg(msg trackingToggledMsg) []tea.Cmd {
 	case true:
 		m.lastTrackingChange = trackingFinished
 		task.trackingActive = false
-		task.updateListDesc(nil, m.timeProvider.Now())
 		m.activeTLComment = nil
 		m.trackingActive = false
 		m.activeTaskID = -1
@@ -823,7 +822,6 @@ func (m *Model) handleActiveTLSwitchedMsg(msg activeTLSwitchedMsg) tea.Cmd {
 
 	lastActiveTask.trackingActive = false
 	lastActiveTask.updateListTitle()
-	lastActiveTask.updateListDesc(nil, m.timeProvider.Now())
 
 	currentlyActiveTask, ok := m.taskMap[msg.currentlyActiveTaskID]
 
@@ -873,7 +871,6 @@ func (m *Model) handleActiveTLDeletedMsg(msg activeTaskLogDeletedMsg) {
 
 	activeTask.trackingActive = false
 	activeTask.updateListTitle()
-	activeTask.updateListDesc(nil, m.timeProvider.Now())
 	m.lastTrackingChange = trackingFinished
 	m.trackingActive = false
 	m.activeTLComment = nil
