@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -168,6 +169,34 @@ func TestTaskListViewClearsTrackedTimeWhenTrackingIsFinished(t *testing.T) {
 	// The saved total stays at 2h 10m here. In the app, finishing also returns a
 	// command that refetches the total from the DB; this test doesn't run commands.
 	updated, _ := tracking.Update(trackingToggledMsg{taskID: 1, finished: true})
+	result := stripANSI(updated.(Model).View().Content)
+
+	// THEN
+	snaps.MatchStandaloneSnapshot(t, result)
+}
+
+func TestTaskListViewKeepsTrackingWhenFinishingFails(t *testing.T) {
+	// GIVEN
+	m := createTestModel()
+	m.activeView = taskListView
+	m.tasksFetched = true
+
+	task := createTestTask(1, "Fix bug in module B", true, false, m.timeProvider)
+	task.SecsSpent = 130 * 60
+	m.taskMap[1] = task
+	m.activeTasksList.SetItems([]list.Item{task})
+
+	m.handleActiveTaskFetchedMsg(activeTaskFetchedMsg{
+		activeTask: domain.ActiveTaskDetails{TaskID: 1, CurrentLogBeginTS: referenceTime.Add(-38 * time.Minute)},
+	})
+	tracking, _ := m.Update(timeTrackedTodayTickMsg{})
+
+	// WHEN
+	failed, _ := tracking.Update(trackingToggledMsg{taskID: 1, finished: true, err: errors.New("couldn't finish task log")})
+	// Advance the clock so the next tick shows whether the row's timer still updates.
+	later := failed.(Model)
+	later.timeProvider = types.TestTimeProvider{FixedTime: referenceTime.Add(5 * time.Minute)}
+	updated, _ := later.Update(timeTrackedTodayTickMsg{})
 	result := stripANSI(updated.(Model).View().Content)
 
 	// THEN

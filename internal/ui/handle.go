@@ -775,13 +775,12 @@ func (m *Model) handleActiveTaskFetchedMsg(msg activeTaskFetchedMsg) {
 }
 
 func (m *Model) handleTrackingToggledMsg(msg trackingToggledMsg) []tea.Cmd {
+	m.changesLocked = false
+
 	if msg.err != nil {
 		m.message = errMsg(msg.err.Error())
-		m.trackingActive = false
 		return nil
 	}
-
-	m.changesLocked = false
 
 	task, ok := m.taskMap[msg.taskID]
 
