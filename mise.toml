@@ -102,6 +102,19 @@ run = '''
 ./hours --dbpath=/var/tmp/throwaway-2.db stats 3d -p
 '''
 
+[tasks."screenshots:capture"]
+description = "Capture screenshots of hours scenarios into .screenshots (needs termctrl)"
+depends = ["build"]
+run = '''
+rm -rf .screenshots
+tests/screenshots/capture.sh ./hours .screenshots
+'''
+
+[tasks."screenshots:publish"]
+description = "Publish .screenshots to a PR as a comment (needs gh)"
+usage = 'arg "<pr>" help="pull request number"'
+run = 'tests/screenshots/publish.sh .screenshots "${usage_pr?}"'
+
 [tasks."release:check"]
 description = "Validate the GoReleaser configuration"
 run = "goreleaser check"
