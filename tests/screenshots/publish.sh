@@ -64,6 +64,7 @@ failed=
 		echo
 		echo '```text'
 		cat "$DIR/FAILED-$failed.txt"
+		echo # termctrl's .txt has no trailing newline; the fence needs its own line
 		echo '```'
 		echo
 		echo "</details>"
