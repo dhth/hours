@@ -1,8 +1,6 @@
 name: screenshots
 
 on:
-  # temporary: runs on every push to a PR while this workflow is being tested
-  pull_request:
   workflow_dispatch:
     inputs:
       pr:
@@ -25,9 +23,6 @@ jobs:
       sha: ${{ steps.check.outputs.sha }}
     steps:
       - uses: actions/checkout@v6
-        with:
-          # the PR's head commit, not the merge commit pull_request checks out
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Set up mise
         uses: jdx/mise-action@v4
         with:
@@ -84,5 +79,5 @@ jobs:
         env:
           # gh --attach needs a user token (fine-grained PAT); app tokens can't upload
           GH_TOKEN: ${{ secrets.SCREENSHOTS_TOKEN }}
-          PR: ${{ inputs.pr || github.event.pull_request.number }}
+          PR: ${{ inputs.pr }}
         run: mise run screenshots:publish "$PR"
