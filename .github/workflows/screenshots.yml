@@ -1,0 +1,96 @@
+# Captures TUI screenshots of a branch and posts them to a PR as a comment:
+#   gh workflow run screenshots.yml --ref <branch> -f pr=<number>
+# Needs the SCREENSHOTS_TOKEN secret: a fine-grained PAT for this repo with
+# Contents: read and Pull requests: write (gh --attach refuses app tokens).
+# Renew it before it expires.
+name: screenshots
+
+on:
+  # temporary: runs on every push to a PR while this workflow is being tested
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request to post the screenshots to
+        required: true
+        type: number
+
+permissions:
+  contents: read
+
+env:
+  TERMCTRL: github:dhth/terminal-control[version_prefix=musl-v]@1.2.1-r1
+  FONT_VERSION: v3.5.0
+  FONT_SHA256: 32226dc81bb30ea421cdc49ba2134b93c2b43096992c829504a3004d2537420d
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      captured: ${{ steps.check.outputs.captured }}
+      sha: ${{ steps.check.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # the PR's head commit, not the merge commit pull_request checks out
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Set up mise
+        uses: jdx/mise-action@v4
+        with:
+          install_args: go
+      - name: Install FiraCode Nerd Font Mono
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # via the API: the plain release download URL has been returning 504s
+          gh release download "$FONT_VERSION" --repo ryanoasis/nerd-fonts --pattern FiraCode.tar.xz --dir /tmp/font
+          echo "$FONT_SHA256  /tmp/font/FiraCode.tar.xz" | sha256sum --check
+          mkdir -p ~/.local/share/fonts
+          tar -xJf /tmp/font/FiraCode.tar.xz -C ~/.local/share/fonts --wildcards 'FiraCodeNerdFontMono-*.ttf'
+          fc-cache -f ~/.local/share/fonts
+      - name: Install termctrl
+        # global, so mise's termctrl shim resolves inside `mise run`
+        run: mise use -g "$TERMCTRL"
+      - name: Capture
+        run: mise run screenshots:capture
+      - id: check
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f .screenshots/scenarios.tsv ]; then
+            echo "captured=true" >> "$GITHUB_OUTPUT"
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() && steps.check.outputs.captured == 'true' }}
+        with:
+          name: screenshots
+          path: .screenshots/
+          include-hidden-files: true # .screenshots/ is a hidden directory
+          if-no-files-found: error
+
+  # Separate job so building and driving hours never runs with the PAT; this
+  # job only runs the publish task.
+  publish:
+    needs: capture
+    if: ${{ !cancelled() && needs.capture.outputs.captured == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.capture.outputs.sha }}
+      - name: Set up mise
+        uses: jdx/mise-action@v4
+        with:
+          install: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: screenshots
+          path: .screenshots
+      - name: Publish
+        env:
+          # gh --attach needs a user token (fine-grained PAT); app tokens can't upload
+          GH_TOKEN: ${{ secrets.SCREENSHOTS_TOKEN }}
+          PR: ${{ inputs.pr || github.event.pull_request.number }}
+        run: mise run screenshots:publish "$PR"
