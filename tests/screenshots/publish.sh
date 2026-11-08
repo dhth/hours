@@ -19,10 +19,13 @@ DIR=$1
 PR=$2
 SHA=$(git rev-parse "${3:-HEAD}")
 
-gh pr comment --help 2>/dev/null | grep -q -- '--attach' || {
+# grep the saved text: with pipefail, grep -q exiting early fails the pipeline
+help=$(gh pr comment --help 2>/dev/null || true)
+case $help in *--attach*) ;; *)
 	echo "error: gh $(gh --version | head -n 1 | cut -d' ' -f3) can't attach images; upgrade to 2.99.0 or newer" >&2
 	exit 1
-}
+	;;
+esac
 [ -f "$DIR/scenarios.tsv" ] || {
 	echo "error: $DIR/scenarios.tsv not found; run capture.sh first" >&2
 	exit 1
