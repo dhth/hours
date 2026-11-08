@@ -42,6 +42,9 @@ failed=
 	echo
 	echo "Taken from [\`${SHA:0:7}\`](https://github.com/$SOURCE/commit/$SHA)."
 	echo
+	# collapsed by default; GitHub needs the blank line after </summary>
+	echo "<details><summary>Screenshots ($(wc -l <"$DIR/scenarios.tsv" | tr -d ' '))</summary>"
+	echo
 	echo "| Scenario | Screenshot |"
 	echo "| --- | --- |"
 	while IFS="$(printf '\t')" read -r name desc; do
@@ -57,6 +60,8 @@ failed=
 			failed=$name
 		fi
 	done <"$DIR/scenarios.tsv"
+	echo
+	echo "</details>"
 
 	if [ -n "$failed" ] && [ -f "$DIR/FAILED-$failed.txt" ]; then
 		echo
