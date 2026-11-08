@@ -5,6 +5,8 @@
 # usage: publish.sh <screenshots-dir> <pr-number> [commit]
 #
 # commit is the commit the screenshots were taken from; it defaults to HEAD.
+# The comment links it on the repo this checkout's origin points at. To post
+# to a PR in another repo, set GH_REPO=<owner>/<repo>.
 # Needs gh 2.99.0 or newer (for --attach), signed in with push access.
 set -euo pipefail
 
@@ -26,7 +28,7 @@ gh pr comment --help 2>/dev/null | grep -q -- '--attach' || {
 	exit 1
 }
 
-REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+SOURCE=$(git remote get-url origin | sed -E 's#^(https://github\.com/|git@github\.com:)##; s#\.git$##')
 body="$DIR/comment.md" # image paths in the body are relative to this file
 attach=()
 failed=
@@ -34,7 +36,7 @@ failed=
 {
 	echo "### Screenshots"
 	echo
-	echo "Taken from [\`${SHA:0:7}\`](https://github.com/$REPO/commit/$SHA)."
+	echo "Taken from [\`${SHA:0:7}\`](https://github.com/$SOURCE/commit/$SHA)."
 	echo
 	echo "| Scenario | Screenshot |"
 	echo "| --- | --- |"
