@@ -1,7 +1,7 @@
 # Captures TUI screenshots of a branch and posts them to a PR as a comment:
 #   gh workflow run screenshots.yml --ref <branch> -f pr=<number>
 # Needs the SCREENSHOTS_TOKEN secret: a fine-grained PAT for this repo with
-# Contents and Pull requests read/write (gh --attach refuses app tokens).
+# Contents: read and Pull requests: write (gh --attach refuses app tokens).
 # Renew it before it expires.
 name: screenshots
 
