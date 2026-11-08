@@ -19,7 +19,8 @@ DIR=$1
 PR=$2
 SHA=$(git rev-parse "${3:-HEAD}")
 
-# grep the saved text: with pipefail, grep -q exiting early fails the pipeline
+# Match on the saved text: piping into grep -q fails under pipefail when grep
+# exits early and gh gets SIGPIPE.
 help=$(gh pr comment --help 2>/dev/null || true)
 case $help in *--attach*) ;; *)
 	echo "error: gh $(gh --version | head -n 1 | cut -d' ' -f3) can't attach images; upgrade to 2.99.0 or newer" >&2
