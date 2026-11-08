@@ -40,7 +40,11 @@ failed=
 {
 	echo "### Screenshots"
 	echo
-	echo "Taken from [\`${SHA:0:7}\`](https://github.com/$SOURCE/commit/$SHA)."
+	taken="Taken on [\`${SHA:0:7}\`](https://github.com/$SOURCE/commit/$SHA)"
+	if [ -n "${GITHUB_RUN_ID:-}" ]; then # set by GitHub Actions
+		taken="$taken in [this workflow run]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)"
+	fi
+	echo "$taken."
 	echo
 	# collapsed by default; GitHub needs the blank line after </summary>
 	echo "<details><summary>Screenshots ($(wc -l <"$DIR/scenarios.tsv" | tr -d ' '))</summary>"
