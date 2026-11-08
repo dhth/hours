@@ -52,6 +52,9 @@ failed=
 			echo "| ❌ **Failed:** $desc | ![FAILED-$name](./FAILED-$name.png) |"
 			attach+=(--attach "$DIR/FAILED-$name.png")
 			failed=$name
+		else # the step failed without a screen to save
+			echo "| ❌ **Failed:** $desc | (no screen captured) |"
+			failed=$name
 		fi
 	done <"$DIR/scenarios.tsv"
 

@@ -23,9 +23,8 @@ HOURS="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 OUT=$2
 FONT='FiraCode Nerd Font Mono'
 SESSION="hours-screenshots-$$"
-TMP=$(mktemp -d)
-DB="$TMP/hours.db"
 STEP=setup
+FAILURE_SAVED=
 
 # Same seed, same generated tasks and log entries on every run.
 export HOURS_GEN_SEED=${HOURS_GEN_SEED:-42}
@@ -40,7 +39,10 @@ font_installed() {
 	if command -v fc-match >/dev/null; then
 		fc-match -f '%{family}\n' "$FONT" | tr ',' '\n' | grep -Fqx "$FONT"
 	else
-		ls ~/Library/Fonts/FiraCodeNerdFontMono-* /Library/Fonts/FiraCodeNerdFontMono-* >/dev/null 2>&1
+		for f in ~/Library/Fonts/FiraCodeNerdFontMono-* /Library/Fonts/FiraCodeNerdFontMono-*; do
+			[ -e "$f" ] && return 0
+		done
+		return 1
 	fi
 }
 font_installed || {
@@ -48,7 +50,14 @@ font_installed || {
 	exit 1
 }
 
+# Appending to an earlier run would duplicate rows and mix old and new files.
+if [ -n "$(ls -A "$OUT" 2>/dev/null)" ]; then
+	echo "error: $OUT is not empty" >&2
+	exit 1
+fi
 mkdir -p "$OUT"
+TMP=$(mktemp -d)
+DB="$TMP/hours.db"
 echo "termctrl: $(termctrl --version)"
 
 save() { # save <name> [termctrl save args...]
@@ -61,7 +70,9 @@ finish() {
 	local status=$?
 	if [ $status -ne 0 ]; then
 		echo "error: step \"$STEP\" failed" >&2
-		save "FAILED-$STEP" "$SESSION" 2>/dev/null || true
+		if [ -z "$FAILURE_SAVED" ]; then
+			save "FAILED-$STEP" "$SESSION" 2>/dev/null || true
+		fi
 	fi
 	termctrl stop "$SESSION" >/dev/null 2>&1 || true
 	rm -rf "$TMP"
@@ -73,12 +84,19 @@ step() { # step <name> <description>
 	STEP=$1
 	printf '%s\t%s\n' "$1" "$2" >>"$OUT/scenarios.tsv"
 }
-shot() { save "$STEP" "$SESSION"; }
+shot() { save "$STEP" "$SESSION" --settle-ms 100; }
 send() { termctrl send "$SESSION" "$@" >/dev/null; }
 wait_for() { termctrl wait "$SESSION" "$1" >/dev/null; }
 tui() { termctrl start "$SESSION" --color always --cols "$1" --rows "$2" -- "$HOURS" -d "$DB" "${@:3}" >/dev/null; }
 cli() { # one-off capture of a non-interactive command
-	save "$STEP" --color always --cols 140 --rows 30 -- "$HOURS" -d "$DB" "$@"
+	local name=$STEP
+	# termctrl save exits 0 even when the command fails, so check it first.
+	if ! "$HOURS" -d "$DB" "$@" >/dev/null 2>&1; then
+		name="FAILED-$STEP"
+		FAILURE_SAVED=1
+	fi
+	save "$name" --color always --cols 140 --rows 30 -- "$HOURS" -d "$DB" "$@"
+	[ -z "$FAILURE_SAVED" ]
 }
 
 "$HOURS" -d "$DB" gen -y --num-days 7 --num-tasks 6 >/dev/null
@@ -114,7 +132,7 @@ send text:s
 wait_for "Task Log Entry"
 send "text:Drafted termctrl scenarios for hours"
 send tab text:KKKKKK # focus begin time, move it back 30 minutes
-wait_for "You're recording 30m"
+wait_for "You're recording 3" # 30m, or 31m if the minute rolled over
 shot
 
 step 07-task-logs-list "Task logs list after saving the entry"
@@ -153,8 +171,15 @@ wait_for "go backwards"
 shot
 
 step 14-report-interactive-prev-week '`hours report week -i`, previous week (h)'
+# The previous week's dates depend on today, so wait for the screen to change.
+before=$(termctrl show "$SESSION")
 send text:h
-sleep 0.5 # the previous week's dates depend on today, so there's no fixed text to wait for
+i=0
+while [ "$(termctrl show "$SESSION")" = "$before" ]; do
+	i=$((i + 1))
+	[ $i -lt 50 ] || exit 1
+	sleep 0.1
+done
 shot
 
 STEP=finished
