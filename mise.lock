@@ -122,11 +122,6 @@ url = "https://dl.google.com/go/go1.27.4.darwin-amd64.tar.gz"
 checksum = "sha256:178ab98950ac69ab25069307dc6ade79f3816e414cce95b4da166a115cde1e7e"
 url = "https://dl.google.com/go/go1.27.4.windows-amd64.zip"
 
-[[tools."go:golang.org/x/vuln/cmd/govulncheck"]]
-version = "1.7.0"
-backend = "go:golang.org/x/vuln/cmd/govulncheck"
-specifiers = ["latest"]
-
 [[tools.gofumpt]]
 version = "0.11.0"
 backend = "aqua:mvdan/gofumpt"
@@ -260,6 +255,11 @@ checksum = "sha256:f56e85f8fd52875102dfc2b01dc07fc174486caebbac7e3aa9f29b4f0057d
 url = "https://github.com/goreleaser/goreleaser/releases/download/v2.9.0/goreleaser_Windows_x86_64.zip"
 url_api = "https://api.github.com/repos/goreleaser/goreleaser/releases/assets/250600902"
 provenance = "github-attestations"
+
+[[tools.govulncheck]]
+version = "1.7.0"
+backend = "go:golang.org/x/vuln/cmd/govulncheck"
+specifiers = ["latest"]
 
 [[tools.yamlfmt]]
 version = "0.21.0"

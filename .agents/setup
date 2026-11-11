@@ -17,7 +17,7 @@ fi
 "$HOME/.local/bin/mise" install --locked \
     actionlint \
     go \
-    "go:golang.org/x/vuln/cmd/govulncheck" \
     gofumpt \
     golangci-lint \
+    govulncheck \
     yamlfmt
