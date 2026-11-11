@@ -13,6 +13,6 @@ jobs:
       - name: Set up mise
         uses: jdx/mise-action@v4
         with:
-          install_args: go go:golang.org/x/vuln/cmd/govulncheck
+          install_args: go govulncheck
       - name: Vulnerability check
         run: mise run vulncheck
